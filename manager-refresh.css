@@ -524,3 +524,11 @@ body.theme-dark .ai-proposal-card { border-color: color-mix(in srgb, var(--ui-ac
 body.theme-dark .ai-proposal-card.is-added { background: rgba(255,255,255,.012); }
 body.theme-dark .ai-file-item { border-color: var(--ui-line); background: rgba(255,255,255,.025); }
 @media (max-width: 620px) { .ai-file-item { max-width: 140px; } .ai-proposal-card .field-row { grid-template-columns: 1fr; gap: 0; } }
+#ai-proposal-list, .ai-proposal-list { scrollbar-width: thin; scrollbar-color: rgba(105,127,118,.28) transparent; }
+.manager-add-dialog form, .calendar-add-form { scrollbar-width: thin; scrollbar-color: rgba(105,127,118,.28) transparent; }
+::-webkit-scrollbar-button { width: 0; height: 0; display: none; }
+textarea::-webkit-scrollbar, .manager-add-dialog form::-webkit-scrollbar, .calendar-add-form::-webkit-scrollbar { width: 7px; height: 7px; }
+textarea::-webkit-scrollbar-track, .manager-add-dialog form::-webkit-scrollbar-track, .calendar-add-form::-webkit-scrollbar-track { background: transparent; }
+textarea::-webkit-scrollbar-thumb, .manager-add-dialog form::-webkit-scrollbar-thumb, .calendar-add-form::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: rgba(105,127,118,.28); background-clip: padding-box; }
+textarea::-webkit-scrollbar-thumb:hover, .manager-add-dialog form::-webkit-scrollbar-thumb:hover, .calendar-add-form::-webkit-scrollbar-thumb:hover { background: rgba(74,111,99,.42); background-clip: padding-box; }
+.ai-proposal-card .field textarea { min-height: 84px; max-height: 180px; resize: none; overflow-y: hidden; }

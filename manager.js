@@ -491,6 +491,17 @@ function clearManagerAIDraft() {
   setManagerAIStatus("");
 }
 
+function autoResizeTextarea(input) {
+  if (!(input instanceof HTMLTextAreaElement)) return;
+  input.style.height = "auto";
+  const style = getComputedStyle(input);
+  const minHeight = Number.parseFloat(style.minHeight) || 0;
+  const maxHeight = Number.parseFloat(style.maxHeight) || 180;
+  const nextHeight = Math.min(maxHeight, Math.max(minHeight, input.scrollHeight + 2));
+  input.style.height = nextHeight + "px";
+  input.style.overflowY = input.scrollHeight > nextHeight + 1 ? "auto" : "hidden";
+}
+
 function managerFileExtension(name) {
   const match = String(name || "").toLowerCase().match(/\.([^.]+)$/);
   return match ? "." + match[1] : "";
@@ -613,6 +624,8 @@ function renderManagerAIProposals(items) {
     card.addEventListener("keydown", (event) => { if (event.key === "Enter" && event.target.tagName !== "TEXTAREA") { event.preventDefault(); addManagerAIProposal(entry); } });
     managerAIProposalEntries.push(entry);
     els.aiProposals.append(card);
+    entry.detailInput.addEventListener("input", () => autoResizeTextarea(entry.detailInput));
+    requestAnimationFrame(() => autoResizeTextarea(entry.detailInput));
   });
   updateManagerAddAllButton();
 }
@@ -624,6 +637,7 @@ function applyManagerAIItems(items) {
     const item = normalized[0];
     els.addTitle.value = item.title || "";
     els.addDetail.value = item.detail || "";
+    requestAnimationFrame(() => autoResizeTextarea(els.addDetail));
     els.addDate.value = item.date || "";
     els.addTime.value = item.time || "";
     window.DeskWeekDefer?.set?.(els.addDefer, item.defer || "none");
@@ -721,6 +735,7 @@ function openManagerAddDialog(date = "", draft = {}, source = "new") {
   clearManagerAIDraft();
   refreshManagerAIConfigHint();
   els.addDialog.showModal();
+  requestAnimationFrame(() => autoResizeTextarea(els.addDetail));
   setTimeout(() => els.addTitle.focus({ preventScroll: true }), 30);
 }
 
@@ -875,6 +890,7 @@ els.aiSummarizeButton.addEventListener("click", summarizeManagerAISource);
 els.aiImageInput.addEventListener("change", () => addManagerAIImages(els.aiImageInput.files));
 els.aiFileInput.addEventListener("change", () => addManagerAIFiles(els.aiFileInput.files));
 els.aiAddAllButton.addEventListener("click", addAllManagerAIProposals);
+els.addDetail.addEventListener("input", () => autoResizeTextarea(els.addDetail));
 els.aiSourceText.addEventListener("paste", (event) => {
   const images = [...(event.clipboardData?.items || [])].filter((item) => item.kind === "file" && item.type.startsWith("image/")).map((item) => item.getAsFile()).filter(Boolean);
   if (!images.length) return;

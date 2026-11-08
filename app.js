@@ -451,6 +451,17 @@ function clearAIDraft() {
   setAIStatus("");
 }
 
+function autoResizeTextarea(input) {
+  if (!(input instanceof HTMLTextAreaElement)) return;
+  input.style.height = "auto";
+  const style = getComputedStyle(input);
+  const minHeight = Number.parseFloat(style.minHeight) || 0;
+  const maxHeight = Number.parseFloat(style.maxHeight) || 180;
+  const nextHeight = Math.min(maxHeight, Math.max(minHeight, input.scrollHeight + 2));
+  input.style.height = nextHeight + "px";
+  input.style.overflowY = input.scrollHeight > nextHeight + 1 ? "auto" : "hidden";
+}
+
 function fileExtension(name) {
   const match = String(name || "").toLowerCase().match(/\.([^.]+)$/);
   return match ? "." + match[1] : "";
@@ -610,6 +621,8 @@ function renderAIProposals(items) {
     });
     aiProposalEntries.push(entry);
     els.aiProposals.append(card);
+    entry.detailInput.addEventListener("input", () => autoResizeTextarea(entry.detailInput));
+    requestAnimationFrame(() => autoResizeTextarea(entry.detailInput));
   });
   updateAIAddAllButton();
 }
@@ -624,6 +637,7 @@ function applyAIItems(items) {
     const item = normalized[0];
     els.calendarNewTitle.value = item.title || "";
     els.calendarNewDetail.value = item.detail || "";
+    requestAnimationFrame(() => autoResizeTextarea(els.calendarNewDetail));
     els.calendarNewDate.value = item.date || "";
     els.calendarNewTime.value = item.time || "";
     window.DeskWeekDefer?.set?.(els.calendarNewDefer, item.defer || "none");
@@ -752,6 +766,7 @@ function openCalendarAddDialog(date, options = {}) {
   }
   refreshAIConfigHint();
   renderCalendarView();
+  requestAnimationFrame(() => autoResizeTextarea(els.calendarNewDetail));
   setTimeout(() => els.calendarNewTitle.focus({ preventScroll: true }), 30);
 }
 
@@ -1340,6 +1355,7 @@ els.aiSummarizeButton?.addEventListener("click", summarizeAISource);
 els.aiImageInput?.addEventListener("change", () => addAIImageFiles(els.aiImageInput.files));
 els.aiFileInput?.addEventListener("change", () => addAIFiles(els.aiFileInput.files));
 els.addAllButton?.addEventListener("click", addAllAIProposals);
+els.calendarNewDetail?.addEventListener("input", () => autoResizeTextarea(els.calendarNewDetail));
 els.aiSourceText?.addEventListener("paste", (event) => {
   const images = [...(event.clipboardData?.items || [])]
     .filter((item) => item.kind === "file" && item.type.startsWith("image/"))
