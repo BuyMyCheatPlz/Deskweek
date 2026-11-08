@@ -358,6 +358,7 @@ async function summarizeWithAI(payload = {}) {
   const apiKey = readUsableAIKey().apiKey;
   if (!apiKey) throw new Error("请先在管理中心配置 AI 接口");
   const sourceText = String(payload.text || "").trim();
+  const extraPrompt = String(payload.extraPrompt || "").trim().slice(0, 4000);
   const images = Array.isArray(payload.images) ? payload.images.slice(0, 4) : [];
   const files = Array.isArray(payload.files) ? payload.files.slice(0, AI_FILE_MAX_COUNT) : [];
   if (!sourceText && !images.length && !files.length) throw new Error("先粘贴文字、添加图片或文件");
@@ -384,20 +385,29 @@ async function summarizeWithAI(payload = {}) {
   const detailExample = isChineseOutput
     ? 'detail 示例："发布机构：…\\n客户公式：…\\n官网：…\\n文件格式：…"'
     : 'detail 示例（仅表示格式，字段名和内容使用原文语言）："<field>: <value>\\n<field>: <value>"';
+  const groupingRules = [
+    "items：先判断资料的整体目的，输出最小必要的事项数。一封邮件、一条通知或一段聊天记录通常只对应 1 个事项。",
+    "同一目标下的报名、填写信息、上传平台、发送材料、通知同学、准备 PPT、满足积分条件、命名格式等步骤必须合并为一项，把步骤写进 detail。例如比赛报名通知里的报名、上传、提交材料、截止时间和积分说明属于同一项，不能拆成多项。",
+    "只有目标不同，并且行动或截止时间明显独立时才拆分。不要因为原文出现多个动词、多个网址、多个要求或建议就拆成多个事项。",
+    "条件、奖励、后果、建议、参考材料和操作说明都属于 detail，不能单独成为事项。能合并就合并，宁少勿碎。",
+    extraPrompt ? "先执行用户的筛选要求，再对保留下来的内容按上述规则合并，只输出筛选后必要的独立事项。" : "",
+  ];
   const systemPrompt = [
     firstPromptLine,
     "只输出一个合法 JSON 对象，不要 Markdown、代码块或额外解释。",
     'JSON 格式：{"items":[{"title":"主标题","detail":"详细信息","date":"YYYY-MM-DD或空字符串","time":"HH:mm或空字符串","defer":"none|7d|1m或Nd"}]}',
-    "items：提取资料中全部彼此独立的待办事项，一件事项一个对象，不要合并不同任务，也不要漏掉文件、表格、邮件或通知中的多个任务。没有明确任务时返回空数组。最多返回 20 项。",
+    extraPrompt ? "用户提供了额外要求。必须优先执行额外要求；如果要求按班级、人员、范围、日期或类型筛选，只输出符合条件的任务，不要输出被排除的任务。" : "",
+    ...groupingRules,
     titleRule,
     detailRule,
     detailExample,
     "date 和 time：只填该项任务在原文中明确给出的值；只有时间没有日期时 date 留空；无法确定的相对日期不要猜；两者都没有时都为空。",
     "defer：没有明确要求时固定填 none。",
-  ].join("\n");
+  ].filter(Boolean).join("\n");
   const userParts = [];
   if (sourceText) userParts.push(sourceText);
   if (fileText) userParts.push(`以下是用户提供的文件内容：\n${fileText}`);
+  if (extraPrompt) userParts.push(`以下是用户的额外要求，必须优先遵守：\n${extraPrompt}`);
   const content = [{ type: "text", text: userParts.join("\n\n") || "请整理图片中的任务信息。" }];
   images.forEach((url) => content.push({ type: "image_url", image_url: { url } }));
   const controller = new AbortController();

@@ -27,7 +27,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.floating-month-holidays { display: flex; flex-wrap: wrap; gap: 1px 4px; min-width: 0; max-height: 21px; margin-top: 2px; overflow: hidden; }
+.floating-month-holidays { display: flex; flex-wrap: wrap; gap: 1px 4px; min-width: 0; max-height: none; margin-top: 2px; overflow: visible; align-items: flex-start; align-content: flex-start; }
 .floating-month-holidays .calendar-event { max-width: 100%; font-size: 8.5px; line-height: 1.2; white-space: normal; overflow-wrap: anywhere; }
 .floating-month-holiday { margin-top: 2px; font-size: 8.5px; }
 .floating-day-holiday { font-size: 10px; }

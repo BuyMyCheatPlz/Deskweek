@@ -587,3 +587,60 @@ body.theme-dark .about-card { background: linear-gradient(145deg, color-mix(in s
 body.theme-dark .update-install-button { border-color: color-mix(in srgb, var(--ui-accent) 35%, var(--ui-line)); background: rgba(128,207,186,.10); color: var(--ui-accent); }
 .about-card { min-height: 150px; }
 .about-links { min-height: 34px; }
+.manager-add-dialog, .calendar-add-dialog { overflow: hidden !important; }
+.manager-add-dialog form, .calendar-add-form { border-radius: inherit; }
+.manager-add-dialog form { max-height: min(698px, calc(100vh - 34px)) !important; }
+.calendar-add-form { max-height: min(654px, calc(100vh - 74px)) !important; }
+/* Keep date, time and defer controls on one proposal row. */
+.ai-proposal-card .field-row.ai-proposal-schedule-row { grid-template-columns: minmax(0, 1fr) 104px 56px; align-items: start; gap: 8px; }
+.ai-proposal-card .ai-proposal-defer-field { min-width: 56px; margin-bottom: 0; }
+.ai-proposal-card .ai-proposal-defer-field .defer-picker { width: 36px !important; min-width: 36px; height: 36px; margin: 0 auto; }
+.ai-proposal-card .ai-proposal-defer-field > span { white-space: nowrap; }
+.ai-proposal-card .ai-proposal-defer-field .defer-trigger { width: 36px; height: 36px; }
+@media (max-width: 620px) {
+  .ai-proposal-card .field-row.ai-proposal-schedule-row { grid-template-columns: minmax(0, 1fr) 92px 54px; gap: 6px; }
+}
+/* Date, time and deferred visibility share one compact row. */
+.field-row.schedule-row { grid-template-columns: minmax(0, 1fr) 104px 56px; align-items: start; gap: 10px; }
+.field-row.schedule-row > .field { min-width: 0; margin-bottom: 0; }
+.field-row.schedule-row .schedule-defer-field { min-width: 56px; }
+.field-row.schedule-row .schedule-defer-field > span { white-space: nowrap; }
+.field-row.schedule-row .defer-picker { width: 36px !important; min-width: 36px; height: 36px; margin: 0 auto; }
+.field-row.schedule-row .defer-trigger { width: 36px; height: 36px; }
+@media (max-width: 620px) {
+  .field-row.schedule-row { grid-template-columns: minmax(0, 1fr) 92px 54px; gap: 6px; }
+}
+/* Extra AI instructions and roomier detailed-entry layout. */
+.manager-add-dialog .ai-summary-box { margin-top: 16px; }
+.calendar-add-dialog .ai-summary-box { margin-top: 16px; }
+.manager-add-dialog form { min-height: min(650px, calc(100vh - 34px)) !important; }
+.calendar-add-form { min-height: min(620px, calc(100vh - 74px)) !important; }
+#managerAIExtraPrompt {
+  width: 100%;
+  min-height: 46px;
+  max-height: 120px;
+  margin-top: 7px;
+  padding: 8px 9px;
+  resize: vertical;
+  border: 1px solid var(--ui-line);
+  border-radius: 9px;
+  outline: 0;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font: inherit;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+#managerAIExtraPrompt:focus { border-color: color-mix(in srgb, var(--ui-accent) 52%, var(--ui-line)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--ui-accent) 12%, transparent); }
+#managerAIExtraPrompt::placeholder { color: var(--ui-muted); }
+body.theme-dark #managerAIExtraPrompt { border-color: var(--ui-line); background: #141d1a; color: var(--ui-ink); }
+/* Month holiday labels sit beside the day number and wrap when needed. */
+#calendarView .month-grid .calendar-day .day-top { align-items: flex-start; justify-content: flex-start; gap: 5px; }
+#calendarView .month-grid .calendar-day .day-number { flex: 0 0 auto; }
+#calendarView .month-grid .calendar-day .calendar-day-holidays { flex: 1 1 auto; min-width: 0; max-height: none; margin-top: 3px; overflow: visible; align-items: flex-start; align-content: flex-start; }
+#calendarView .month-grid .calendar-day .calendar-day-holidays .calendar-event { max-width: 100%; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; }
+#calendarView .month-grid .calendar-day .day-count { flex: 0 0 auto; margin-left: auto; align-self: flex-start; }
+/* GitHub star invitation */
+.about-star-note { margin: 8px 0 0 !important; color: var(--ui-muted); font-size: 11px; line-height: 1.55; }
+.about-star-link { color: var(--ui-accent); font-weight: 700; text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--ui-accent) 38%, transparent); transition: color .15s ease, border-color .15s ease; }
+.about-star-link:hover { color: color-mix(in srgb, var(--ui-accent) 82%, var(--ui-ink)); border-bottom-color: currentColor; }

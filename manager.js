@@ -13,7 +13,7 @@ const els = {
   managerNewTitle: $("#managerNewTitle"), managerNewDate: $("#managerNewDate"), managerNewTime: $("#managerNewTime"), managerNewDefer: $("#managerNewDefer"),
   quickFocusButton: $("#quickFocusButton"), managerNewDetailButton: $("#managerNewDetailButton"),
   addDialog: $("#managerAddDialog"), detailedForm: $("#managerDetailedForm"), singleTaskFields: $("#managerSingleTaskFields"), addTitle: $("#managerAddTitle"), addDetail: $("#managerAddDetail"), addDate: $("#managerAddDate"), addTime: $("#managerAddTime"), addDefer: $("#managerAddDefer"), addSubmit: $("#managerAddSubmit"),
-  closeAddDialog: $("#managerCloseAddDialog"), cancelAdd: $("#managerCancelAdd"), aiProposals: $("#managerAIProposals"), aiAddAllButton: $("#managerAddAllButton"), aiConfigHint: $("#managerAIConfigHint"), aiSourceText: $("#managerAISourceText"), aiImageInput: $("#managerAIImageInput"), aiImageList: $("#managerAIImageList"), aiFileInput: $("#managerAIFileInput"), aiFileList: $("#managerAIFileList"), aiSummarizeButton: $("#managerAISummarizeButton"), aiSummaryStatus: $("#managerAIStatus"),
+  closeAddDialog: $("#managerCloseAddDialog"), cancelAdd: $("#managerCancelAdd"), aiProposals: $("#managerAIProposals"), aiAddAllButton: $("#managerAddAllButton"), aiConfigHint: $("#managerAIConfigHint"), aiSourceText: $("#managerAISourceText"), aiExtraPrompt: $("#managerAIExtraPrompt"), aiImageInput: $("#managerAIImageInput"), aiImageList: $("#managerAIImageList"), aiFileInput: $("#managerAIFileInput"), aiFileList: $("#managerAIFileList"), aiSummarizeButton: $("#managerAISummarizeButton"), aiSummaryStatus: $("#managerAIStatus"),
   calendarTitle: $("#calendarTitle"), calendarBody: $("#calendarBody"), calPrev: $("#calPrev"), calNext: $("#calNext"), calToday: $("#calToday"),
   autostartToggle: $("#autostartToggle"),
   aiBaseUrl: $("#aiBaseUrl"), aiModel: $("#aiModel"), aiApiKey: $("#aiApiKey"), aiAutoTranslateToggle: $("#aiAutoTranslateToggle"), aiConfigStatus: $("#aiConfigStatus"), saveAIConfig: $("#saveAIConfig"), clearAIKey: $("#clearAIKey"),
@@ -104,14 +104,32 @@ function normalizeItem(item) {
   };
 }
 function setItemDoneState(item, done) { item.done = Boolean(done); item.completedAt = item.done ? (item.completedAt || new Date().toISOString()) : ""; }
+function nextTaskColor(date) {
+  const count = state.items.filter((item) => !item.deleted && item.date === date).length;
+  return COLORS[count % COLORS.length];
+}
+function reconcileTaskColors(items) {
+  const used = new Map();
+  (Array.isArray(items) ? items : [])
+    .filter((item) => !item.deleted && isValidDateKey(item.date))
+    .sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")) || String(a.id || "").localeCompare(String(b.id || "")))
+    .forEach((item) => {
+      const index = used.get(item.date) || 0;
+      item.color = COLORS[index % COLORS.length];
+      used.set(item.date, index + 1);
+    });
+  return items;
+}
 function normalizeItems(items) {
   const ids = new Set();
-  return (Array.isArray(items) ? items : []).filter(validItem).map((item) => {
+  const normalizedItems = (Array.isArray(items) ? items : []).filter(validItem).map((item) => {
     const normalized = normalizeItem(item);
     while (ids.has(normalized.id)) normalized.id = uid();
     ids.add(normalized.id);
     return normalized;
   });
+  reconcileTaskColors(normalizedItems);
+  return normalizedItems;
 }
 function readOptionalTime(input) {
   if (!input) return "";
@@ -139,7 +157,7 @@ function toast(message) { clearTimeout(toastTimer); els.toast.textContent = mess
 function finishConfirm(result) { const resolve = confirmResolver; confirmResolver = null; if (els.confirmDialog.open) els.confirmDialog.close(); resolve?.(result); }
 function requestConfirm({ title, message, okText = "确认" }) { els.confirmTitle.textContent = title; els.confirmMessage.textContent = message; els.confirmAccept.textContent = okText; return new Promise((resolve) => { confirmResolver = resolve; els.confirmDialog.showModal(); }); }
 function persist() { return window.deskWeek?.saveStore?.({ items: state.items, prefs: state.prefs }) || Promise.resolve(); }
-async function commit(message) { try { await persist(); if (message) toast(message); renderAll(); } catch { toast("保存失败"); } }
+async function commit(message) { reconcileTaskColors(state.items); try { await persist(); if (message) toast(message); renderAll(); } catch { toast("保存失败"); } }
 function switchSection(section) {
   state.section = section;
   document.querySelectorAll("[data-section]").forEach((node) => {
@@ -334,22 +352,23 @@ function dayCell(date, outside = false) {
     cell.addEventListener("click", create);
     cell.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); create(event); } });
     cell.addEventListener("pointerenter", () => { hoveredCalendarKey = key; });
-    cell.addEventListener("pointerleave", () => { if (hoveredCalendarKey === key) hoveredCalendarKey = ""; });
+    cell.addEventListener("focusin", () => { hoveredCalendarKey = key; });
   }
   const top = document.createElement("div"); top.className = "day-top";
   const number = document.createElement("span"); number.className = "day-number"; number.textContent = date.getDate();
   const info = calendarInfo(date);
   const tasks = itemsOn(key);
   const count = document.createElement("span"); count.className = "day-count"; count.textContent = tasks.length ? String(tasks.length) : "";
-  top.append(number, count); cell.append(top);
+  top.append(number);
   if (info.events.length) {
     cell.classList.add("has-holiday");
     const holidays = document.createElement("span");
     holidays.className = "calendar-day-holidays";
     info.events.forEach((event) => holidays.append(calendarEventNode(event)));
-    cell.append(holidays);
+    top.append(holidays);
     cell.title = window.DeskWeekCalendarInfo?.eventTitle?.(date) || info.events.map((event) => event.label).join(" · ");
   }
+  top.append(count); cell.append(top);
   const list = document.createElement("div"); list.className = "day-task-list"; list.dataset.total = String(tasks.length);
   tasks.slice(0, 3).forEach((item) => {
     const pill = document.createElement("div"); pill.className = "day-task-pill" + (item.done ? " done" : "") + (isTaskDeferred(item) ? " deferred" : ""); pill.style.setProperty("--pill", item.color);
@@ -370,7 +389,7 @@ function renderMonth() {
 function renderWeek() {
   const start = startOfWeek(state.calDate); const grid = document.createElement("div"); grid.className = "week-calendar-grid";
   for (let i = 0; i < 7; i += 1) {
-    const date = addDays(start, i); const key = dateKey(date); const card = document.createElement("div"); card.className = "week-day-card" + (key === todayKey() ? " today" : ""); card.style.setProperty("--cell-index", i); card.addEventListener("pointerenter", () => { hoveredCalendarKey = key; }); card.addEventListener("pointerleave", () => { if (hoveredCalendarKey === key) hoveredCalendarKey = ""; });
+    const date = addDays(start, i); const key = dateKey(date); const card = document.createElement("div"); card.className = "week-day-card" + (key === todayKey() ? " today" : ""); card.style.setProperty("--cell-index", i); card.addEventListener("pointerenter", () => { hoveredCalendarKey = key; }); card.addEventListener("focusin", () => { hoveredCalendarKey = key; });
     const head = document.createElement("button"); head.type = "button"; head.className = "week-day-head"; const info = calendarInfo(date); head.setAttribute("aria-label", `${date.getMonth() + 1}月${date.getDate()}日，点击新建任务`); head.title = window.DeskWeekCalendarInfo?.eventTitle?.(date) || ""; head.addEventListener("click", () => openNewTaskForDate(key)); const strong = document.createElement("strong"); strong.append(document.createTextNode(WEEKDAYS[i])); const number = document.createElement("span"); number.className = "week-day-number"; number.textContent = String(date.getDate()); const events = document.createElement("span"); events.className = "week-day-events"; info.events.forEach((event) => events.append(calendarEventNode(event))); const count = document.createElement("span"); count.className = "week-day-count"; count.textContent = itemsOn(key).length ? `${itemsOn(key).length} 项` : ""; head.append(strong, number, events, count); card.append(head);
     const list = document.createElement("div"); list.className = "day-task-list";
     itemsOn(key).forEach((item) => { const deferred = isTaskDeferred(item); const pill = document.createElement("div"); pill.className = "day-task-pill" + (item.done ? " done" : "") + (deferred ? " deferred" : ""); pill.style.setProperty("--pill", item.color); pill.tabIndex = 0; pill.setAttribute("role", "button"); pill.setAttribute("aria-label", `编辑任务：${item.title}`); const dot = document.createElement("i"); const text = document.createElement("span"); text.textContent = (deferred ? "◷ " : "") + (item.time ? `${item.time} ` : "") + item.title; pill.append(dot, text); pill.title = item.title + (deferred ? "（延后显示：" + deferLabel(item) + "）" : ""); pill.addEventListener("click", (event) => { event.stopPropagation(); openEditor(item.id); }); pill.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); event.stopPropagation(); openEditor(item.id); } }); list.append(pill); });
@@ -391,7 +410,7 @@ function renderDay() {
 function renderYear() {
   const grid = document.createElement("div"); grid.className = "year-grid";
   for (let month = 0; month < 12; month += 1) {
-    const mini = document.createElement("div"); mini.className = "mini-month"; mini.style.setProperty("--cell-index", month); mini.addEventListener("click", () => { state.calFocusDate = new Date(state.calDate.getFullYear(), month, 1); state.calDate = new Date(state.calDate.getFullYear(), month, 1); state.calMode = "month"; renderCalendar(); });
+    const monthDate = new Date(state.calDate.getFullYear(), month, 1); const monthKey = dateKey(monthDate); const mini = document.createElement("div"); mini.className = "mini-month"; mini.style.setProperty("--cell-index", month); mini.dataset.date = monthKey; mini.addEventListener("pointerenter", () => { hoveredCalendarKey = monthKey; }); mini.addEventListener("focusin", () => { hoveredCalendarKey = monthKey; }); mini.addEventListener("click", () => { state.calFocusDate = monthDate; state.calDate = monthDate; state.calMode = "month"; renderCalendar(); });
     const title = document.createElement("h4"); title.textContent = `${month + 1}月`; mini.append(title);
     const weekdays = document.createElement("div"); weekdays.className = "mini-weekdays"; ["一", "二", "三", "四", "五", "六", "日"].forEach((d) => { const n = document.createElement("span"); n.textContent = d; weekdays.append(n); }); mini.append(weekdays);
     const days = document.createElement("div"); days.className = "mini-grid"; const start = startOfWeek(new Date(state.calDate.getFullYear(), month, 1));
@@ -486,6 +505,7 @@ function clearManagerAIDraft() {
   managerAIImageAttachments = [];
   managerAIFileAttachments = [];
   if (els.aiSourceText) els.aiSourceText.value = "";
+  if (els.aiExtraPrompt) els.aiExtraPrompt.value = "";
   if (els.aiImageInput) els.aiImageInput.value = "";
   if (els.aiFileInput) els.aiFileInput.value = "";
   renderManagerAIImageList();
@@ -559,12 +579,12 @@ function readManagerAIProposal(entry) {
   if (rawDate === null) return null;
   const time = readOptionalTime(entry.timeInput);
   if (time === null) return null;
-  return { title, detail: clampText(entry.detailInput.value, 4000), date: resolveTaskDate(rawDate, time), time };
+  const date = resolveTaskDate(rawDate, time);
+  return { title, detail: clampText(entry.detailInput.value, 4000), date, time, defer: date ? window.DeskWeekDefer?.read?.(entry.deferPicker) || "none" : "none" };
 }
 
 function insertManagerAIProposal(entry, proposal) {
-  const count = state.items.filter((item) => item.date === proposal.date).length;
-  state.items.push(normalizeItem({ id: uid(), title: proposal.title, detail: proposal.detail, date: proposal.date, time: proposal.time, defer: "none", done: false, color: COLORS[count % COLORS.length], createdAt: new Date().toISOString() }));
+  state.items.push(normalizeItem({ id: uid(), title: proposal.title, detail: proposal.detail, date: proposal.date, time: proposal.time, defer: proposal.defer || "none", done: false, color: nextTaskColor(proposal.date), createdAt: new Date().toISOString() }));
   entry.added = true;
   entry.card.classList.add("is-added");
   entry.addButton.disabled = true;
@@ -616,14 +636,16 @@ function renderManagerAIProposals(items) {
       <div class="ai-proposal-head"><strong>事项${["一","二","三","四","五","六","七","八","九","十"][index] || index + 1}</strong><button class="ai-proposal-add" type="button">添加</button></div>
       <label class="field"><span>标题</span><input class="ai-proposal-title" type="text" maxlength="100"></label>
       <label class="field"><span>详情</span><textarea class="ai-proposal-detail" rows="2" maxlength="4000"></textarea></label>
-      <div class="field-row"><label class="field"><span>日期</span><input class="ai-proposal-date" type="text" inputmode="numeric" maxlength="10" placeholder="日期" data-date-picker></label><label class="field"><span>时间</span><input class="ai-proposal-time" type="text" inputmode="numeric" maxlength="5" placeholder="12:00" data-time-picker></label></div>`;
-    const entry = { added: false, card, titleInput: card.querySelector(".ai-proposal-title"), detailInput: card.querySelector(".ai-proposal-detail"), dateInput: card.querySelector(".ai-proposal-date"), timeInput: card.querySelector(".ai-proposal-time"), addButton: card.querySelector(".ai-proposal-add") };
+      <div class="field-row ai-proposal-schedule-row"><label class="field"><span>日期</span><input class="ai-proposal-date" type="text" inputmode="numeric" maxlength="10" placeholder="日期" data-date-picker></label><label class="field"><span>时间</span><input class="ai-proposal-time" type="text" inputmode="numeric" maxlength="5" placeholder="12:00" data-time-picker></label><div class="field ai-proposal-defer-field"><span>延后显示</span><div class="ai-proposal-defer defer-picker" data-defer-picker data-defer-value="none"><button class="defer-trigger" type="button" aria-label="延后显示：立即显示" aria-expanded="false"><span class="defer-clock-icon" aria-hidden="true"></span><span class="defer-trigger-badge" hidden></span></button></div></div></div>`;
+    const entry = { added: false, card, titleInput: card.querySelector(".ai-proposal-title"), detailInput: card.querySelector(".ai-proposal-detail"), dateInput: card.querySelector(".ai-proposal-date"), timeInput: card.querySelector(".ai-proposal-time"), deferPicker: card.querySelector(".ai-proposal-defer"), addButton: card.querySelector(".ai-proposal-add") };
     entry.titleInput.value = item.title || "";
     entry.detailInput.value = item.detail || "";
     entry.dateInput.value = item.date || "";
     entry.timeInput.value = item.time || "";
     window.DeskWeekDate?.attach?.(entry.dateInput);
     window.DeskWeekTime?.attach?.(entry.timeInput);
+    window.DeskWeekDefer?.attach?.(entry.deferPicker);
+    window.DeskWeekDefer?.set?.(entry.deferPicker, item.defer || "none");
     entry.addButton.addEventListener("click", () => addManagerAIProposal(entry));
     card.addEventListener("keydown", (event) => { if (event.key === "Enter" && event.target.tagName !== "TEXTAREA") { event.preventDefault(); addManagerAIProposal(entry); } });
     managerAIProposalEntries.push(entry);
@@ -709,6 +731,7 @@ function readableManagerAIError(error) {
 async function summarizeManagerAISource() {
   if (managerAISummaryBusy) return;
   const source = String(els.aiSourceText?.value || "").trim();
+  const extraPrompt = String(els.aiExtraPrompt?.value || "").trim();
   if (!source && !managerAIImageAttachments.length && !managerAIFileAttachments.length) { setManagerAIStatus("先粘贴文字、添加图片或文件", true); return; }
   if (managerAIKeyInvalid) { setManagerAIStatus("AI 密钥已失效，请在设置里重新填写 API Key", true); return; }
   if (!managerAIConfigAvailable || !window.deskWeek?.summarizeTask) { setManagerAIStatus("先在设置里配置 AI 接口", true); return; }
@@ -716,6 +739,7 @@ async function summarizeManagerAISource() {
   try {
     const result = await window.deskWeek.summarizeTask({
       text: source,
+      extraPrompt,
       images: managerAIImageAttachments.map((image) => image.dataUrl),
       files: managerAIFileAttachments.map((file) => ({ name: file.name, dataUrl: file.dataUrl })),
     });
@@ -856,6 +880,7 @@ function transitionCalendarTarget(previousMode) {
   const fallback = state.calFocusDate instanceof Date ? state.calFocusDate : state.calDate;
   if (!isValidDateKey(hoveredCalendarKey)) return fallback;
   const hovered = fromKey(hoveredCalendarKey);
+  if (previousMode === "year" && hovered.getFullYear() === state.calDate.getFullYear()) return hovered;
   if (previousMode === "month" && sameCalendarMonth(hovered, state.calDate)) return hovered;
   if (previousMode === "week" && sameCalendarWeek(hovered, state.calDate)) return hovered;
   return fallback;
@@ -919,9 +944,8 @@ els.detailedForm.addEventListener("submit", (event) => {
   if (time === null) return;
   const date = resolveTaskDate(rawDate, time);
   const defer = date ? window.DeskWeekDefer?.read?.(els.addDefer) || "none" : "none";
-  const count = state.items.filter((item) => item.date === date).length;
   const fromInline = managerAddSource === "inline";
-  state.items.push(normalizeItem({ id: uid(), title, detail: clampText(els.addDetail.value, 4000), date, time, defer, done: false, color: COLORS[count % COLORS.length], createdAt: new Date().toISOString() }));
+  state.items.push(normalizeItem({ id: uid(), title, detail: clampText(els.addDetail.value, 4000), date, time, defer, done: false, color: nextTaskColor(date), createdAt: new Date().toISOString() }));
   closeManagerAddDialog();
   if (fromInline) {
     els.managerNewTitle.value = "";
@@ -939,8 +963,7 @@ els.managerAddForm.addEventListener("submit", (event) => {
   if (time === null) return;
   const date = resolveTaskDate(rawDate, time);
   const defer = date ? window.DeskWeekDefer?.read?.(els.managerNewDefer) || "none" : "none";
-  const count = state.items.filter((item) => item.date === date).length;
-  state.items.push(normalizeItem({ id: uid(), title, detail: "", date, time, defer, done: false, color: COLORS[count % COLORS.length], createdAt: new Date().toISOString() }));
+  state.items.push(normalizeItem({ id: uid(), title, detail: "", date, time, defer, done: false, color: nextTaskColor(date), createdAt: new Date().toISOString() }));
   els.managerNewTitle.value = ""; els.managerNewDate.value = date; els.managerNewTime.value = ""; window.DeskWeekDefer?.set?.(els.managerNewDefer, "none"); commit("已添加"); els.managerNewTitle.focus();
 });
 els.editForm.addEventListener("submit", (event) => {

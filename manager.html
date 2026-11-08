@@ -91,11 +91,11 @@
                 <div>
                   <h3>DeskWeek</h3>
                   <p class="about-credit">开发：小虾 × <a class="about-link" href="https://space.bilibili.com/520978347" data-external-url="https://space.bilibili.com/520978347">菜鸡咕</a></p>
+                  <p class="about-star-note">如果你觉得这个软件对你有所帮助，可以来 <a class="about-star-link" href="https://github.com/EasonGuuu/Deskweek" data-external-url="https://github.com/EasonGuuu/Deskweek">GitHub</a> 给我们点个 star 吗！</p>
                 </div>
                 <span class="version-pill">v1.2.1</span>
               </div>
               <div class="about-links">
-                <a class="about-link" href="https://github.com/EasonGuuu/Deskweek" data-external-url="https://github.com/EasonGuuu/Deskweek">GitHub</a>
                 <button id="checkUpdateButton" class="soft-button" type="button">检查更新</button>
                 <div id="updateStatus" class="update-status" data-state="idle" role="status" aria-live="polite">
                   <span class="update-dot" aria-hidden="true"></span>
@@ -114,13 +114,13 @@
       <div id="managerSingleTaskFields">
         <label class="field"><span>事项</span><input id="managerAddTitle" type="text" maxlength="100" placeholder="要做什么？" required></label>
         <label class="field"><span>详情</span><textarea id="managerAddDetail" rows="3" maxlength="4000" placeholder="补充要求、链接或注意事项"></textarea></label>
-        <div class="field-row"><label class="field"><span>日期</span><input id="managerAddDate" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="日期" aria-label="选择日期" data-date-picker></label><label class="field"><span>时间</span><input id="managerAddTime" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="12:00" aria-label="可选时间" data-time-picker></label></div>
-        <div class="field"><span>延后显示</span><div id="managerAddDefer" class="defer-picker" data-defer-picker data-defer-value="none"><button class="defer-trigger" type="button" aria-label="延后显示：立即显示" aria-expanded="false"><span class="defer-clock-icon" aria-hidden="true"></span><span class="defer-trigger-badge" hidden></span></button></div></div>
+        <div class="field-row schedule-row"><label class="field"><span>日期</span><input id="managerAddDate" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="日期" aria-label="选择日期" data-date-picker></label><label class="field"><span>时间</span><input id="managerAddTime" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="12:00" aria-label="可选时间" data-time-picker></label><div class="field schedule-defer-field"><span>延后显示</span><div id="managerAddDefer" class="defer-picker" data-defer-picker data-defer-value="none"><button class="defer-trigger" type="button" aria-label="延后显示：立即显示" aria-expanded="false"><span class="defer-clock-icon" aria-hidden="true"></span><span class="defer-trigger-badge" hidden></span></button></div></div></div>
       </div>
       <div id="managerAIProposals" class="ai-proposal-list" hidden></div>
       <section class="ai-summary-box">
         <div class="ai-summary-head"><h3>AI 总结</h3><span id="managerAIConfigHint" class="ai-config-hint" hidden>未配置接口</span></div>
         <textarea id="managerAISourceText" rows="3" maxlength="12000" placeholder="粘贴邮件、通知或聊天内容，也可以添加文件"></textarea>
+        <textarea id="managerAIExtraPrompt" class="ai-extra-prompt" rows="2" maxlength="4000" placeholder="补充要求，例如：只保留与我有关的考试"></textarea>
         <div class="ai-summary-actions">
           <label class="soft-button ai-image-button">添加图片<input id="managerAIImageInput" type="file" accept="image/*" multiple hidden></label>
           <label class="soft-button ai-image-button">添加文件<input id="managerAIFileInput" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.ods,.csv,.pptx,.odt,.rtf,.txt,.md,.markdown,.json,.xml,.yaml,.yml,.log" multiple hidden></label>
@@ -140,8 +140,7 @@
       <div class="dialog-head"><div><h2>修改事项</h2></div><button id="managerCloseDialog" class="icon-button" type="button">×</button></div>
       <label class="field"><span>事项</span><input id="managerEditTitle" type="text" maxlength="100" required></label>
       <label class="field"><span>详情</span><textarea id="managerEditDetail" rows="4" maxlength="4000" placeholder="补充要求、链接或注意事项"></textarea></label>
-      <div class="field-row"><label class="field"><span>日期</span><input id="managerEditDate" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="日期" aria-label="选择日期" data-date-picker></label><label class="field"><span>时间</span><input id="managerEditTime" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="12:00" aria-label="可选时间" data-time-picker></label></div>
-      <div class="field"><span>延后显示</span><div id="managerEditDefer" class="defer-picker" data-defer-picker data-defer-value="none"><button class="defer-trigger" type="button" aria-label="延后显示：立即显示" aria-expanded="false"><span class="defer-clock-icon" aria-hidden="true"></span><span class="defer-trigger-badge" hidden></span></button></div></div>
+      <div class="field-row schedule-row"><label class="field"><span>日期</span><input id="managerEditDate" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="日期" aria-label="选择日期" data-date-picker></label><label class="field"><span>时间</span><input id="managerEditTime" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="12:00" aria-label="可选时间" data-time-picker></label><div class="field schedule-defer-field"><span>延后显示</span><div id="managerEditDefer" class="defer-picker" data-defer-picker data-defer-value="none"><button class="defer-trigger" type="button" aria-label="延后显示：立即显示" aria-expanded="false"><span class="defer-clock-icon" aria-hidden="true"></span><span class="defer-trigger-badge" hidden></span></button></div></div></div>
       <label class="done-field"><input id="managerEditDone" type="checkbox"><span>已完成</span></label>
       <div class="dialog-actions"><button id="managerDeleteTask" class="danger-button" type="button">移到垃圾箱</button><span class="spacer"></span><button id="managerCancelEdit" class="soft-button" type="button">取消</button><button class="primary-button" type="submit">保存</button></div>
     </form>

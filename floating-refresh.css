@@ -421,3 +421,53 @@ textarea::-webkit-scrollbar-thumb, .calendar-add-form::-webkit-scrollbar-thumb {
 textarea::-webkit-scrollbar-thumb:hover, .calendar-add-form::-webkit-scrollbar-thumb:hover { background: rgba(74,111,99,.42); background-clip: padding-box; }
 .calendar-add-form { scrollbar-width: thin; scrollbar-color: rgba(105,127,118,.28) transparent; }
 .ai-proposal-card .field textarea { min-height: 84px; max-height: none; resize: none; overflow-y: hidden; }
+.calendar-add-dialog { overflow: hidden !important; }
+.calendar-add-form { border-radius: inherit; }
+.calendar-add-form { max-height: min(654px, calc(100vh - 74px)) !important; }
+/* Keep date, time and defer controls on one proposal row. */
+.ai-proposal-card .field-row.ai-proposal-schedule-row { grid-template-columns: minmax(0, 1fr) 104px 56px; align-items: start; gap: 8px; }
+.ai-proposal-card .ai-proposal-defer-field { min-width: 56px; margin-bottom: 0; }
+.ai-proposal-card .ai-proposal-defer-field .defer-picker { width: 36px !important; min-width: 36px; height: 36px; margin: 0 auto; }
+.ai-proposal-card .ai-proposal-defer-field > span { white-space: nowrap; }
+.ai-proposal-card .ai-proposal-defer-field .defer-trigger { width: 36px; height: 36px; }
+@media (max-width: 620px) {
+  .ai-proposal-card .field-row.ai-proposal-schedule-row { grid-template-columns: minmax(0, 1fr) 92px 54px; gap: 6px; }
+}
+/* Date, time and deferred visibility share one compact row. */
+.field-row.schedule-row { grid-template-columns: minmax(0, 1fr) 104px 56px; align-items: start; gap: 10px; }
+.field-row.schedule-row > .field { min-width: 0; margin-bottom: 0; }
+.field-row.schedule-row .schedule-defer-field { min-width: 56px; }
+.field-row.schedule-row .schedule-defer-field > span { white-space: nowrap; }
+.field-row.schedule-row .defer-picker { width: 36px !important; min-width: 36px; height: 36px; margin: 0 auto; }
+.field-row.schedule-row .defer-trigger { width: 36px; height: 36px; }
+@media (max-width: 620px) {
+  .field-row.schedule-row { grid-template-columns: minmax(0, 1fr) 92px 54px; gap: 6px; }
+}
+/* Extra AI instructions and roomier detailed-entry layout. */
+.manager-add-dialog .ai-summary-box { margin-top: 16px; }
+.calendar-add-dialog .ai-summary-box { margin-top: 16px; }
+.manager-add-dialog form { min-height: min(650px, calc(100vh - 34px)) !important; }
+.calendar-add-form { min-height: min(620px, calc(100vh - 74px)) !important; }
+#aiExtraPrompt {
+  width: 100%;
+  min-height: 46px;
+  max-height: 120px;
+  margin-top: 7px;
+  padding: 8px 9px;
+  resize: vertical;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 9px;
+  outline: 0;
+  background: rgba(0,0,0,.13);
+  color: var(--ink);
+  font: inherit;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+#aiExtraPrompt:focus { border-color: rgba(155,211,199,.32); box-shadow: 0 0 0 3px rgba(103,200,179,.07); }
+#aiExtraPrompt::placeholder { color: var(--muted); }
+body.theme-light #aiExtraPrompt { border-color: rgba(48,96,82,.12); background: rgba(255,255,255,.66); color: #293f39; }
+/* Month holiday labels sit beside the day number and wrap when needed. */
+.floating-month-head { display: flex; min-width: 0; align-items: flex-start; gap: 4px; }
+.floating-month-head > .floating-month-number { flex: 0 0 auto; }
+.floating-month-head > .floating-month-holidays { flex: 1 1 auto; min-width: 0; }

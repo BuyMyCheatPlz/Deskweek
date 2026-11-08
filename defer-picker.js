@@ -132,7 +132,8 @@
   });
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && pickerOpen) { event.stopPropagation(); close(); } }, true);
   addEventListener('resize', position);
-  pickers.forEach((picker) => {
+  function attachPicker(picker) {
+    if (!picker || picker.dataset.deferAttached === 'true') return picker;
     if (!picker.dataset.deferValue) picker.dataset.deferValue = 'none';
     const trigger = picker.querySelector('.defer-trigger');
     trigger.addEventListener('click', (event) => {
@@ -140,7 +141,11 @@
       event.stopPropagation();
       if (activePicker === picker && pickerOpen) close(); else open(picker);
     });
+    picker.dataset.deferAttached = 'true';
     syncTrigger(picker);
-  });
-  window.DeskWeekDefer = { read, set, normalize };
+    return picker;
+  }
+
+  pickers.forEach(attachPicker);
+  window.DeskWeekDefer = { attach: attachPicker, read, set, normalize };
 })();

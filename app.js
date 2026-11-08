@@ -36,6 +36,7 @@ const els = {
   calendarCancelAdd: $("#calendarCancelAdd"),
   aiConfigHint: $("#aiConfigHint"),
   aiSourceText: $("#aiSourceText"),
+  aiExtraPrompt: $("#aiExtraPrompt"),
   aiImageInput: $("#aiImageInput"),
   aiFileInput: $("#aiFileInput"),
   aiFileList: $("#aiFileList"),
@@ -98,7 +99,7 @@ let layoutRevealTimer = 0;
 let calendarFocusDate = new Date();
 let hoveredDateKey = "";
 let calendarDateClickTimer = 0;
-function normalizedTheme(value) { return value === "light" ? "light" : "dark"; }
+function normalizedTheme(value) { return value === "dark" ? "dark" : "light"; }
 function applyTheme(theme) {
   const value = normalizedTheme(theme);
   state.theme = value;
@@ -220,6 +221,7 @@ function applyStore(data) {
 }
 
 function saveState() {
+  reconcileTaskColors(state.items);
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ items: state.items })); } catch { toast("浏览器没有开放本地存储"); }
   persistStore();
 }
@@ -266,14 +268,32 @@ function setItemDoneState(item, done) {
   item.done = Boolean(done);
   item.completedAt = item.done ? (item.completedAt || new Date().toISOString()) : "";
 }
+function nextTaskColor(date) {
+  const count = state.items.filter((item) => !item.deleted && item.date === date).length;
+  return COLORS[count % COLORS.length];
+}
+function reconcileTaskColors(items) {
+  const used = new Map();
+  (Array.isArray(items) ? items : [])
+    .filter((item) => !item.deleted && isValidDateKey(item.date))
+    .sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")) || String(a.id || "").localeCompare(String(b.id || "")))
+    .forEach((item) => {
+      const index = used.get(item.date) || 0;
+      item.color = COLORS[index % COLORS.length];
+      used.set(item.date, index + 1);
+    });
+  return items;
+}
 function normalizeItems(items) {
   const ids = new Set();
-  return (Array.isArray(items) ? items : []).filter(validItem).map((item) => {
+  const normalizedItems = (Array.isArray(items) ? items : []).filter(validItem).map((item) => {
     const normalized = normalizeItem(item);
     while (ids.has(normalized.id)) normalized.id = uid();
     ids.add(normalized.id);
     return normalized;
   });
+  reconcileTaskColors(normalizedItems);
+  return normalizedItems;
 }
 function readOptionalTime(input) {
   if (!input) return "";
@@ -297,7 +317,7 @@ function resolveTaskDate(date, time) {
 const prefs = loadPrefs();
 state.showDone = Boolean(prefs.showDone);
 state.taskPanelHeight = Number(prefs.taskPanelHeight) || null;
-state.theme = normalizedTheme(prefs.theme || document.documentElement.dataset.theme || window.DeskWeekThemeBootstrap?.get?.() || "dark");
+state.theme = normalizedTheme(prefs.theme || document.documentElement.dataset.theme || window.DeskWeekThemeBootstrap?.get?.() || "light");
 state.showCalendar = prefs.showCalendar !== false;
 state.showTasks = prefs.showTasks !== false;
 state.calendarMode = normalizeCalendarMode(prefs.calendarMode);
@@ -443,6 +463,7 @@ function clearAIDraft() {
   aiImageAttachments = [];
   aiFileAttachments = [];
   if (els.aiSourceText) els.aiSourceText.value = "";
+  if (els.aiExtraPrompt) els.aiExtraPrompt.value = "";
   if (els.aiImageInput) els.aiImageInput.value = "";
   if (els.aiFileInput) els.aiFileInput.value = "";
   renderAIImageList();
@@ -520,26 +541,27 @@ function readAIProposal(entry) {
   if (rawDate === null) return null;
   const time = readOptionalTime(entry.timeInput);
   if (time === null) return null;
+  const date = resolveTaskDate(rawDate, time);
   return {
     title,
     detail: clampText(entry.detailInput.value, 4000),
-    date: resolveTaskDate(rawDate, time),
+    date,
     time,
+    defer: date ? window.DeskWeekDefer?.read?.(entry.deferPicker) || "none" : "none",
   };
 }
 
 function insertAIProposal(entry, proposal) {
   state.showDone = false;
-  const count = state.items.filter((item) => item.date === proposal.date).length;
   state.items.push(normalizeItem({
     id: uid(),
     title: proposal.title,
     detail: proposal.detail,
     date: proposal.date,
     time: proposal.time,
-    defer: "none",
+    defer: proposal.defer || "none",
     done: false,
-    color: COLORS[count % COLORS.length],
+    color: nextTaskColor(proposal.date),
     createdAt: new Date().toISOString(),
   }));
   entry.added = true;
@@ -597,7 +619,7 @@ function renderAIProposals(items) {
       <div class="ai-proposal-head"><strong>事项${["一","二","三","四","五","六","七","八","九","十"][index] || index + 1}</strong><button class="ai-proposal-add" type="button">添加</button></div>
       <label class="field"><span>标题</span><input class="ai-proposal-title" type="text" maxlength="100"></label>
       <label class="field"><span>详情</span><textarea class="ai-proposal-detail" rows="2" maxlength="4000"></textarea></label>
-      <div class="field-row"><label class="field"><span>日期</span><input class="ai-proposal-date" type="text" inputmode="numeric" maxlength="10" placeholder="日期" data-date-picker></label><label class="field"><span>时间</span><input class="ai-proposal-time" type="text" inputmode="numeric" maxlength="5" placeholder="12:00" data-time-picker></label></div>`;
+      <div class="field-row ai-proposal-schedule-row"><label class="field"><span>日期</span><input class="ai-proposal-date" type="text" inputmode="numeric" maxlength="10" placeholder="日期" data-date-picker></label><label class="field"><span>时间</span><input class="ai-proposal-time" type="text" inputmode="numeric" maxlength="5" placeholder="12:00" data-time-picker></label><div class="field ai-proposal-defer-field"><span>延后显示</span><div class="ai-proposal-defer defer-picker" data-defer-picker data-defer-value="none"><button class="defer-trigger" type="button" aria-label="延后显示：立即显示" aria-expanded="false"><span class="defer-clock-icon" aria-hidden="true"></span><span class="defer-trigger-badge" hidden></span></button></div></div></div>`;
     const entry = {
       added: false,
       card,
@@ -605,6 +627,7 @@ function renderAIProposals(items) {
       detailInput: card.querySelector(".ai-proposal-detail"),
       dateInput: card.querySelector(".ai-proposal-date"),
       timeInput: card.querySelector(".ai-proposal-time"),
+      deferPicker: card.querySelector(".ai-proposal-defer"),
       addButton: card.querySelector(".ai-proposal-add"),
     };
     entry.titleInput.value = item.title || "";
@@ -613,6 +636,8 @@ function renderAIProposals(items) {
     entry.timeInput.value = item.time || "";
     window.DeskWeekDate?.attach?.(entry.dateInput);
     window.DeskWeekTime?.attach?.(entry.timeInput);
+    window.DeskWeekDefer?.attach?.(entry.deferPicker);
+    window.DeskWeekDefer?.set?.(entry.deferPicker, item.defer || "none");
     entry.addButton.addEventListener("click", () => addAIProposal(entry));
     card.addEventListener("keydown", (event) => {
       if (event.key === "Enter" && event.target.tagName !== "TEXTAREA") {
@@ -696,6 +721,7 @@ function readableAIError(error) {
 async function summarizeAISource() {
   if (aiSummaryBusy) return;
   const text = String(els.aiSourceText?.value || "").trim();
+  const extraPrompt = String(els.aiExtraPrompt?.value || "").trim();
   if (!text && !aiImageAttachments.length && !aiFileAttachments.length) { setAIStatus("先粘贴文字、添加图片或文件", true); return; }
   if (aiKeyInvalid) { setAIStatus("AI 密钥已失效，请到管理中心重新填写 API Key", true); return; }
   if (!aiConfigAvailable || !window.deskWeek?.summarizeTask) { setAIStatus("先在管理中心配置 AI 接口", true); return; }
@@ -706,6 +732,7 @@ async function summarizeAISource() {
   try {
     const result = await window.deskWeek.summarizeTask({
       text,
+      extraPrompt,
       images: aiImageAttachments.map((image) => image.dataUrl),
       files: aiFileAttachments.map((file) => ({ name: file.name, dataUrl: file.dataUrl })),
     });
@@ -804,6 +831,7 @@ function scheduleCalendarDateSelect(key, date) {
 
 function bindCalendarDateInteraction(node, key, date) {
   node.addEventListener("pointerenter", () => { hoveredDateKey = key; });
+  node.addEventListener("focusin", () => { hoveredDateKey = key; });
   node.addEventListener("click", (event) => {
     if (event.target.closest(".calendar-task-toggle")) return;
     scheduleCalendarDateSelect(key, date);
@@ -918,17 +946,20 @@ function renderMonth() {
       cell.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectFloatingDate(key, date); } });
     }
     const info = calendarInfo(date);
+    const head = document.createElement("span");
+    head.className = "floating-month-head";
     const number = document.createElement("span");
     number.className = "floating-month-number";
     number.textContent = String(date.getDate());
-    cell.append(number);
+    head.append(number);
     if (info.events.length) {
       const holidays = document.createElement("span");
       holidays.className = "floating-month-holidays";
       info.events.forEach((event) => holidays.append(calendarEventNode(event)));
-      cell.append(holidays);
+      head.append(holidays);
       cell.title = window.DeskWeekCalendarInfo?.eventTitle?.(date) || info.events.map((event) => event.label).join(" · ");
     }
+    cell.append(head);
     const dayItems = itemsOn(key);
     const list = document.createElement("span");
     list.className = "floating-month-tasks";
@@ -1419,7 +1450,6 @@ els.addForm.addEventListener("submit", (event) => {
   if (time === null) return;
   const date = resolveTaskDate(rawDate, time);
   state.showDone = false;
-  const index = state.items.filter((item) => item.date === date).length;
   state.items.push(normalizeItem({
     id: uid(),
     title,
@@ -1428,7 +1458,7 @@ els.addForm.addEventListener("submit", (event) => {
     time,
     defer: date ? window.DeskWeekDefer?.read?.(els.newDefer) || "none" : "none",
     done: false,
-    color: COLORS[index % COLORS.length],
+    color: nextTaskColor(date),
     createdAt: new Date().toISOString(),
   }));
   saveState();
@@ -1457,7 +1487,6 @@ els.calendarAddForm.addEventListener("submit", (event) => {
   if (time === null) return;
   const date = resolveTaskDate(rawDate, time);
   state.showDone = false;
-  const index = state.items.filter((item) => item.date === date).length;
   state.items.push(normalizeItem({
     id: uid(),
     title,
@@ -1466,7 +1495,7 @@ els.calendarAddForm.addEventListener("submit", (event) => {
     time,
     defer: date ? window.DeskWeekDefer?.read?.(els.calendarNewDefer) || "none" : "none",
     done: false,
-    color: COLORS[index % COLORS.length],
+    color: nextTaskColor(date),
     createdAt: new Date().toISOString(),
   }));
   saveState();
