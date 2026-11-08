@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-CN" data-default-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:;">
+  <title>DeskWeek 管理中心</title>
+  <script src="theme-bootstrap.js"></script>
+  <link rel="stylesheet" href="manager.css">
+  <link rel="stylesheet" href="time-picker.css">
+  <link rel="stylesheet" href="date-picker.css">
+  <link rel="stylesheet" href="defer-picker.css">
+  <link rel="stylesheet" href="manager-refresh.css">
+  <link rel="stylesheet" href="typography.css">
+  <link rel="stylesheet" href="calendar-holidays.css">
+</head>
+<body class="theme-light">
+  <div class="app-shell">
+    <header class="titlebar">
+      <div class="title-brand"><span class="brand-mark">W</span><strong>DeskWeek</strong><span class="title-separator">/</span><span class="title-page">管理中心</span></div>
+      <div class="window-buttons" aria-label="窗口控制"><button id="minimizeWindow" class="window-button" aria-label="最小化" title="最小化"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5h9"/></svg></button><button id="maximizeWindow" class="window-button" aria-label="最大化" title="最大化" aria-pressed="false"><svg class="maximize-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.3" y="3.3" width="9.4" height="9.4" rx="1.7"/></svg><svg class="restore-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 3.4h7.1v7.1M10.5 5.5H3.4v7.1h7.1z"/></svg></button><button id="closeWindow" class="window-button close" aria-label="关闭" title="关闭"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4.2 4.2 7.6 7.6m0-7.6-7.6 7.6"/></svg></button></div>
+    </header>
+    <div class="workspace">
+      <aside class="sidebar">
+        <div class="sidebar-heading"><h1>我的清单</h1></div>
+        <nav class="sidebar-nav" aria-label="主菜单">
+          <button class="nav-item active" data-section="tasks"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6h10M9 12h10M9 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="4.7" cy="6" r="1.2" fill="currentColor"/><circle cx="4.7" cy="12" r="1.2" fill="currentColor"/><circle cx="4.7" cy="18" r="1.2" fill="currentColor"/></svg></span><span>待办</span></button>
+          <div class="subnav">
+            <button class="subnav-item active" data-filter="todo"><span>未完成</span><b id="countTodo">0</b></button>
+            <button class="subnav-item" data-filter="done"><span>已完成</span><b id="countDone">0</b></button>
+            <button class="subnav-item" data-filter="trash"><span>垃圾箱</span><b id="countTrash">0</b></button>
+          </div>
+          <button class="nav-item" data-section="calendar"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5.5" width="17" height="15" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M7.5 3.5v4M16.5 3.5v4M3.5 10h17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M8 14h2M14 14h2M8 17h2M14 17h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span><span>日历</span></button>
+          <button class="nav-item" data-section="settings"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h9M18 7h2M4 17h2M11 17h9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="15.5" cy="7" r="2.4" stroke="currentColor" stroke-width="1.7"/><circle cx="8.5" cy="17" r="2.4" stroke="currentColor" stroke-width="1.7"/></svg></span><span>设置</span></button>
+        </nav>
+      </aside>
+      <main class="content tasks-mode">
+        <section id="tasksView" class="view active-view">
+          <header class="view-header">
+            <div><h2 id="taskViewTitle">未完成</h2></div>
+            <div class="view-actions"><button id="quickFocusButton" class="primary-button" title="快捷键 Ctrl+N">＋ 新建任务</button></div>
+          </header>
+          <form id="managerAddForm" class="quick-add" aria-label="新建任务">
+            <div class="title-control"><input id="managerNewTitle" class="quick-title" type="text" maxlength="100" placeholder="要做什么？" aria-label="任务内容" autocomplete="off"><button id="managerNewDetailButton" class="detail-open-button" type="button" aria-label="详细输入" title="详细输入"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 3.5h8l3 3v10h-11z"/><path d="M12.5 3.5v3h3M7 10h6M7 13h6"/></svg></button></div>
+            <input id="managerNewDate" class="quick-date" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="日期" aria-label="截止日期" title="日期" data-date-picker>
+            <input id="managerNewTime" class="quick-time" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="12:00" aria-label="截止时间（可选）" title="时间，可直接输入 12:00" data-time-picker>
+            <div id="managerNewDefer" class="defer-picker" data-defer-picker data-defer-value="none"><button class="defer-trigger" type="button" aria-label="延后显示：立即显示" aria-expanded="false"><span class="defer-clock-icon" aria-hidden="true"></span><span class="defer-trigger-badge" hidden></span></button></div>
+            <button class="primary-button" type="submit">添加</button>
+          </form>
+<div id="managerTaskList" class="manager-task-list"></div>
+          <section id="deferredTaskShelf" class="deferred-task-shelf" hidden>
+            <button id="deferredShelfToggle" class="deferred-shelf-toggle" type="button" aria-expanded="false">
+              <span class="deferred-shelf-icon" aria-hidden="true">◷</span>
+              <span class="deferred-shelf-copy"><strong>延后显示</strong></span>
+              <span id="deferredShelfCount" class="deferred-shelf-count"></span>
+              <svg class="deferred-shelf-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
+            </button>
+            <div id="deferredShelfList" class="deferred-shelf-list" hidden></div>
+          </section>
+        </section>
+        <section id="calendarView" class="view">
+          <header class="calendar-header">
+            <div><h2 id="calendarTitle">2026年11月</h2></div>
+            <div class="calendar-actions">
+              <button id="calPrev" class="icon-button" aria-label="上一页">‹</button><button id="calToday" class="soft-button">今天</button><button id="calNext" class="icon-button" aria-label="下一页">›</button>
+              <div class="segmented" role="group" aria-label="日历视图"><button class="segment" data-cal-mode="year">年</button><button class="segment active" data-cal-mode="month">月</button><button class="segment" data-cal-mode="week">周</button><button class="segment" data-cal-mode="day">日</button></div>
+            </div>
+          </header>
+          <div id="calendarBody" class="calendar-body"></div>
+        </section>
+        <section id="settingsView" class="view">
+          <header class="view-header"><div><h2>设置</h2></div></header>
+          <div class="settings-grid">
+            <article class="settings-card appearance-card"><div class="settings-card-head"><div><h3>外观主题</h3></div><div class="theme-choice" role="group" aria-label="选择外观主题"><button id="themeLightButton" class="theme-choice-button" type="button" data-theme-choice="light"><span aria-hidden="true">☀</span>浅色</button><button id="themeDarkButton" class="theme-choice-button" type="button" data-theme-choice="dark"><span aria-hidden="true">☾</span>深色</button></div></div></article>
+            <article class="settings-card ai-settings-card">
+              <div class="settings-card-head"><div><h3>AI 总结</h3></div><span id="aiConfigStatus" class="ai-config-status">未配置</span></div>
+              <div class="ai-config-grid">
+                <label class="ai-config-field"><span>接口地址</span><input id="aiBaseUrl" type="url" placeholder="https://api.openai.com/v1" autocomplete="off"></label>
+                <label class="ai-config-field"><span>模型</span><input id="aiModel" type="text" placeholder="gpt-4o-mini" autocomplete="off"></label>
+                <label class="ai-config-field ai-config-key"><span>API Key</span><input id="aiApiKey" type="password" placeholder="留空则不修改" autocomplete="new-password"></label>
+              </div>
+              <div class="ai-option-row"><span class="ai-option-label">自动翻译</span><label class="toggle" aria-label="自动翻译"><input id="aiAutoTranslateToggle" type="checkbox"><span class="toggle-track"></span></label></div>
+              <div class="settings-actions"><button id="saveAIConfig" class="soft-button">保存 AI 配置</button><button id="clearAIKey" class="soft-button">清除密钥</button></div>
+            </article>
+            <article class="settings-card"><div class="settings-card-head"><div><h3>开机自动启动</h3></div><label class="toggle"><input id="autostartToggle" type="checkbox"><span class="toggle-track"></span></label></div></article>
+            <article class="settings-card"><div class="settings-card-head"><div><h3>备份与恢复</h3></div></div><div class="settings-actions"><button id="managerExport" class="soft-button">导出 JSON</button><button id="managerImport" class="soft-button">导入 JSON</button><input id="managerImportFile" type="file" accept="application/json,.json" hidden></div></article>
+            <article class="settings-card"><div class="settings-card-head"><div><h3>本地数据</h3></div></div><div class="settings-actions"><button id="settingsOpenDataFolder" class="soft-button">打开数据目录</button></div><p class="settings-note">位置：data\data.json</p></article>
+            <article class="settings-card about-card">
+              <div class="about-head"><div><h3>DeskWeek</h3><p class="about-credit">开发：小虾 × 菜鸡咕</p></div><span class="version-pill">v1.0</span></div>
+              <div class="about-tags"><span>Electron</span><span>JavaScript</span><span>Windows 10/11</span><span>本地数据</span></div>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <dialog id="managerAddDialog" class="edit-dialog manager-add-dialog" aria-labelledby="managerAddDialogTitle">
+    <form id="managerDetailedForm" autocomplete="off">
+      <div class="dialog-head"><div><h2 id="managerAddDialogTitle">记一件事</h2></div><button id="managerCloseAddDialog" class="icon-button" type="button" aria-label="关闭">×</button></div>
+      <label class="field"><span>事项</span><input id="managerAddTitle" type="text" maxlength="100" placeholder="要做什么？" required></label>
+      <label class="field"><span>详情</span><textarea id="managerAddDetail" rows="3" maxlength="4000" placeholder="补充要求、链接或注意事项"></textarea></label>
+      <section class="ai-summary-box">
+        <div class="ai-summary-head"><h3>AI 总结</h3><span id="managerAIConfigHint" class="ai-config-hint" hidden>未配置接口</span></div>
+        <textarea id="managerAISourceText" rows="3" maxlength="12000" placeholder="粘贴邮件、通知或聊天内容"></textarea>
+        <div class="ai-summary-actions">
+          <label class="soft-button ai-image-button">添加图片<input id="managerAIImageInput" type="file" accept="image/*" multiple hidden></label>
+          <div id="managerAIImageList" class="ai-image-list"></div>
+          <span class="spacer"></span>
+          <button id="managerAISummarizeButton" class="primary-button" type="button">总结并填入</button>
+        </div>
+        <p id="managerAIStatus" class="ai-summary-status" hidden></p>
+      </section>
+      <div class="field-row"><label class="field"><span>日期</span><input id="managerAddDate" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="日期" aria-label="选择日期" data-date-picker></label><label class="field"><span>时间</span><input id="managerAddTime" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="12:00" aria-label="可选时间" data-time-picker></label></div>
+      <div class="field"><span>延后显示</span><div id="managerAddDefer" class="defer-picker" data-defer-picker data-defer-value="none"><button class="defer-trigger" type="button" aria-label="延后显示：立即显示" aria-expanded="false"><span class="defer-clock-icon" aria-hidden="true"></span><span class="defer-trigger-badge" hidden></span></button></div></div>
+      <div class="dialog-actions"><span class="spacer"></span><button id="managerCancelAdd" class="soft-button" type="button">取消</button><button class="primary-button" type="submit">添加</button></div>
+    </form>
+  </dialog>
+  <dialog id="managerEditDialog" class="edit-dialog">
+    <form id="managerEditForm">
+      <div class="dialog-head"><div><h2>修改事项</h2></div><button id="managerCloseDialog" class="icon-button" type="button">×</button></div>
+      <label class="field"><span>事项</span><input id="managerEditTitle" type="text" maxlength="100" required></label>
+      <label class="field"><span>详情</span><textarea id="managerEditDetail" rows="4" maxlength="4000" placeholder="补充要求、链接或注意事项"></textarea></label>
+      <div class="field-row"><label class="field"><span>日期</span><input id="managerEditDate" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="日期" aria-label="选择日期" data-date-picker></label><label class="field"><span>时间</span><input id="managerEditTime" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="12:00" aria-label="可选时间" data-time-picker></label></div>
+      <div class="field"><span>延后显示</span><div id="managerEditDefer" class="defer-picker" data-defer-picker data-defer-value="none"><button class="defer-trigger" type="button" aria-label="延后显示：立即显示" aria-expanded="false"><span class="defer-clock-icon" aria-hidden="true"></span><span class="defer-trigger-badge" hidden></span></button></div></div>
+      <label class="done-field"><input id="managerEditDone" type="checkbox"><span>已完成</span></label>
+      <div class="dialog-actions"><button id="managerDeleteTask" class="danger-button" type="button">移到垃圾箱</button><span class="spacer"></span><button id="managerCancelEdit" class="soft-button" type="button">取消</button><button class="primary-button" type="submit">保存</button></div>
+    </form>
+  </dialog>
+  <dialog id="managerConfirmDialog" class="confirm-dialog" aria-labelledby="managerConfirmTitle">
+    <div class="confirm-copy">
+      <h2 id="managerConfirmTitle">确认操作</h2>
+      <p id="managerConfirmMessage" class="confirm-message"></p>
+    </div>
+    <div class="dialog-actions">
+      <span class="spacer"></span>
+      <button id="managerConfirmCancel" class="soft-button" type="button">取消</button>
+      <button id="managerConfirmAccept" class="danger-button" type="button">确认</button>
+    </div>
+  </dialog>
+
+  <div id="managerToast" class="toast" role="status" aria-live="polite"></div>
+  <script src="defer-picker.js"></script>
+  <script src="date-picker.js"></script>
+  <script src="time-picker.js"></script>
+  <script src="lunar.js"></script>
+  <script src="calendar-info.js"></script>
+  <script src="manager.js"></script>
+</body>
+</html>
+

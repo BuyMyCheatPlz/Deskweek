@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-CN" data-default-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:;">
+  <script src="theme-bootstrap.js"></script>
+  <title>DeskWeek · 周历清单</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="floating.css">
+  <link rel="stylesheet" href="time-picker.css">
+  <link rel="stylesheet" href="date-picker.css">
+  <link rel="stylesheet" href="defer-picker.css">
+  <link rel="stylesheet" href="floating-refresh.css">
+  <link rel="stylesheet" href="typography.css">
+  <link rel="stylesheet" href="calendar-holidays.css">
+</head>
+<body class="theme-dark">
+  <main class="desk">
+    <div class="brand-row">
+      <div class="brand">
+        <span class="drag-grip" title="拖动窗口" aria-hidden="true">⠿</span>
+        <span class="brand-mark">W</span>
+        <div>
+          <strong>DeskWeek</strong>
+        </div>
+      </div>
+      <div class="brand-actions">
+        <div class="calendar-action-group">
+          <div id="calendarModeMenu" class="calendar-mode-menu" role="group" aria-label="日历范围">
+            <button type="button" data-floating-cal-mode="month">月</button>
+            <button type="button" data-floating-cal-mode="week" class="active">周</button>
+            <button type="button" data-floating-cal-mode="day">日</button>
+          </div>
+          <button id="calendarToggle" class="ghost-button view-toggle" type="button" aria-pressed="true" title="显示/隐藏日历">日历</button>
+        </div>
+        <button id="tasksToggle" class="ghost-button view-toggle" type="button" aria-pressed="true" title="显示/隐藏事项">事项</button>
+        <button id="manageButton" class="ghost-button manage-button" title="管理中心">管理</button>
+        <button id="toggleDone" class="ghost-button" title="已完成">已完成</button>
+        <button id="collapseButton" class="ghost-button collapse-button" title="收起">收起</button>
+      </div>
+    </div>
+
+    <section id="fishWidget" class="fish-widget" aria-label="大肥鱼挂件">
+      <img src="dafeiyu.png" alt="大肥鱼">
+    </section>
+
+    <section class="week-card" aria-label="日历">
+      <header class="week-head">
+        <div>
+          <h1 id="rangeTitle">本周</h1>
+          <p id="weekSubtitle" class="subtitle"></p>
+        </div>
+        <div class="week-tools">
+          <button id="prevWeek" class="icon-button" aria-label="上一周" title="上一周">‹</button>
+          <button id="todayButton" class="today-button">回到今天</button>
+          <button id="nextWeek" class="icon-button" aria-label="下一周" title="下一周">›</button>
+          <button id="calendarQuickAddButton" class="icon-button calendar-quick-add" type="button" aria-label="添加" title="添加">＋ 添加</button>
+        </div>
+      </header>
+      <div id="weekGrid" class="week-grid"></div>
+    </section>
+
+        <div id="splitter" class="splitter" title="调整高度" aria-label="调整高度"></div>
+    <section class="task-card" aria-label="待办">
+      <header class="task-head">
+        <div>
+          <h2 id="taskListTitle">最近要做</h2>
+        </div>
+          <div class="task-head-counts"><span id="openCount" class="count-pill">0 项未完成</span><span id="deferredCount" class="deferred-count" hidden></span></div>
+      </header>
+
+      <div id="taskList" class="task-list"></div>
+
+      <form id="addForm" class="add-form" autocomplete="off">
+        <div class="title-control">
+          <input id="newTitle" class="title-input" type="text" maxlength="100" placeholder="要做什么？" required>
+          <button id="newDetailButton" class="detail-open-button" type="button" aria-label="详细输入" title="详细输入"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 3.5h8l3 3v10h-11z"/><path d="M12.5 3.5v3h3M7 10h6M7 13h6"/></svg></button>
+        </div>
+        <input id="newDate" class="date-input" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="日期" aria-label="选择日期" data-date-picker>
+        <input id="newTime" class="time-input" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="12:00" title="时间，可直接输入 12:00" aria-label="可选时间" data-time-picker>
+        <div id="newDefer" class="defer-picker" data-defer-picker data-defer-value="none"><button class="defer-trigger" type="button" aria-label="延后显示：立即显示" aria-expanded="false"><span class="defer-clock-icon" aria-hidden="true"></span><span class="defer-trigger-badge" hidden></span></button></div>
+        <button class="add-button" type="submit">添加</button>
+      </form>
+    </section>
+    <div id="resizeGrip" class="resize-grip" data-resize-edge="se" title="调整大小" aria-label="调整大小"></div>
+    <div class="resize-handle n" data-resize-edge="n" title="向上/向下调整高度" aria-label="调整上边"></div>
+    <div class="resize-handle e" data-resize-edge="e" title="向左/向右调整宽度" aria-label="调整右边"></div>
+    <div class="resize-handle s" data-resize-edge="s" title="向上/向下调整高度" aria-label="调整底边"></div>
+    <div class="resize-handle w" data-resize-edge="w" title="向左/向右调整宽度" aria-label="调整左边"></div>
+    <div class="resize-handle ne" data-resize-edge="ne" aria-label="调整右上角"></div>
+    <div class="resize-handle nw" data-resize-edge="nw" aria-label="调整左上角"></div>
+    <div class="resize-handle sw" data-resize-edge="sw" aria-label="调整左下角"></div>
+  </main>
+
+  <dialog id="calendarAddDialog" class="calendar-add-dialog" aria-labelledby="calendarAddDialogTitle">
+    <form id="calendarAddForm" class="calendar-add-form" autocomplete="off">
+      <div class="dialog-head calendar-add-dialog-head">
+        <div>
+          <h2 id="calendarAddDialogTitle">记一件事</h2>
+        </div>
+        <button id="closeCalendarAddDialog" class="icon-button" type="button" aria-label="关闭新增事项">×</button>
+      </div>
+      <label class="field">
+        <span>事项</span>
+        <input id="calendarNewTitle" type="text" maxlength="100" placeholder="要做什么？" required>
+      </label>
+      <label class="field">
+        <span>详情</span>
+        <textarea id="calendarNewDetail" rows="3" maxlength="4000" placeholder="补充要求、链接或注意事项"></textarea>
+      </label>
+      <section class="ai-summary-box">
+        <div class="ai-summary-head"><h3>AI 总结</h3><span id="aiConfigHint" class="ai-config-hint" hidden>未配置接口</span></div>
+        <textarea id="aiSourceText" rows="3" maxlength="12000" placeholder="粘贴邮件、通知或聊天内容"></textarea>
+        <div class="ai-summary-actions">
+          <label class="soft-button ai-image-button">添加图片<input id="aiImageInput" type="file" accept="image/*" multiple hidden></label>
+          <div id="aiImageList" class="ai-image-list"></div>
+          <span class="spacer"></span>
+          <button id="aiSummarizeButton" class="save-button" type="button">总结并填入</button>
+        </div>
+        <p id="aiSummaryStatus" class="ai-summary-status" hidden></p>
+      </section>
+      <div class="field-row">
+        <label class="field">
+          <span>日期</span>
+          <input id="calendarNewDate" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="日期" aria-label="选择日期" data-date-picker>
+        </label>
+        <label class="field">
+          <span>时间</span>
+          <input id="calendarNewTime" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="12:00" aria-label="可选时间" data-time-picker>
+        </label>
+      </div>
+      <div class="field"><span>延后显示</span><div id="calendarNewDefer" class="defer-picker" data-defer-picker data-defer-value="none"><button class="defer-trigger" type="button" aria-label="延后显示：立即显示" aria-expanded="false"><span class="defer-clock-icon" aria-hidden="true"></span><span class="defer-trigger-badge" hidden></span></button></div></div>
+      <div class="dialog-actions">
+        <span class="spacer"></span>
+        <button id="calendarCancelAdd" class="ghost-button" type="button">取消</button>
+        <button class="save-button" type="submit">添加</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="editDialog" class="edit-dialog">
+    <form id="editForm">
+      <div class="dialog-head">
+        <div>
+          <h2>修改事项</h2>
+        </div>
+        <button id="closeDialog" class="icon-button" type="button" aria-label="关闭">×</button>
+      </div>
+      <label class="field">
+        <span>事项</span>
+        <input id="editTitle" type="text" maxlength="100" required>
+      </label>
+      <label class="field">
+        <span>详情</span>
+        <textarea id="editDetail" rows="4" maxlength="4000" placeholder="补充要求、链接或注意事项"></textarea>
+      </label>
+      <div class="field-row">
+        <label class="field">
+          <span>日期</span>
+          <input id="editDate" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="日期" aria-label="选择日期" data-date-picker>
+        </label>
+        <label class="field">
+          <span>时间</span>
+          <input id="editTime" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="12:00" aria-label="可选时间" data-time-picker>
+        </label>
+      </div>
+      <div class="field"><span>延后显示</span><div id="editDefer" class="defer-picker" data-defer-picker data-defer-value="none"><button class="defer-trigger" type="button" aria-label="延后显示：立即显示" aria-expanded="false"><span class="defer-clock-icon" aria-hidden="true"></span><span class="defer-trigger-badge" hidden></span></button></div></div>
+      <label class="done-field">
+        <input id="editDone" type="checkbox">
+        <span>已完成</span>
+      </label>
+      <div class="dialog-actions">
+        <button id="deleteTask" class="danger-button" type="button">移到垃圾箱</button>
+        <span class="spacer"></span>
+        <button id="cancelEdit" class="ghost-button" type="button">取消</button>
+        <button class="save-button" type="submit">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="confirmDialog" class="confirm-dialog" aria-labelledby="confirmTitle">
+    <div class="confirm-copy">
+      <h2 id="confirmTitle">确认操作</h2>
+      <p id="confirmMessage" class="confirm-message"></p>
+    </div>
+    <div class="dialog-actions">
+      <span class="spacer"></span>
+      <button id="confirmCancel" class="ghost-button" type="button">取消</button>
+      <button id="confirmAccept" class="danger-button" type="button">确认</button>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="defer-picker.js"></script>
+  <script src="date-picker.js"></script>
+  <script src="time-picker.js"></script>
+  <script src="lunar.js"></script>
+  <script src="calendar-info.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+

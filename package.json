@@ -1,0 +1,22 @@
+{
+  "name": "deskweek-float",
+  "productName": "DeskWeek",
+  "version": "1.0.0",
+  "description": "A small desktop floating weekly calendar and deadline-sorted todo list.",
+  "main": "main.cjs",
+  "private": true,
+  "license": "MIT",
+  "author": "小虾",
+  "scripts": {
+    "start": "electron .",
+    "package": "electron-packager . DeskWeek --platform=win32 --arch=x64 --out=dist --overwrite --asar --icon=app-icon.ico",
+    "check": "node --check main.cjs && node --check preload.cjs && node --check app.js && node --check manager.js && node --check calendar-info.js && node --check date-picker.js && node --check time-picker.js && node --check defer-picker.js"
+  },
+  "dependencies": {
+    "koffi": "3.3.3"
+  },
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "44.9.0"
+  }
+}

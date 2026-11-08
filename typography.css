@@ -1,0 +1,103 @@
+/* DeskWeek typography scale: Segoe numerals, MiSans Chinese glyphs. */
+:root { --dw-font-family: "Segoe UI Variable", "MiSans", "Noto Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif; }
+html, body, button, input, textarea, select {
+  font-family: var(--dw-font-family);
+  font-optical-sizing: auto;
+  font-kerning: normal;
+  font-synthesis: weight style;
+}
+body { font-size: 14px; font-weight: 400; line-height: 1.5; text-rendering: optimizeLegibility; }
+button, input, textarea, select { font-size: inherit; }
+
+/* Manager: keep the task content comfortably readable at normal window size. */
+.title-brand { font-size: 13px; }
+.nav-item { font-size: 14px; }
+.subnav-item { font-size: 13px; }
+.subnav-item b { font-size: 11px; }
+.sidebar-footer { font-size: 11px; }
+.view-subtitle { font-size: 12.5px; }
+.deferred-task-hint { font-size: 11.5px; }
+.primary-button, .soft-button { font-size: 12px; }
+.danger-button { font-size: 11.5px; }
+.quick-add input, .quick-add .dw-date-control, .quick-add .dw-time-control { font-size: 12.5px; }
+.manager-task-title { font-size: 14px; line-height: 1.4; }
+.manager-task-meta { font-size: 11.5px; line-height: 1.45; }
+.task-defer-tag { font-size: 10.5px; }
+.row-action { font-size: 11.5px; }
+.calendar-scroll-hint { font-size: 11px; line-height: 1.45; }
+.calendar-weekday { font-size: 10.5px; }
+#calendarView .calendar-day .day-number { font-size: 12.5px; }
+#calendarView .calendar-day .day-count { font-size: 9.5px; }
+#calendarView .month-grid .day-task-pill { padding: 1px 4px; font-size: 10px; line-height: 1.2; }
+#calendarView .month-grid .day-task-more { padding: 0 3px; font-size: 9px; line-height: 1.1; }
+.week-day-head strong { font-size: 12px; }
+.week-day-head span { font-size: 10.5px; }
+.week-day-card .day-task-pill { font-size: 11px; line-height: 1.45; }
+.mini-month h4 { font-size: 12px; }
+.mini-weekdays span { font-size: 9px; }
+.mini-day { font-size: 9px; }
+.segment { font-size: 11.5px; }
+.settings-card h3 { font-size: 14px; }
+.settings-card p { font-size: 12px; line-height: 1.6; }
+.settings-note { font-size: 11px !important; line-height: 1.5; }
+.dialog-head h2 { font-size: 21px; }
+.field > span { font-size: 11px; }
+.field input, .field .dw-date-control, .field .dw-time-control { font-size: 13px; }
+.done-field { font-size: 12px; }
+.toast { font-size: 12px; }
+
+/* Floating view: slightly larger labels without crowding the week grid. */
+.brand strong { font-size: 14.5px; }
+.brand span { font-size: 10.5px; }
+.brand-actions .ghost-button { font-size: 11px; }
+.subtitle { font-size: 11.5px; line-height: 1.45; }
+.today-button { font-size: 10.5px; }
+.weekday { font-size: 10px; }
+.week-item { font-size: 11.25px; line-height: 1.45; }
+.week-item-time { font-size: 9.75px; }
+.more-items, .empty-day { font-size: 10.5px; }
+.count-pill { font-size: 10.5px; }
+.deferred-count { font-size: 9.5px; }
+.task-title { font-size: 13.25px; line-height: 1.45; }
+.task-due { font-size: 10.75px; }
+.add-form input, .add-form .dw-date-control, .add-form .dw-time-control { font-size: 12.25px; }
+.add-button { font-size: 11.25px; }
+.floating-month-weekdays span { font-size: 9.5px; }
+.floating-month-number { font-size: 10.5px; }
+.floating-month-task { font-size: 9.25px; line-height: 1.3; }
+.floating-month-more { font-size: 8.75px; }
+.floating-day-head span { font-size: 11.5px; }
+.floating-day-add { font-size: 11px; }
+.fish-caption strong { font-size: 12.5px; }
+.fish-caption span { font-size: 10px; }
+.dialog-head h2 { font-size: 21px; }
+.field > span { font-size: 11px; }
+.field input, .field .dw-date-control, .field .dw-time-control { font-size: 13px; }
+.done-field { font-size: 12px; }
+.dialog-actions .ghost-button, .dialog-actions .danger-button, .dialog-actions .save-button { font-size: 11.25px; }
+
+/* Date, time, and defer panels share the same readable scale. */
+.dw-date-title { font-size: 14px; }
+.dw-date-quick button { font-size: 10.5px; }
+.dw-date-weekdays span { font-size: 10px; }
+.dw-date-day { font-size: 11.5px; }
+.dw-time-head strong { font-size: 13px; }
+.dw-time-head span { font-size: 9.5px; }
+.dw-time-clear, .dw-time-quick button { font-size: 10.5px; }
+.dw-time-column-wrap > span { font-size: 9.5px; }
+.dw-time-option { font-size: 12px; }
+.dw-time-foot > span { font-size: 9.5px; }
+.dw-time-done { font-size: 10.5px; }
+.defer-trigger-badge { font-size: 8px; }
+.dw-defer-head strong { font-size: 12.5px; }
+.dw-defer-head span { font-size: 9.5px; }
+.dw-defer-days-wrap { font-size: 10px; }
+.dw-defer-days { font-size: 12px; }
+.dw-defer-quick button { font-size: 11.5px; }
+.dw-defer-note { font-size: 9.25px; }
+.dw-defer-clear { font-size: 10px !important; }
+.dw-defer-cancel, .dw-defer-done { font-size: 10.5px !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  html, body, button, input, textarea, select { font-kerning: normal; }
+}

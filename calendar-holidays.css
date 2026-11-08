@@ -1,0 +1,53 @@
+/* Shared holiday and solar-term labels */
+.calendar-event { font-weight: 700; letter-spacing: 0; }
+.calendar-event.workday { color: #b87518; }
+.calendar-event.legal { color: #b27478; font-weight: 650; }
+.calendar-event.legal.legal-major { color: #d62828; font-weight: 800; }
+.calendar-event.traditional,
+.calendar-event.other { color: #d62828; }
+.calendar-event.festival { color: #596fc2; }
+.calendar-event.term { color: #2f9d86; }
+.calendar-event.term.term-spring { color: #68b85e; }
+.calendar-event.term.term-summer { color: #c99b18; }
+.calendar-event.term.term-autumn { color: #c46122; }
+.calendar-event.term.term-winter { color: #6f9fbc; }
+
+.weekday { min-width: 0; overflow: hidden; line-height: 1.3; white-space: normal; overflow-wrap: anywhere; }
+.weekday .calendar-event { margin-left: 1px; font-size: .90em; }
+
+.floating-month-holiday,
+.floating-day-holiday,
+.calendar-day-holiday,
+.week-day-holiday {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 700;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.floating-month-holidays { display: flex; flex-wrap: wrap; gap: 1px 4px; min-width: 0; max-height: 21px; margin-top: 2px; overflow: hidden; }
+.floating-month-holidays .calendar-event { max-width: 100%; font-size: 8.5px; line-height: 1.2; white-space: normal; overflow-wrap: anywhere; }
+.floating-month-holiday { margin-top: 2px; font-size: 8.5px; }
+.floating-day-holiday { font-size: 10px; }
+.floating-month-day.outside .floating-month-holiday { opacity: .32; }
+
+.calendar-day-holiday { margin-top: 3px; font-size: 9px; }
+.week-day-head .calendar-event { font-size: 9.5px; }
+.day-focus-holiday { margin-left: 7px; font-size: 10px; }
+
+body.theme-dark .calendar-event.workday { color: #efbd69; }
+body.theme-dark .calendar-event.legal { color: #d89a9d; font-weight: 650; }
+body.theme-dark .calendar-event.legal.legal-major { color: #ff6f6f; font-weight: 800; }
+body.theme-dark .calendar-event.traditional,
+body.theme-dark .calendar-event.other { color: #ff6f6f; }
+body.theme-dark .calendar-event.festival { color: #9fb9ff; }
+body.theme-dark .calendar-event.term { color: #82d9c5; }
+body.theme-dark .calendar-event.term.term-spring { color: #a9e89d; }
+body.theme-dark .calendar-event.term.term-summer { color: #ffe173; }
+body.theme-dark .calendar-event.term.term-autumn { color: #ffa461; }
+body.theme-dark .calendar-event.term.term-winter { color: #d9efff; }
+.week-day-head strong { display: flex; min-width: 0; align-items: center; white-space: nowrap; }
+.week-day-head .calendar-event { flex: 0 0 auto; }
+.week-day-head > span:last-child { flex: 0 0 auto; }
