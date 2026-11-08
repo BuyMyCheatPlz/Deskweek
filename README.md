@@ -6,6 +6,10 @@
 
 DeskWeek 是一个面向 Windows 的桌面周历与待办浮窗。它附着在桌面层工作，不替换壁纸；任务数据默认只保存在本机。
 
+## 下载
+
+可在 [GitHub Releases](https://github.com/EasonGuuu/Deskweek/releases/latest) 下载 Windows x64 便携版。
+
 ## 功能
 
 - 桌面浮窗与独立管理中心
