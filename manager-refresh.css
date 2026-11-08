@@ -532,3 +532,58 @@ textarea::-webkit-scrollbar-track, .manager-add-dialog form::-webkit-scrollbar-t
 textarea::-webkit-scrollbar-thumb, .manager-add-dialog form::-webkit-scrollbar-thumb, .calendar-add-form::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: rgba(105,127,118,.28); background-clip: padding-box; }
 textarea::-webkit-scrollbar-thumb:hover, .manager-add-dialog form::-webkit-scrollbar-thumb:hover, .calendar-add-form::-webkit-scrollbar-thumb:hover { background: rgba(74,111,99,.42); background-clip: padding-box; }
 .ai-proposal-card .field textarea { min-height: 84px; max-height: 180px; resize: none; overflow-y: hidden; }
+/* About links and updater */
+.about-card { gap: 14px; }
+.about-links { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.about-link { color: var(--ui-accent); font-size: 11.5px; font-weight: 650; text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--ui-accent) 32%, transparent); transition: color .15s ease, border-color .15s ease; }
+.about-link:hover { color: var(--ui-ink); border-color: var(--ui-ink); }
+.update-panel { display: flex; flex-direction: column; gap: 9px; padding: 12px; border: 1px solid var(--ui-line); border-radius: 12px; background: var(--ui-surface-soft); }
+.update-panel[hidden], .update-progress[hidden], .update-actions [hidden] { display: none !important; }
+.update-copy { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
+.update-copy strong { color: var(--ui-ink); font-size: 12px; font-weight: 700; }
+.update-copy span { color: var(--ui-muted); font-size: 10.5px; line-height: 1.55; white-space: pre-line; }
+.update-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.update-actions .soft-button, .update-actions .primary-button { min-height: 32px; }
+.update-progress { height: 6px; overflow: hidden; border-radius: 999px; background: color-mix(in srgb, var(--ui-line-strong) 55%, transparent); }
+.update-progress > span { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--ui-accent); transition: width .2s ease; }
+body.theme-dark .update-panel { border-color: var(--ui-line); background: rgba(255,255,255,.025); }
+/* About panel redesign */
+.about-card { align-self: start; position: relative; gap: 14px; overflow: hidden; background: linear-gradient(145deg, color-mix(in srgb, var(--ui-accent-soft) 34%, var(--ui-surface)), var(--ui-surface)); }
+.about-head { align-items: flex-start; padding-bottom: 12px; border-bottom: 1px solid var(--ui-line); }
+.about-head h3 { font-size: 18px; letter-spacing: -.035em; }
+.about-credit { margin-top: 6px !important; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; color: var(--ui-muted); }
+.about-credit .about-link { padding: 0; border: 0; background: transparent; font-size: 11.5px; font-weight: 700; }
+.about-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.about-links .about-link { min-height: 34px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border: 1px solid var(--ui-line); border-radius: 9px; background: var(--ui-surface); color: var(--ui-ink); font-size: 11px; font-weight: 650; text-decoration: none; }
+.about-links .about-link::after { content: "↗"; color: var(--ui-muted); font-size: 10px; }
+.about-links .about-link:hover { border-color: var(--ui-line-strong); color: var(--ui-accent); }
+.about-links .soft-button { min-height: 34px; }
+.update-panel { margin-top: 2px; padding: 12px 0 0; display: flex; flex-direction: column; gap: 9px; border: 0; border-top: 1px solid var(--ui-line); border-radius: 0; background: transparent; }
+.update-copy { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.update-copy strong { display: inline-flex; align-items: center; gap: 7px; color: var(--ui-ink); font-size: 12px; font-weight: 700; }
+.update-copy strong::before { content: ""; width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--ui-accent); box-shadow: 0 0 0 3px var(--ui-accent-soft); }
+.update-copy span { color: var(--ui-muted); font-size: 10.5px; line-height: 1.5; white-space: pre-line; }
+.update-actions { display: flex; justify-content: flex-end; gap: 7px; }
+.update-actions .soft-button { min-height: 30px; padding: 0 10px; border-color: transparent; background: transparent; color: var(--ui-muted); }
+.update-actions .soft-button:hover { background: var(--ui-surface-soft); color: var(--ui-ink); }
+.update-actions .primary-button { min-height: 32px; }
+body.theme-dark .about-card { background: linear-gradient(145deg, color-mix(in srgb, var(--ui-accent-soft) 28%, var(--ui-surface)), var(--ui-surface)); }
+/* About card fixed-height inline updater */
+.about-card { align-self: stretch; min-height: 0; }
+.about-links { align-items: center; }
+.update-status { margin-left: auto; min-height: 34px; display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; color: var(--ui-muted); font-size: 10.5px; font-weight: 600; white-space: nowrap; }
+.update-dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--ui-line-strong); transition: background .16s ease, box-shadow .16s ease; }
+.update-status[data-state="latest"] .update-dot { background: var(--ui-accent); box-shadow: 0 0 0 3px var(--ui-accent-soft); }
+.update-status[data-state="checking"] .update-dot { background: #c28b2c; animation: updateDotPulse 1s ease-in-out infinite; }
+.update-status[data-state="update"] { color: var(--ui-ink); }
+.update-status[data-state="update"] .update-dot { background: var(--ui-accent); box-shadow: 0 0 0 3px var(--ui-accent-soft); }
+.update-status[data-state="error"] { color: var(--ui-danger); cursor: help; }
+.update-status[data-state="error"] .update-dot { background: var(--ui-danger); }
+.update-install-button { min-height: 28px; margin-left: 3px; padding: 0 9px; border: 1px solid color-mix(in srgb, var(--ui-accent) 32%, var(--ui-line)); border-radius: 8px; background: var(--ui-accent-soft); color: var(--ui-accent); font-size: 10px; font-weight: 700; cursor: pointer; }
+.update-install-button:hover { border-color: color-mix(in srgb, var(--ui-accent) 55%, var(--ui-line)); }
+.update-install-button:disabled { opacity: .6; cursor: default; }
+.update-install-button[hidden] { display: none !important; }
+@keyframes updateDotPulse { 0%, 100% { opacity: .45; transform: scale(.84); } 50% { opacity: 1; transform: scale(1); } }
+body.theme-dark .update-install-button { border-color: color-mix(in srgb, var(--ui-accent) 35%, var(--ui-line)); background: rgba(128,207,186,.10); color: var(--ui-accent); }
+.about-card { min-height: 150px; }
+.about-links { min-height: 34px; }

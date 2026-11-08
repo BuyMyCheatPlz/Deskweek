@@ -20,6 +20,7 @@ const els = {
   themeLightButton: $("#themeLightButton"), themeDarkButton: $("#themeDarkButton"),
   managerExport: $("#managerExport"), managerImport: $("#managerImport"), managerImportFile: $("#managerImportFile"),
   settingsOpenDataFolder: $("#settingsOpenDataFolder"),
+  checkUpdateButton: $("#checkUpdateButton"), updateStatus: $("#updateStatus"), updateStatusText: $("#updateStatusText"), installUpdateButton: $("#installUpdateButton"),
   dialog: $("#managerEditDialog"), editForm: $("#managerEditForm"), editTitle: $("#managerEditTitle"), editDetail: $("#managerEditDetail"), editDate: $("#managerEditDate"), editTime: $("#managerEditTime"), editDefer: $("#managerEditDefer"), editDone: $("#managerEditDone"),
   deleteTask: $("#managerDeleteTask"), closeDialog: $("#managerCloseDialog"), cancelEdit: $("#managerCancelEdit"), toast: $("#managerToast"),
   confirmDialog: $("#managerConfirmDialog"), confirmTitle: $("#managerConfirmTitle"), confirmMessage: $("#managerConfirmMessage"), confirmCancel: $("#managerConfirmCancel"), confirmAccept: $("#managerConfirmAccept"),
@@ -43,6 +44,8 @@ let managerAISummaryBusy = false;
 let managerAIConfigAvailable = false;
 let managerAIKeyInvalid = false;
 let managerAddSource = "new";
+let latestUpdateInfo = null;
+let updateBusy = false;
 function normalizedTheme(value) { return value === "dark" ? "dark" : "light"; }
 function currentTheme() { return normalizedTheme(state.prefs.theme || document.documentElement.dataset.theme || window.DeskWeekThemeBootstrap?.get?.() || "light"); }
 function applyTheme(theme, remember = false) {
@@ -748,6 +751,76 @@ async function loadAutostart() {
   try { const enabled = await window.deskWeek?.getAutostart?.(); els.autostartToggle.checked = Boolean(enabled); }
   catch { /* ignore */ }
 }
+function readableUpdateError(error) {
+  return String(error?.message || error || "更新失败")
+    .replace(/^Error invoking remote method '[^']+':\s*/i, "")
+    .replace(/^Error:\s*/i, "");
+}
+
+function setUpdateStatus(message, state = "idle", install = false, detail = "") {
+  els.updateStatus.dataset.state = state;
+  els.updateStatusText.textContent = message;
+  els.updateStatusText.title = detail;
+  els.installUpdateButton.hidden = !install;
+  els.installUpdateButton.disabled = state === "busy";
+  els.installUpdateButton.textContent = state === "error" ? "重试" : "下载更新";
+}
+
+async function checkForManagerUpdate() {
+  if (updateBusy) return;
+  updateBusy = true;
+  latestUpdateInfo = null;
+  els.checkUpdateButton.disabled = true;
+  els.checkUpdateButton.textContent = "检查中…";
+  setUpdateStatus("检查中…", "checking");
+  try {
+    const info = await window.deskWeek?.checkForUpdates?.();
+    if (!info) throw new Error("检查更新接口不可用");
+    latestUpdateInfo = info;
+    if (!info.hasUpdate) {
+      els.checkUpdateButton.hidden = false;
+      setUpdateStatus("已是最新", "latest");
+      return;
+    }
+    els.checkUpdateButton.hidden = true;
+    setUpdateStatus(`可更新 v${info.latestVersion}`, "update", true);
+  } catch (error) {
+    els.checkUpdateButton.hidden = false;
+    setUpdateStatus("检查失败", "error", false, readableUpdateError(error));
+  } finally {
+    updateBusy = false;
+    els.checkUpdateButton.disabled = false;
+    els.checkUpdateButton.textContent = "检查更新";
+  }
+}
+
+async function installManagerUpdate() {
+  if (updateBusy || !latestUpdateInfo?.hasUpdate) return;
+  const confirmed = await requestConfirm({
+    title: `更新到 v${latestUpdateInfo.latestVersion}？`,
+    message: "程序会自动下载、关闭旧版本、保留 data 中的任务和设置，然后重新启动。",
+    okText: "下载并更新",
+  });
+  if (!confirmed) return;
+  updateBusy = true;
+  els.installUpdateButton.disabled = true;
+  setUpdateStatus("准备下载…", "busy", true);
+  try {
+    const result = await window.deskWeek?.downloadUpdate?.();
+    if (result?.updated === false) {
+      els.checkUpdateButton.hidden = false;
+      setUpdateStatus("已是最新", "latest");
+      return;
+    }
+    setUpdateStatus("正在重启…", "busy", false);
+  } catch (error) {
+    setUpdateStatus("更新失败", "error", true, readableUpdateError(error));
+  } finally {
+    updateBusy = false;
+    els.installUpdateButton.disabled = false;
+  }
+}
+
 function openDataFolder() { window.deskWeek?.openDataFolder?.(); }
 function exportData() {
   const payload = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), items: state.items, prefs: state.prefs }, null, 2);
@@ -914,6 +987,16 @@ els.managerImportFile.addEventListener("change", () => { const file = els.manage
 document.querySelectorAll("[data-theme-choice]").forEach((button) => button.addEventListener("click", () => setThemePreference(button.dataset.themeChoice)));
 els.saveAIConfig?.addEventListener("click", () => persistAIConfig(false));
 els.clearAIKey?.addEventListener("click", () => persistAIConfig(true));
+document.querySelectorAll("[data-external-url]").forEach((link) => link.addEventListener("click", (event) => { event.preventDefault(); window.deskWeek?.openExternal?.(link.dataset.externalUrl); }));
+els.checkUpdateButton.addEventListener("click", checkForManagerUpdate);
+els.installUpdateButton.addEventListener("click", installManagerUpdate);
+window.deskWeek?.onUpdateProgress?.((progress) => {
+  if (!progress || !latestUpdateInfo) return;
+  const percent = Number(progress.percent) || 0;
+  if (progress.phase === "ready") setUpdateStatus("正在重启…", "busy", false);
+  else setUpdateStatus(`下载中 ${percent}%`, "busy", true);
+});
+
 els.aiAutoTranslateToggle?.addEventListener("change", async () => {
   const enabled = Boolean(els.aiAutoTranslateToggle.checked);
   try {

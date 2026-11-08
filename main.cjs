@@ -11,6 +11,7 @@ const WordExtractor = require("word-extractor");
 const JSZip = require("jszip");
 const koffi = require("koffi");
 const { createDesktopManager } = require("./lib/desktop.cjs");
+const { checkGithubUpdate, downloadAndInstallUpdate } = require("./lib/updater.cjs");
 
 app.commandLine.appendSwitch("disable-renderer-backgrounding");
 app.commandLine.appendSwitch("disable-background-timer-throttling");
@@ -806,6 +807,26 @@ ipcMain.on("deskweek:manager-close", (event) => {
 ipcMain.handle("deskweek:ai-config-get", () => publicAIConfig());
 ipcMain.handle("deskweek:ai-config-save", (_event, next) => saveAIConfig(next));
 ipcMain.handle("deskweek:ai-summarize", (_event, payload) => summarizeWithAI(payload));
+
+ipcMain.handle("deskweek:update-check", () => checkGithubUpdate());
+ipcMain.handle("deskweek:update-download", (event) => downloadAndInstallUpdate(event, portableDataDir()));
+
+ipcMain.handle("deskweek:open-external", async (_event, url) => {
+  const parsed = new URL(String(url || ""));
+  if (parsed.protocol !== "https:") throw new Error("只允许打开 HTTPS 链接");
+  const host = parsed.hostname.toLowerCase();
+  if (![ "github.com", "space.bilibili.com" ].some((allowed) => host === allowed || host.endsWith("." + allowed))) throw new Error("链接地址不受支持");
+  await shell.openExternal(parsed.toString());
+  return true;
+});
+
+ipcMain.handle("deskweek:show-update-file", (_event, filePath) => {
+  const updatesDir = path.resolve(portableDataDir(), "updates") + path.sep;
+  const resolved = path.resolve(String(filePath || ""));
+  if (!resolved.startsWith(updatesDir) || !fs.existsSync(resolved)) throw new Error("更新文件不存在");
+  shell.showItemInFolder(resolved);
+  return true;
+});
 
 ipcMain.handle("deskweek:get-autostart", () => app.getLoginItemSettings().openAtLogin);
 

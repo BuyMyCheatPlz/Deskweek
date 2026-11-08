@@ -28,6 +28,14 @@ managerClose: () => ipcRenderer.send("deskweek:manager-close"),
   getAIConfig: () => ipcRenderer.invoke("deskweek:ai-config-get"),
   saveAIConfig: (config) => ipcRenderer.invoke("deskweek:ai-config-save", config),
   summarizeTask: (payload) => ipcRenderer.invoke("deskweek:ai-summarize", payload),
+  openExternal: (url) => ipcRenderer.invoke("deskweek:open-external", url),
+  checkForUpdates: () => ipcRenderer.invoke("deskweek:update-check"),
+  downloadUpdate: () => ipcRenderer.invoke("deskweek:update-download"),
+  onUpdateProgress: (callback) => {
+    const listener = (_event, progress) => callback(progress);
+    ipcRenderer.on("deskweek:update-progress", listener);
+    return () => ipcRenderer.removeListener("deskweek:update-progress", listener);
+  },
   getAutostart: () => ipcRenderer.invoke("deskweek:get-autostart"),
   setAutostart: (enabled) => ipcRenderer.invoke("deskweek:set-autostart", enabled),
   openDataFolder: () => ipcRenderer.invoke("deskweek:open-data-folder"),
