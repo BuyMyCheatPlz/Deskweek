@@ -531,7 +531,7 @@ textarea::-webkit-scrollbar, .manager-add-dialog form::-webkit-scrollbar, .calen
 textarea::-webkit-scrollbar-track, .manager-add-dialog form::-webkit-scrollbar-track, .calendar-add-form::-webkit-scrollbar-track { background: transparent; }
 textarea::-webkit-scrollbar-thumb, .manager-add-dialog form::-webkit-scrollbar-thumb, .calendar-add-form::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: rgba(105,127,118,.28); background-clip: padding-box; }
 textarea::-webkit-scrollbar-thumb:hover, .manager-add-dialog form::-webkit-scrollbar-thumb:hover, .calendar-add-form::-webkit-scrollbar-thumb:hover { background: rgba(74,111,99,.42); background-clip: padding-box; }
-.ai-proposal-card .field textarea { min-height: 84px; max-height: 180px; resize: none; overflow-y: hidden; }
+.ai-proposal-card .field textarea { min-height: 84px; max-height: none; resize: none; overflow-y: hidden; }
 /* About links and updater */
 .about-card { gap: 14px; }
 .about-links { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }

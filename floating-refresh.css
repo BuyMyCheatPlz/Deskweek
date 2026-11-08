@@ -420,4 +420,4 @@ textarea::-webkit-scrollbar-track, .calendar-add-form::-webkit-scrollbar-track {
 textarea::-webkit-scrollbar-thumb, .calendar-add-form::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: rgba(105,127,118,.28); background-clip: padding-box; }
 textarea::-webkit-scrollbar-thumb:hover, .calendar-add-form::-webkit-scrollbar-thumb:hover { background: rgba(74,111,99,.42); background-clip: padding-box; }
 .calendar-add-form { scrollbar-width: thin; scrollbar-color: rgba(105,127,118,.28) transparent; }
-.ai-proposal-card .field textarea { min-height: 84px; max-height: 180px; resize: none; overflow-y: hidden; }
+.ai-proposal-card .field textarea { min-height: 84px; max-height: none; resize: none; overflow-y: hidden; }

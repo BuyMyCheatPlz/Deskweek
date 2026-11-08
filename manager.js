@@ -499,7 +499,8 @@ function autoResizeTextarea(input) {
   input.style.height = "auto";
   const style = getComputedStyle(input);
   const minHeight = Number.parseFloat(style.minHeight) || 0;
-  const maxHeight = Number.parseFloat(style.maxHeight) || 180;
+  const parsedMaxHeight = Number.parseFloat(style.maxHeight);
+  const maxHeight = Number.isFinite(parsedMaxHeight) ? parsedMaxHeight : Number.POSITIVE_INFINITY;
   const nextHeight = Math.min(maxHeight, Math.max(minHeight, input.scrollHeight + 2));
   input.style.height = nextHeight + "px";
   input.style.overflowY = input.scrollHeight > nextHeight + 1 ? "auto" : "hidden";
