@@ -4,6 +4,11 @@ const { app, BrowserWindow, ipcMain, screen, shell, Tray, Menu, nativeImage, saf
 const path = require("node:path");
 const fs = require("node:fs");
 const { performance } = require("node:perf_hooks");
+const mammoth = require("mammoth");
+const XLSX = require("xlsx");
+const pdfParse = require("pdf-parse");
+const WordExtractor = require("word-extractor");
+const JSZip = require("jszip");
 const koffi = require("koffi");
 const { createDesktopManager } = require("./lib/desktop.cjs");
 
@@ -202,6 +207,142 @@ function validDateKey(value) {
   return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
 }
 
+const AI_FILE_MAX_COUNT = 5;
+const AI_FILE_MAX_BYTES = 20 * 1024 * 1024;
+const AI_FILE_MAX_CHARS = 60_000;
+const AI_FILE_TOTAL_CHARS = 120_000;
+const AI_TEXT_EXTENSIONS = new Set([".txt", ".md", ".markdown", ".json", ".xml", ".yaml", ".yml", ".log"]);
+const AI_WORKBOOK_EXTENSIONS = new Set([".xlsx", ".xls", ".xlsm", ".ods", ".csv"]);
+const AI_SUPPORTED_EXTENSIONS = new Set([".pdf", ".doc", ".docx", ".pptx", ".odt", ".rtf", ...AI_TEXT_EXTENSIONS, ...AI_WORKBOOK_EXTENSIONS]);
+
+function decodeDataUrl(dataUrl) {
+  const match = String(dataUrl || "").match(/^data:([^;,]*)(;base64)?,([\s\S]*)$/i);
+  if (!match || !match[2]) throw new Error("文件内容格式不正确");
+  return Buffer.from(match[3], "base64");
+}
+
+function decodeXmlEntities(text) {
+  return String(text || "")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/&#(\d+);/g, (_match, code) => String.fromCodePoint(Number(code)));
+}
+
+function bufferToText(buffer) {
+  if (buffer.length >= 2 && buffer[0] === 0xff && buffer[1] === 0xfe) return buffer.subarray(2).toString("utf16le");
+  if (buffer.length >= 2 && buffer[0] === 0xfe && buffer[1] === 0xff) {
+    const copy = Buffer.from(buffer.subarray(2));
+    copy.swap16();
+    return copy.toString("utf16le");
+  }
+  return buffer.toString("utf8");
+}
+
+function normalizeDocumentText(text) {
+  return String(text || "")
+    .replace(/\r\n?/g, "\n")
+    .replace(/\u0000/g, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{4,}/g, "\n\n\n")
+    .trim();
+}
+
+async function extractPptxText(buffer) {
+  const zip = await JSZip.loadAsync(buffer);
+  const slides = Object.keys(zip.files)
+    .filter((name) => /^ppt\/slides\/slide\d+\.xml$/i.test(name))
+    .sort((a, b) => Number(a.match(/slide(\d+)/i)?.[1] || 0) - Number(b.match(/slide(\d+)/i)?.[1] || 0));
+  const parts = [];
+  for (const name of slides) {
+    const xml = await zip.file(name).async("string");
+    const texts = [...xml.matchAll(/<a:t[^>]*>([\s\S]*?)<\/a:t>/gi)].map((match) => decodeXmlEntities(match[1]).trim()).filter(Boolean);
+    if (texts.length) parts.push(`第 ${parts.length + 1} 页\n${texts.join("\n")}`);
+  }
+  return parts.join("\n\n");
+}
+
+async function extractOdtText(buffer) {
+  const zip = await JSZip.loadAsync(buffer);
+  const file = zip.file("content.xml");
+  if (!file) return "";
+  const xml = await file.async("string");
+  return decodeXmlEntities(xml.replace(/<text:(?:p|h)[^>]*>/gi, "\n").replace(/<[^>]+>/g, " "));
+}
+
+function extractRtfText(buffer) {
+  return bufferToText(buffer)
+    .replace(/\\'[0-9a-f]{2}/gi, " ")
+    .replace(/\\[a-z]+-?\d* ?/gi, " ")
+    .replace(/[{}]/g, " ");
+}
+
+async function extractDocumentFile(file) {
+  const name = String(file?.name || "未命名文件").trim().slice(0, 180);
+  const ext = path.extname(name).toLowerCase();
+  if (!AI_SUPPORTED_EXTENSIONS.has(ext)) throw new Error(`暂不支持 ${ext || "该"} 文件格式`);
+  const buffer = decodeDataUrl(file?.dataUrl);
+  if (!buffer.length) throw new Error("文件是空的");
+  if (buffer.length > AI_FILE_MAX_BYTES) throw new Error("文件不能超过 20MB");
+  let text = "";
+  if (ext === ".pdf") {
+    const result = await pdfParse(buffer);
+    text = result?.text || "";
+  } else if (ext === ".docx") {
+    const result = await mammoth.extractRawText({ buffer });
+    text = result?.value || "";
+  } else if (ext === ".doc") {
+    const extractor = new WordExtractor();
+    const document = await extractor.extract(buffer);
+    text = document?.getBody?.() || document?.getText?.() || "";
+  } else if (AI_WORKBOOK_EXTENSIONS.has(ext)) {
+    const workbook = XLSX.read(buffer, { type: "buffer", cellDates: false, raw: false });
+    text = workbook.SheetNames.map((sheetName) => {
+      const sheet = workbook.Sheets[sheetName];
+      return `工作表：${sheetName}\n${XLSX.utils.sheet_to_csv(sheet, { blankrows: false })}`;
+    }).join("\n\n");
+  } else if (ext === ".pptx") {
+    text = await extractPptxText(buffer);
+  } else if (ext === ".odt") {
+    text = await extractOdtText(buffer);
+  } else if (ext === ".rtf") {
+    text = extractRtfText(buffer);
+  } else if (AI_TEXT_EXTENSIONS.has(ext)) {
+    text = bufferToText(buffer);
+  }
+  const normalized = normalizeDocumentText(text);
+  if (!normalized) {
+    const hint = ext === ".pdf" ? "；如果是扫描版 PDF，请把页面截图作为图片添加" : "";
+    throw new Error(`没有提取到文字${hint}`);
+  }
+  const clipped = normalized.slice(0, AI_FILE_MAX_CHARS);
+  return { name, text: clipped, truncated: normalized.length > clipped.length };
+}
+
+async function extractDocumentFiles(files) {
+  const accepted = Array.isArray(files) ? files.slice(0, AI_FILE_MAX_COUNT) : [];
+  const sections = [];
+  let totalChars = 0;
+  for (const file of accepted) {
+    let extracted;
+    try {
+      extracted = await extractDocumentFile(file);
+    } catch (error) {
+      throw new Error(`文件“${String(file?.name || "未命名文件")}”读取失败：${error.message}`);
+    }
+    const remaining = Math.max(0, AI_FILE_TOTAL_CHARS - totalChars);
+    const text = extracted.text.slice(0, remaining);
+    if (!text) break;
+    totalChars += text.length;
+    const truncated = extracted.truncated || text.length < extracted.text.length || totalChars >= AI_FILE_TOTAL_CHARS;
+    sections.push(`文件：${extracted.name}${truncated ? "（内容过长，已截取前部）" : ""}\n${text}`);
+    if (totalChars >= AI_FILE_TOTAL_CHARS) break;
+  }
+  return sections;
+}
+
 function parseAIJson(content) {
   const text = String(content || "").trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
   const start = text.indexOf("{");
@@ -217,18 +358,22 @@ async function summarizeWithAI(payload = {}) {
   if (!apiKey) throw new Error("请先在管理中心配置 AI 接口");
   const sourceText = String(payload.text || "").trim();
   const images = Array.isArray(payload.images) ? payload.images.slice(0, 4) : [];
-  if (!sourceText && !images.length) throw new Error("先粘贴文字或添加图片");
+  const files = Array.isArray(payload.files) ? payload.files.slice(0, AI_FILE_MAX_COUNT) : [];
+  if (!sourceText && !images.length && !files.length) throw new Error("先粘贴文字、添加图片或文件");
   for (const image of images) {
     if (typeof image !== "string" || !/^data:image\/(?:png|jpe?g|webp|gif);base64,/i.test(image)) throw new Error("图片格式不支持");
     if (image.length > 9_000_000) throw new Error("单张图片不能超过 6MB");
   }
+  const fileSections = await extractDocumentFiles(files);
+  const fileText = fileSections.join("\n\n---\n\n");
+  if (!sourceText && !images.length && !fileText) throw new Error("没有读取到可总结的内容");
   const baseUrl = publicConfig.baseUrl.replace(/\/+$/, "");
   const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
   const today = localDateKey();
   const isChineseOutput = publicConfig.autoTranslate;
   const firstPromptLine = isChineseOutput
-    ? "你是 DeskWeek 的任务整理助手。请从用户提供的邮件、通知、聊天文字或图片中提取待办事项。若用户给出的内容不是中文，则先翻译成中文，再进行总结，其中所有的人名保留原文，地名、专有名词和专业性名词等以类似apple（苹果）的形式给出。"
-    : "你是 DeskWeek 的任务整理助手。请从用户提供的邮件、通知、聊天文字或图片中提取待办事项。保留用户原文的主要语言，不要自行翻译。";
+    ? "你是 DeskWeek 的任务整理助手。请从用户提供的邮件、通知、聊天文字、图片或文件中提取待办事项。若用户给出的内容不是中文，则先翻译成中文，再进行总结，其中所有的人名保留原文，地名、专有名词和专业性名词等以类似apple（苹果）的形式给出。"
+    : "你是 DeskWeek 的任务整理助手。请从用户提供的邮件、通知、聊天文字、图片或文件中提取待办事项。保留用户原文的主要语言，不要自行翻译。";
   const titleRule = isChineseOutput
     ? "title：使用中文，不超过 30 个汉字，直接说明要做什么，不要照抄整段原文。"
     : "title：保留原文主要语言，直接说明要做什么，保持简短，不要翻译，不要照抄整段原文。";
@@ -241,17 +386,21 @@ async function summarizeWithAI(payload = {}) {
   const systemPrompt = [
     firstPromptLine,
     "只输出一个合法 JSON 对象，不要 Markdown、代码块或额外解释。",
-    'JSON 格式：{"title":"主标题","detail":"详细信息","date":"YYYY-MM-DD或空字符串","time":"HH:mm或空字符串","defer":"none|7d|1m或Nd"}',
+    'JSON 格式：{"items":[{"title":"主标题","detail":"详细信息","date":"YYYY-MM-DD或空字符串","time":"HH:mm或空字符串","defer":"none|7d|1m或Nd"}]}',
+    "items：提取资料中全部彼此独立的待办事项，一件事项一个对象，不要合并不同任务，也不要漏掉文件、表格、邮件或通知中的多个任务。没有明确任务时返回空数组。最多返回 20 项。",
     titleRule,
     detailRule,
     detailExample,
-    "date 和 time：只填原文明确给出的值；只有时间没有日期时 date 留空；无法确定的相对日期不要猜；两者都没有时都为空。",
+    "date 和 time：只填该项任务在原文中明确给出的值；只有时间没有日期时 date 留空；无法确定的相对日期不要猜；两者都没有时都为空。",
     "defer：没有明确要求时固定填 none。",
   ].join("\n");
-  const content = [{ type: "text", text: sourceText || "请整理图片中的任务信息。" }];
+  const userParts = [];
+  if (sourceText) userParts.push(sourceText);
+  if (fileText) userParts.push(`以下是用户提供的文件内容：\n${fileText}`);
+  const content = [{ type: "text", text: userParts.join("\n\n") || "请整理图片中的任务信息。" }];
   images.forEach((url) => content.push({ type: "image_url", image_url: { url } }));
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 90000);
+  const timeout = setTimeout(() => controller.abort(), 120000);
   try {
     const response = await fetch(endpoint, {
       method: "POST",
@@ -274,18 +423,20 @@ async function summarizeWithAI(payload = {}) {
     const raw = data?.choices?.[0]?.message?.content;
     const text = Array.isArray(raw) ? raw.map((part) => part?.text || "").join("") : raw;
     const result = parseAIJson(text);
-    let date = validDateKey(result.date) ? result.date : "";
-    let time = /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(result.time || "")) ? String(result.time) : "";
-    if (time && !date) date = today;
-    const deferText = String(result.defer || "none").toLowerCase();
-    const defer = deferText === "1m" || /^[1-9]\d*d$/.test(deferText) ? deferText : "none";
-    return {
-      title: String(result.title || "").trim().slice(0, 60),
-      detail: String(result.detail || "").trim().slice(0, 4000),
-      date,
-      time,
-      defer,
-    };
+    const rawItems = Array.isArray(result?.items) ? result.items : (result?.title || result?.detail ? [result] : []);
+    const items = rawItems.slice(0, 20).map((entry) => {
+      const title = String(entry?.title || "").trim().slice(0, 100);
+      const detail = String(entry?.detail || "").trim().slice(0, 4000);
+      if (!title && !detail) return null;
+      let date = validDateKey(entry?.date) ? entry.date : "";
+      let time = /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(entry?.time || "")) ? String(entry.time) : "";
+      if (time && !date) date = today;
+      const deferText = String(entry?.defer || "none").toLowerCase();
+      const defer = deferText === "1m" || /^[1-9]\d*d$/.test(deferText) ? deferText : "none";
+      return { title: title || detail.slice(0, 30), detail, date, time, defer };
+    }).filter(Boolean);
+    if (!items.length) throw new Error("AI 没有从资料中提取到待办事项");
+    return { items };
   } catch (error) {
     if (error?.name === "AbortError") throw new Error("AI 请求超时");
     throw error;
@@ -293,6 +444,7 @@ async function summarizeWithAI(payload = {}) {
     clearTimeout(timeout);
   }
 }
+
 function migrateLegacyStore() {
   try {
     if (fs.existsSync(dataFile())) return;

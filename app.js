@@ -37,9 +37,15 @@ const els = {
   aiConfigHint: $("#aiConfigHint"),
   aiSourceText: $("#aiSourceText"),
   aiImageInput: $("#aiImageInput"),
+  aiFileInput: $("#aiFileInput"),
+  aiFileList: $("#aiFileList"),
   aiImageList: $("#aiImageList"),
   aiSummarizeButton: $("#aiSummarizeButton"),
   aiSummaryStatus: $("#aiSummaryStatus"),
+  aiProposals: $("#calendarAIProposals"),
+  singleTaskFields: $("#calendarSingleTaskFields"),
+  addAllButton: $("#calendarAddAllButton"),
+  calendarAddSubmit: $("#calendarAddSubmit"),
   toggleDone: $("#toggleDone"),
   manageButton: $("#manageButton"),
   calendarToggle: $("#calendarToggle"),
@@ -78,6 +84,11 @@ let confirmResolver = null;
 let calendarAddWillCommit = false;
 let calendarAddOrigin = "calendar";
 let aiImageAttachments = [];
+let aiFileAttachments = [];
+let aiProposalEntries = [];
+const AI_MAX_FILES = 5;
+const AI_MAX_FILE_BYTES = 20 * 1024 * 1024;
+const AI_FILE_EXTENSIONS = new Set([".pdf", ".doc", ".docx", ".xls", ".xlsx", ".xlsm", ".ods", ".csv", ".pptx", ".odt", ".rtf", ".txt", ".md", ".markdown", ".json", ".xml", ".yaml", ".yml", ".log"]);
 let aiConfigAvailable = false;
 let aiKeyInvalid = false;
 let aiSummaryBusy = false;
@@ -393,20 +404,235 @@ function renderAIImageList() {
   });
 }
 
+function renderAIFileList() {
+  if (!els.aiFileList) return;
+  els.aiFileList.replaceChildren();
+  aiFileAttachments.forEach((file, index) => {
+    const item = document.createElement("span");
+    item.className = "ai-file-item";
+    const name = document.createElement("span");
+    name.className = "ai-file-name";
+    name.textContent = file.name;
+    name.title = file.name;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "ai-file-remove";
+    remove.setAttribute("aria-label", `移除 ${file.name}`);
+    remove.textContent = "×";
+    remove.addEventListener("click", () => {
+      aiFileAttachments.splice(index, 1);
+      renderAIFileList();
+    });
+    item.append(name, remove);
+    els.aiFileList.append(item);
+  });
+}
+
+function clearAIProposalResults() {
+  aiProposalEntries = [];
+  if (els.aiProposals) {
+    els.aiProposals.replaceChildren();
+    els.aiProposals.hidden = true;
+  }
+  if (els.singleTaskFields) els.singleTaskFields.hidden = false;
+  if (els.calendarAddSubmit) els.calendarAddSubmit.hidden = false;
+  if (els.addAllButton) els.addAllButton.hidden = true;
+}
+
 function clearAIDraft() {
   aiImageAttachments = [];
+  aiFileAttachments = [];
   if (els.aiSourceText) els.aiSourceText.value = "";
+  if (els.aiImageInput) els.aiImageInput.value = "";
+  if (els.aiFileInput) els.aiFileInput.value = "";
   renderAIImageList();
+  renderAIFileList();
+  clearAIProposalResults();
   setAIStatus("");
+}
+
+function fileExtension(name) {
+  const match = String(name || "").toLowerCase().match(/\.([^.]+)$/);
+  return match ? "." + match[1] : "";
 }
 
 function readFileDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error(`无法读取图片：${file.name}`));
+    reader.onerror = () => reject(new Error(`无法读取文件：${file.name}`));
     reader.readAsDataURL(file);
   });
+}
+
+async function addAIFiles(fileList) {
+  const files = Array.from(fileList || []);
+  if (!files.length) return;
+  const room = Math.max(0, AI_MAX_FILES - aiFileAttachments.length);
+  if (!room) { setAIStatus("最多添加 5 个文件", true); return; }
+  const accepted = [];
+  for (const file of files.slice(0, room)) {
+    if (!AI_FILE_EXTENSIONS.has(fileExtension(file.name))) { setAIStatus(`暂不支持：${file.name}`, true); continue; }
+    if (file.size > AI_MAX_FILE_BYTES) { setAIStatus(`文件不能超过 20MB：${file.name}`, true); continue; }
+    accepted.push(file);
+  }
+  try {
+    const entries = await Promise.all(accepted.map(async (file) => ({ name: file.name, size: file.size, dataUrl: await readFileDataUrl(file) })));
+    aiFileAttachments.push(...entries);
+    renderAIFileList();
+    if (files.length > room) setAIStatus("最多添加 5 个文件", true);
+    else if (entries.length) setAIStatus("");
+  } catch (error) {
+    setAIStatus(error.message || "文件读取失败", true);
+  } finally {
+    if (els.aiFileInput) els.aiFileInput.value = "";
+  }
+}
+
+function updateAIAddAllButton() {
+  if (!els.addAllButton) return;
+  const pending = aiProposalEntries.filter((entry) => !entry.added).length;
+  els.addAllButton.hidden = aiProposalEntries.length < 2 || pending === 0;
+  els.addAllButton.disabled = pending === 0;
+  els.addAllButton.textContent = `一键添加（${pending}）`;
+}
+
+function readAIProposal(entry) {
+  const title = clampText(entry.titleInput.value);
+  if (!title) {
+    entry.titleInput.focus();
+    toast("还有事项没写标题");
+    return null;
+  }
+  const rawDate = readTaskDate(entry.dateInput);
+  if (rawDate === null) return null;
+  const time = readOptionalTime(entry.timeInput);
+  if (time === null) return null;
+  return {
+    title,
+    detail: clampText(entry.detailInput.value, 4000),
+    date: resolveTaskDate(rawDate, time),
+    time,
+  };
+}
+
+function insertAIProposal(entry, proposal) {
+  state.showDone = false;
+  const count = state.items.filter((item) => item.date === proposal.date).length;
+  state.items.push(normalizeItem({
+    id: uid(),
+    title: proposal.title,
+    detail: proposal.detail,
+    date: proposal.date,
+    time: proposal.time,
+    defer: "none",
+    done: false,
+    color: COLORS[count % COLORS.length],
+    createdAt: new Date().toISOString(),
+  }));
+  entry.added = true;
+  entry.card.classList.add("is-added");
+  entry.addButton.disabled = true;
+  entry.addButton.textContent = "已添加";
+  updateAIAddAllButton();
+}
+
+function addAIProposal(entry) {
+  if (entry.added) return true;
+  const proposal = readAIProposal(entry);
+  if (!proposal) return false;
+  insertAIProposal(entry, proposal);
+  saveState();
+  renderTasks();
+  renderCalendarView();
+  toast("已添加");
+  return true;
+}
+
+function addAllAIProposals() {
+  const pending = aiProposalEntries.filter((entry) => !entry.added);
+  if (!pending.length) return;
+  const prepared = [];
+  for (const entry of pending) {
+    const proposal = readAIProposal(entry);
+    if (!proposal) return;
+    prepared.push({ entry, proposal });
+  }
+  for (const item of prepared) insertAIProposal(item.entry, item.proposal);
+  saveState();
+  renderAll();
+  calendarAddWillCommit = true;
+  closeCalendarAddDialog();
+  toast(`已添加 ${prepared.length} 项`);
+}
+
+function renderAIProposals(items) {
+  aiProposalEntries = [];
+  if (!els.aiProposals) return;
+  els.aiProposals.replaceChildren();
+  const multiple = items.length > 1;
+  els.aiProposals.hidden = !multiple;
+  if (els.singleTaskFields) els.singleTaskFields.hidden = multiple;
+  if (els.calendarAddSubmit) els.calendarAddSubmit.hidden = multiple;
+  if (!multiple) {
+    updateAIAddAllButton();
+    return;
+  }
+  items.forEach((item, index) => {
+    const card = document.createElement("article");
+    card.className = "ai-proposal-card";
+    card.innerHTML = `
+      <div class="ai-proposal-head"><strong>事项${["一","二","三","四","五","六","七","八","九","十"][index] || index + 1}</strong><button class="ai-proposal-add" type="button">添加</button></div>
+      <label class="field"><span>标题</span><input class="ai-proposal-title" type="text" maxlength="100"></label>
+      <label class="field"><span>详情</span><textarea class="ai-proposal-detail" rows="2" maxlength="4000"></textarea></label>
+      <div class="field-row"><label class="field"><span>日期</span><input class="ai-proposal-date" type="text" inputmode="numeric" maxlength="10" placeholder="日期" data-date-picker></label><label class="field"><span>时间</span><input class="ai-proposal-time" type="text" inputmode="numeric" maxlength="5" placeholder="12:00" data-time-picker></label></div>`;
+    const entry = {
+      added: false,
+      card,
+      titleInput: card.querySelector(".ai-proposal-title"),
+      detailInput: card.querySelector(".ai-proposal-detail"),
+      dateInput: card.querySelector(".ai-proposal-date"),
+      timeInput: card.querySelector(".ai-proposal-time"),
+      addButton: card.querySelector(".ai-proposal-add"),
+    };
+    entry.titleInput.value = item.title || "";
+    entry.detailInput.value = item.detail || "";
+    entry.dateInput.value = item.date || "";
+    entry.timeInput.value = item.time || "";
+    window.DeskWeekDate?.attach?.(entry.dateInput);
+    window.DeskWeekTime?.attach?.(entry.timeInput);
+    entry.addButton.addEventListener("click", () => addAIProposal(entry));
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && event.target.tagName !== "TEXTAREA") {
+        event.preventDefault();
+        addAIProposal(entry);
+      }
+    });
+    aiProposalEntries.push(entry);
+    els.aiProposals.append(card);
+  });
+  updateAIAddAllButton();
+}
+
+function applyAIItems(items) {
+  const normalized = Array.isArray(items) ? items.filter((item) => item && (item.title || item.detail)) : [];
+  if (!normalized.length) {
+    setAIStatus("AI 没有提取到待办事项", true);
+    return;
+  }
+  if (normalized.length === 1) {
+    const item = normalized[0];
+    els.calendarNewTitle.value = item.title || "";
+    els.calendarNewDetail.value = item.detail || "";
+    els.calendarNewDate.value = item.date || "";
+    els.calendarNewTime.value = item.time || "";
+    window.DeskWeekDefer?.set?.(els.calendarNewDefer, item.defer || "none");
+    renderAIProposals([]);
+    setAIStatus("已填入");
+    return;
+  }
+  renderAIProposals(normalized);
+  setAIStatus(`已提取 ${normalized.length} 项事项`);
 }
 
 async function addAIImageFiles(fileList) {
@@ -455,24 +681,20 @@ function readableAIError(error) {
 async function summarizeAISource() {
   if (aiSummaryBusy) return;
   const text = String(els.aiSourceText?.value || "").trim();
-  if (!text && !aiImageAttachments.length) { setAIStatus("先粘贴文字或添加图片", true); return; }
+  if (!text && !aiImageAttachments.length && !aiFileAttachments.length) { setAIStatus("先粘贴文字、添加图片或文件", true); return; }
   if (aiKeyInvalid) { setAIStatus("AI 密钥已失效，请到管理中心重新填写 API Key", true); return; }
   if (!aiConfigAvailable || !window.deskWeek?.summarizeTask) { setAIStatus("先在管理中心配置 AI 接口", true); return; }
   aiSummaryBusy = true;
   els.aiSummarizeButton.disabled = true;
   els.aiSummarizeButton.textContent = "整理中…";
-  setAIStatus("正在整理…");
+  setAIStatus("正在读取资料并整理…");
   try {
     const result = await window.deskWeek.summarizeTask({
       text,
       images: aiImageAttachments.map((image) => image.dataUrl),
+      files: aiFileAttachments.map((file) => ({ name: file.name, dataUrl: file.dataUrl })),
     });
-    if (result?.title) els.calendarNewTitle.value = result.title;
-    if (result?.detail !== undefined) els.calendarNewDetail.value = result.detail;
-    if (result?.date !== undefined) els.calendarNewDate.value = result.date;
-    if (result?.time !== undefined) els.calendarNewTime.value = result.time;
-    window.DeskWeekDefer?.set?.(els.calendarNewDefer, result?.defer || "none");
-    setAIStatus("已填入");
+    applyAIItems(result?.items || (result?.title ? [result] : []));
   } catch (error) {
     setAIStatus(readableAIError(error), true);
   } finally {
@@ -481,6 +703,7 @@ async function summarizeAISource() {
     els.aiSummarizeButton.textContent = "总结并填入";
   }
 }
+
 function resetCalendarAddDefaults() {
   const today = todayKey();
   selectedDate = today;
@@ -1115,6 +1338,8 @@ els.newDetailButton?.addEventListener("click", () => {
 });
 els.aiSummarizeButton?.addEventListener("click", summarizeAISource);
 els.aiImageInput?.addEventListener("change", () => addAIImageFiles(els.aiImageInput.files));
+els.aiFileInput?.addEventListener("change", () => addAIFiles(els.aiFileInput.files));
+els.addAllButton?.addEventListener("click", addAllAIProposals);
 els.aiSourceText?.addEventListener("paste", (event) => {
   const images = [...(event.clipboardData?.items || [])]
     .filter((item) => item.kind === "file" && item.type.startsWith("image/"))
@@ -1202,6 +1427,7 @@ els.addForm.addEventListener("submit", (event) => {
 
 els.calendarAddForm.addEventListener("submit", (event) => {
   event.preventDefault();
+  if (els.singleTaskFields?.hidden) { addAllAIProposals(); return; }
   const addedFromForm = calendarAddOrigin === "form";
   const title = clampText(els.calendarNewTitle.value);
   const rawDate = readTaskDate(els.calendarNewDate);

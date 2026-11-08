@@ -21,7 +21,8 @@ DeskWeek 是一个面向 Windows 的桌面周历与待办浮窗。它附着在�
 - 公历、农历、二十四节气、中国传统节日与法定节假日
 - 法定节日当天和假期期间使用不同颜色区分
 - 同一天存在多个节日时尽量完整显示
-- 可选 AI 总结：支持 OpenAI 兼容的 `/chat/completions` 接口
+- 可选 AI 总结：支持文字、图片、PDF、Word、Excel、PPT、文本等资料
+- 一次资料可提取多件待办，并支持逐项添加或一键添加全部
 - AI 自动翻译开关，可把非中文内容整理为中文
 - 便携数据：任务保存在程序旁的 `data/data.json`
 
@@ -67,6 +68,8 @@ API Key 使用 Electron `safeStorage` 加密后独立保存在 `data/ai-key.dat`
 - API Key
 
 接口需要兼容 `POST /chat/completions`。AI 总结为可选功能，关闭时程序仍可完全离线使用。
+
+可添加 PDF、DOC/DOCX、XLS/XLSX/ODS/CSV、PPTX、ODT、RTF、TXT、Markdown、JSON、XML、YAML 等资料；单个文件上限 20MB，一次最多 5 个。扫描版 PDF 如果没有文字层，可把页面截图作为图片添加。
 
 ## 许可
 

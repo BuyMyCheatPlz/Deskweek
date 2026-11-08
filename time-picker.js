@@ -302,7 +302,8 @@ const scrollSyncSuppressedUntil = new WeakMap();
 
   window.addEventListener('resize', positionPopover);
 
-  inputs.forEach((input) => {
+  function attachInput(input) {
+    if (!input || input.closest('.dw-time-control')) return input;
     const control = document.createElement('div');
     control.className = 'dw-time-control';
     input.parentNode.insertBefore(control, input);
@@ -334,9 +335,13 @@ const scrollSyncSuppressedUntil = new WeakMap();
       if (activeInput === input && pickerOpen) closePicker();
       else openPicker(input, trigger);
     });
-  });
+    return input;
+  }
+
+  inputs.forEach(attachInput);
 
   window.DeskWeekTime = {
+    attach: attachInput,
     normalize: normalizeTime,
     commit: commitInput,
     read(input) {

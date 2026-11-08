@@ -1,7 +1,7 @@
 {
   "name": "deskweek-float",
   "productName": "DeskWeek",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "A small desktop floating weekly calendar and deadline-sorted todo list.",
   "main": "main.cjs",
   "private": true,
@@ -13,7 +13,12 @@
     "check": "node --check main.cjs && node --check preload.cjs && node --check app.js && node --check manager.js && node --check calendar-info.js && node --check date-picker.js && node --check time-picker.js && node --check defer-picker.js"
   },
   "dependencies": {
-    "koffi": "3.3.3"
+    "jszip": "3.10.1",
+    "koffi": "3.3.3",
+    "mammoth": "1.13.0",
+    "pdf-parse": "1.1.1",
+    "word-extractor": "1.0.4",
+    "xlsx": "0.18.5"
   },
   "devDependencies": {
     "@electron/packager": "20.3.0",

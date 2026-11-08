@@ -102,40 +102,46 @@
         </div>
         <button id="closeCalendarAddDialog" class="icon-button" type="button" aria-label="关闭新增事项">×</button>
       </div>
-      <label class="field">
-        <span>事项</span>
-        <input id="calendarNewTitle" type="text" maxlength="100" placeholder="要做什么？" required>
-      </label>
-      <label class="field">
-        <span>详情</span>
-        <textarea id="calendarNewDetail" rows="3" maxlength="4000" placeholder="补充要求、链接或注意事项"></textarea>
-      </label>
+      <div id="calendarSingleTaskFields">
+        <label class="field">
+          <span>事项</span>
+          <input id="calendarNewTitle" type="text" maxlength="100" placeholder="要做什么？" required>
+        </label>
+        <label class="field">
+          <span>详情</span>
+          <textarea id="calendarNewDetail" rows="3" maxlength="4000" placeholder="补充要求、链接或注意事项"></textarea>
+        </label>
+        <div class="field-row">
+          <label class="field">
+            <span>日期</span>
+            <input id="calendarNewDate" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="日期" aria-label="选择日期" data-date-picker>
+          </label>
+          <label class="field">
+            <span>时间</span>
+            <input id="calendarNewTime" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="12:00" aria-label="可选时间" data-time-picker>
+          </label>
+        </div>
+        <div class="field"><span>延后显示</span><div id="calendarNewDefer" class="defer-picker" data-defer-picker data-defer-value="none"><button class="defer-trigger" type="button" aria-label="延后显示：立即显示" aria-expanded="false"><span class="defer-clock-icon" aria-hidden="true"></span><span class="defer-trigger-badge" hidden></span></button></div></div>
+      </div>
+      <div id="calendarAIProposals" class="ai-proposal-list" hidden></div>
       <section class="ai-summary-box">
         <div class="ai-summary-head"><h3>AI 总结</h3><span id="aiConfigHint" class="ai-config-hint" hidden>未配置接口</span></div>
-        <textarea id="aiSourceText" rows="3" maxlength="12000" placeholder="粘贴邮件、通知或聊天内容"></textarea>
+        <textarea id="aiSourceText" rows="3" maxlength="12000" placeholder="粘贴邮件、通知或聊天内容，也可以添加文件"></textarea>
         <div class="ai-summary-actions">
           <label class="soft-button ai-image-button">添加图片<input id="aiImageInput" type="file" accept="image/*" multiple hidden></label>
+          <label class="soft-button ai-image-button">添加文件<input id="aiFileInput" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.ods,.csv,.pptx,.odt,.rtf,.txt,.md,.markdown,.json,.xml,.yaml,.yml,.log" multiple hidden></label>
           <div id="aiImageList" class="ai-image-list"></div>
+          <div id="aiFileList" class="ai-file-list"></div>
           <span class="spacer"></span>
+          <button id="calendarAddAllButton" class="save-button ai-add-all-button" type="button" hidden>一键添加</button>
           <button id="aiSummarizeButton" class="save-button" type="button">总结并填入</button>
         </div>
         <p id="aiSummaryStatus" class="ai-summary-status" hidden></p>
       </section>
-      <div class="field-row">
-        <label class="field">
-          <span>日期</span>
-          <input id="calendarNewDate" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="日期" aria-label="选择日期" data-date-picker>
-        </label>
-        <label class="field">
-          <span>时间</span>
-          <input id="calendarNewTime" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="12:00" aria-label="可选时间" data-time-picker>
-        </label>
-      </div>
-      <div class="field"><span>延后显示</span><div id="calendarNewDefer" class="defer-picker" data-defer-picker data-defer-value="none"><button class="defer-trigger" type="button" aria-label="延后显示：立即显示" aria-expanded="false"><span class="defer-clock-icon" aria-hidden="true"></span><span class="defer-trigger-badge" hidden></span></button></div></div>
       <div class="dialog-actions">
         <span class="spacer"></span>
         <button id="calendarCancelAdd" class="ghost-button" type="button">取消</button>
-        <button class="save-button" type="submit">添加</button>
+        <button id="calendarAddSubmit" class="save-button" type="submit">添加</button>
       </div>
     </form>
   </dialog>

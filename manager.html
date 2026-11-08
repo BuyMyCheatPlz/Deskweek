@@ -87,7 +87,7 @@
             <article class="settings-card"><div class="settings-card-head"><div><h3>备份与恢复</h3></div></div><div class="settings-actions"><button id="managerExport" class="soft-button">导出 JSON</button><button id="managerImport" class="soft-button">导入 JSON</button><input id="managerImportFile" type="file" accept="application/json,.json" hidden></div></article>
             <article class="settings-card"><div class="settings-card-head"><div><h3>本地数据</h3></div></div><div class="settings-actions"><button id="settingsOpenDataFolder" class="soft-button">打开数据目录</button></div><p class="settings-note">位置：data\data.json</p></article>
             <article class="settings-card about-card">
-              <div class="about-head"><div><h3>DeskWeek</h3><p class="about-credit">开发：小虾 × 菜鸡咕</p></div><span class="version-pill">v1.0.1</span></div>
+              <div class="about-head"><div><h3>DeskWeek</h3><p class="about-credit">开发：小虾 × 菜鸡咕</p></div><span class="version-pill">v1.1.0</span></div>
               <div class="about-tags"><span>Electron</span><span>JavaScript</span><span>Windows 10/11</span><span>本地数据</span></div>
             </article>
           </div>
@@ -98,22 +98,28 @@
   <dialog id="managerAddDialog" class="edit-dialog manager-add-dialog" aria-labelledby="managerAddDialogTitle">
     <form id="managerDetailedForm" autocomplete="off">
       <div class="dialog-head"><div><h2 id="managerAddDialogTitle">记一件事</h2></div><button id="managerCloseAddDialog" class="icon-button" type="button" aria-label="关闭">×</button></div>
-      <label class="field"><span>事项</span><input id="managerAddTitle" type="text" maxlength="100" placeholder="要做什么？" required></label>
-      <label class="field"><span>详情</span><textarea id="managerAddDetail" rows="3" maxlength="4000" placeholder="补充要求、链接或注意事项"></textarea></label>
+      <div id="managerSingleTaskFields">
+        <label class="field"><span>事项</span><input id="managerAddTitle" type="text" maxlength="100" placeholder="要做什么？" required></label>
+        <label class="field"><span>详情</span><textarea id="managerAddDetail" rows="3" maxlength="4000" placeholder="补充要求、链接或注意事项"></textarea></label>
+        <div class="field-row"><label class="field"><span>日期</span><input id="managerAddDate" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="日期" aria-label="选择日期" data-date-picker></label><label class="field"><span>时间</span><input id="managerAddTime" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="12:00" aria-label="可选时间" data-time-picker></label></div>
+        <div class="field"><span>延后显示</span><div id="managerAddDefer" class="defer-picker" data-defer-picker data-defer-value="none"><button class="defer-trigger" type="button" aria-label="延后显示：立即显示" aria-expanded="false"><span class="defer-clock-icon" aria-hidden="true"></span><span class="defer-trigger-badge" hidden></span></button></div></div>
+      </div>
+      <div id="managerAIProposals" class="ai-proposal-list" hidden></div>
       <section class="ai-summary-box">
         <div class="ai-summary-head"><h3>AI 总结</h3><span id="managerAIConfigHint" class="ai-config-hint" hidden>未配置接口</span></div>
-        <textarea id="managerAISourceText" rows="3" maxlength="12000" placeholder="粘贴邮件、通知或聊天内容"></textarea>
+        <textarea id="managerAISourceText" rows="3" maxlength="12000" placeholder="粘贴邮件、通知或聊天内容，也可以添加文件"></textarea>
         <div class="ai-summary-actions">
           <label class="soft-button ai-image-button">添加图片<input id="managerAIImageInput" type="file" accept="image/*" multiple hidden></label>
+          <label class="soft-button ai-image-button">添加文件<input id="managerAIFileInput" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.ods,.csv,.pptx,.odt,.rtf,.txt,.md,.markdown,.json,.xml,.yaml,.yml,.log" multiple hidden></label>
           <div id="managerAIImageList" class="ai-image-list"></div>
+          <div id="managerAIFileList" class="ai-file-list"></div>
           <span class="spacer"></span>
+          <button id="managerAddAllButton" class="primary-button ai-add-all-button" type="button" hidden>一键添加</button>
           <button id="managerAISummarizeButton" class="primary-button" type="button">总结并填入</button>
         </div>
         <p id="managerAIStatus" class="ai-summary-status" hidden></p>
       </section>
-      <div class="field-row"><label class="field"><span>日期</span><input id="managerAddDate" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="日期" aria-label="选择日期" data-date-picker></label><label class="field"><span>时间</span><input id="managerAddTime" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="12:00" aria-label="可选时间" data-time-picker></label></div>
-      <div class="field"><span>延后显示</span><div id="managerAddDefer" class="defer-picker" data-defer-picker data-defer-value="none"><button class="defer-trigger" type="button" aria-label="延后显示：立即显示" aria-expanded="false"><span class="defer-clock-icon" aria-hidden="true"></span><span class="defer-trigger-badge" hidden></span></button></div></div>
-      <div class="dialog-actions"><span class="spacer"></span><button id="managerCancelAdd" class="soft-button" type="button">取消</button><button class="primary-button" type="submit">添加</button></div>
+      <div class="dialog-actions"><span class="spacer"></span><button id="managerCancelAdd" class="soft-button" type="button">取消</button><button id="managerAddSubmit" class="primary-button" type="submit">添加</button></div>
     </form>
   </dialog>
   <dialog id="managerEditDialog" class="edit-dialog">

@@ -268,7 +268,8 @@
 
   window.addEventListener('resize', positionPopover);
 
-  inputs.forEach((input) => {
+  function attachInput(input) {
+    if (!input || input.closest('.dw-date-control')) return input;
     const control = document.createElement('div');
     control.className = 'dw-date-control';
     input.parentNode.insertBefore(control, input);
@@ -300,9 +301,13 @@
       if (activeInput === input && pickerOpen) closePicker();
       else openPicker(input, trigger);
     });
-  });
+    return input;
+  }
+
+  inputs.forEach(attachInput);
 
   window.DeskWeekDate = {
+    attach: attachInput,
     normalize: normalizeDate,
     commit: commitInput,
     read(input) {

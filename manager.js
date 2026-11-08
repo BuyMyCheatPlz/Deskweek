@@ -12,8 +12,8 @@ const els = {
   managerTaskList: $("#managerTaskList"), managerAddForm: $("#managerAddForm"),
   managerNewTitle: $("#managerNewTitle"), managerNewDate: $("#managerNewDate"), managerNewTime: $("#managerNewTime"), managerNewDefer: $("#managerNewDefer"),
   quickFocusButton: $("#quickFocusButton"), managerNewDetailButton: $("#managerNewDetailButton"),
-  addDialog: $("#managerAddDialog"), detailedForm: $("#managerDetailedForm"), addTitle: $("#managerAddTitle"), addDetail: $("#managerAddDetail"), addDate: $("#managerAddDate"), addTime: $("#managerAddTime"), addDefer: $("#managerAddDefer"),
-  closeAddDialog: $("#managerCloseAddDialog"), cancelAdd: $("#managerCancelAdd"), aiConfigHint: $("#managerAIConfigHint"), aiSourceText: $("#managerAISourceText"), aiImageInput: $("#managerAIImageInput"), aiImageList: $("#managerAIImageList"), aiSummarizeButton: $("#managerAISummarizeButton"), aiSummaryStatus: $("#managerAIStatus"),
+  addDialog: $("#managerAddDialog"), detailedForm: $("#managerDetailedForm"), singleTaskFields: $("#managerSingleTaskFields"), addTitle: $("#managerAddTitle"), addDetail: $("#managerAddDetail"), addDate: $("#managerAddDate"), addTime: $("#managerAddTime"), addDefer: $("#managerAddDefer"), addSubmit: $("#managerAddSubmit"),
+  closeAddDialog: $("#managerCloseAddDialog"), cancelAdd: $("#managerCancelAdd"), aiProposals: $("#managerAIProposals"), aiAddAllButton: $("#managerAddAllButton"), aiConfigHint: $("#managerAIConfigHint"), aiSourceText: $("#managerAISourceText"), aiImageInput: $("#managerAIImageInput"), aiImageList: $("#managerAIImageList"), aiFileInput: $("#managerAIFileInput"), aiFileList: $("#managerAIFileList"), aiSummarizeButton: $("#managerAISummarizeButton"), aiSummaryStatus: $("#managerAIStatus"),
   calendarTitle: $("#calendarTitle"), calendarBody: $("#calendarBody"), calPrev: $("#calPrev"), calNext: $("#calNext"), calToday: $("#calToday"),
   autostartToggle: $("#autostartToggle"),
   aiBaseUrl: $("#aiBaseUrl"), aiModel: $("#aiModel"), aiApiKey: $("#aiApiKey"), aiAutoTranslateToggle: $("#aiAutoTranslateToggle"), aiConfigStatus: $("#aiConfigStatus"), saveAIConfig: $("#saveAIConfig"), clearAIKey: $("#clearAIKey"),
@@ -34,6 +34,11 @@ let monthFitFrame = 0;
 let lastCalendarMode = "";
 let deferredShelfOpen = false;
 let managerAIImageAttachments = [];
+let managerAIFileAttachments = [];
+let managerAIProposalEntries = [];
+const MANAGER_AI_MAX_FILES = 5;
+const MANAGER_AI_MAX_FILE_BYTES = 20 * 1024 * 1024;
+const MANAGER_AI_FILE_EXTENSIONS = new Set([".pdf", ".doc", ".docx", ".xls", ".xlsx", ".xlsm", ".ods", ".csv", ".pptx", ".odt", ".rtf", ".txt", ".md", ".markdown", ".json", ".xml", ".yaml", ".yml", ".log"]);
 let managerAISummaryBusy = false;
 let managerAIConfigAvailable = false;
 let managerAIKeyInvalid = false;
@@ -454,11 +459,180 @@ function renderManagerAIImageList() {
   });
 }
 
+function renderManagerAIFileList() {
+  if (!els.aiFileList) return;
+  els.aiFileList.replaceChildren();
+  managerAIFileAttachments.forEach((file, index) => {
+    const item = document.createElement("span"); item.className = "ai-file-item";
+    const name = document.createElement("span"); name.className = "ai-file-name"; name.textContent = file.name; name.title = file.name;
+    const remove = document.createElement("button"); remove.type = "button"; remove.className = "ai-file-remove"; remove.setAttribute("aria-label", "移除 " + file.name); remove.textContent = "×";
+    remove.addEventListener("click", () => { managerAIFileAttachments.splice(index, 1); renderManagerAIFileList(); });
+    item.append(name, remove); els.aiFileList.append(item);
+  });
+}
+
+function clearManagerAIProposalResults() {
+  managerAIProposalEntries = [];
+  if (els.aiProposals) { els.aiProposals.replaceChildren(); els.aiProposals.hidden = true; }
+  if (els.singleTaskFields) els.singleTaskFields.hidden = false;
+  if (els.addSubmit) els.addSubmit.hidden = false;
+  if (els.aiAddAllButton) els.aiAddAllButton.hidden = true;
+}
+
 function clearManagerAIDraft() {
   managerAIImageAttachments = [];
+  managerAIFileAttachments = [];
   if (els.aiSourceText) els.aiSourceText.value = "";
+  if (els.aiImageInput) els.aiImageInput.value = "";
+  if (els.aiFileInput) els.aiFileInput.value = "";
   renderManagerAIImageList();
+  renderManagerAIFileList();
+  clearManagerAIProposalResults();
   setManagerAIStatus("");
+}
+
+function managerFileExtension(name) {
+  const match = String(name || "").toLowerCase().match(/\.([^.]+)$/);
+  return match ? "." + match[1] : "";
+}
+
+function readManagerFileDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("无法读取文件：" + file.name));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function addManagerAIFiles(fileList) {
+  const files = Array.from(fileList || []);
+  if (!files.length) return;
+  const room = Math.max(0, MANAGER_AI_MAX_FILES - managerAIFileAttachments.length);
+  if (!room) { setManagerAIStatus("最多添加 5 个文件", true); return; }
+  const accepted = [];
+  for (const file of files.slice(0, room)) {
+    if (!MANAGER_AI_FILE_EXTENSIONS.has(managerFileExtension(file.name))) { setManagerAIStatus(`暂不支持：${file.name}`, true); continue; }
+    if (file.size > MANAGER_AI_MAX_FILE_BYTES) { setManagerAIStatus(`文件不能超过 20MB：${file.name}`, true); continue; }
+    accepted.push(file);
+  }
+  try {
+    const entries = await Promise.all(accepted.map(async (file) => ({ name: file.name, size: file.size, dataUrl: await readManagerFileDataUrl(file) })));
+    managerAIFileAttachments.push(...entries);
+    renderManagerAIFileList();
+    if (files.length > room) setManagerAIStatus("最多添加 5 个文件", true);
+    else if (entries.length) setManagerAIStatus("");
+  } catch (error) {
+    setManagerAIStatus(error.message || "文件读取失败", true);
+  } finally {
+    if (els.aiFileInput) els.aiFileInput.value = "";
+  }
+}
+
+function updateManagerAddAllButton() {
+  if (!els.aiAddAllButton) return;
+  const pending = managerAIProposalEntries.filter((entry) => !entry.added).length;
+  els.aiAddAllButton.hidden = managerAIProposalEntries.length < 2 || pending === 0;
+  els.aiAddAllButton.disabled = pending === 0;
+  els.aiAddAllButton.textContent = `一键添加（${pending}）`;
+}
+
+function readManagerAIProposal(entry) {
+  const title = clampText(entry.titleInput.value);
+  if (!title) { entry.titleInput.focus(); toast("还有事项没写标题"); return null; }
+  const rawDate = readTaskDate(entry.dateInput);
+  if (rawDate === null) return null;
+  const time = readOptionalTime(entry.timeInput);
+  if (time === null) return null;
+  return { title, detail: clampText(entry.detailInput.value, 4000), date: resolveTaskDate(rawDate, time), time };
+}
+
+function insertManagerAIProposal(entry, proposal) {
+  const count = state.items.filter((item) => item.date === proposal.date).length;
+  state.items.push(normalizeItem({ id: uid(), title: proposal.title, detail: proposal.detail, date: proposal.date, time: proposal.time, defer: "none", done: false, color: COLORS[count % COLORS.length], createdAt: new Date().toISOString() }));
+  entry.added = true;
+  entry.card.classList.add("is-added");
+  entry.addButton.disabled = true;
+  entry.addButton.textContent = "已添加";
+  updateManagerAddAllButton();
+}
+
+async function addManagerAIProposal(entry) {
+  if (entry.added) return true;
+  const proposal = readManagerAIProposal(entry);
+  if (!proposal) return false;
+  insertManagerAIProposal(entry, proposal);
+  await commit("已添加");
+  return true;
+}
+
+async function addAllManagerAIProposals() {
+  const pending = managerAIProposalEntries.filter((entry) => !entry.added);
+  if (!pending.length) return;
+  const prepared = [];
+  for (const entry of pending) {
+    const proposal = readManagerAIProposal(entry);
+    if (!proposal) return;
+    prepared.push({ entry, proposal });
+  }
+  for (const item of prepared) insertManagerAIProposal(item.entry, item.proposal);
+  if (managerAddSource === "inline") {
+    els.managerNewTitle.value = "";
+    els.managerNewTime.value = "";
+    window.DeskWeekDefer?.set?.(els.managerNewDefer, "none");
+  }
+  managerAddSource = "new";
+  closeManagerAddDialog();
+  await commit(`已添加 ${prepared.length} 项`);
+}
+
+function renderManagerAIProposals(items) {
+  managerAIProposalEntries = [];
+  if (!els.aiProposals) return;
+  els.aiProposals.replaceChildren();
+  const multiple = items.length > 1;
+  els.aiProposals.hidden = !multiple;
+  if (els.singleTaskFields) els.singleTaskFields.hidden = multiple;
+  if (els.addSubmit) els.addSubmit.hidden = multiple;
+  if (!multiple) { updateManagerAddAllButton(); return; }
+  items.forEach((item, index) => {
+    const card = document.createElement("article"); card.className = "ai-proposal-card";
+    card.innerHTML = `
+      <div class="ai-proposal-head"><strong>事项${["一","二","三","四","五","六","七","八","九","十"][index] || index + 1}</strong><button class="ai-proposal-add" type="button">添加</button></div>
+      <label class="field"><span>标题</span><input class="ai-proposal-title" type="text" maxlength="100"></label>
+      <label class="field"><span>详情</span><textarea class="ai-proposal-detail" rows="2" maxlength="4000"></textarea></label>
+      <div class="field-row"><label class="field"><span>日期</span><input class="ai-proposal-date" type="text" inputmode="numeric" maxlength="10" placeholder="日期" data-date-picker></label><label class="field"><span>时间</span><input class="ai-proposal-time" type="text" inputmode="numeric" maxlength="5" placeholder="12:00" data-time-picker></label></div>`;
+    const entry = { added: false, card, titleInput: card.querySelector(".ai-proposal-title"), detailInput: card.querySelector(".ai-proposal-detail"), dateInput: card.querySelector(".ai-proposal-date"), timeInput: card.querySelector(".ai-proposal-time"), addButton: card.querySelector(".ai-proposal-add") };
+    entry.titleInput.value = item.title || "";
+    entry.detailInput.value = item.detail || "";
+    entry.dateInput.value = item.date || "";
+    entry.timeInput.value = item.time || "";
+    window.DeskWeekDate?.attach?.(entry.dateInput);
+    window.DeskWeekTime?.attach?.(entry.timeInput);
+    entry.addButton.addEventListener("click", () => addManagerAIProposal(entry));
+    card.addEventListener("keydown", (event) => { if (event.key === "Enter" && event.target.tagName !== "TEXTAREA") { event.preventDefault(); addManagerAIProposal(entry); } });
+    managerAIProposalEntries.push(entry);
+    els.aiProposals.append(card);
+  });
+  updateManagerAddAllButton();
+}
+
+function applyManagerAIItems(items) {
+  const normalized = Array.isArray(items) ? items.filter((item) => item && (item.title || item.detail)) : [];
+  if (!normalized.length) { setManagerAIStatus("AI 没有提取到待办事项", true); return; }
+  if (normalized.length === 1) {
+    const item = normalized[0];
+    els.addTitle.value = item.title || "";
+    els.addDetail.value = item.detail || "";
+    els.addDate.value = item.date || "";
+    els.addTime.value = item.time || "";
+    window.DeskWeekDefer?.set?.(els.addDefer, item.defer || "none");
+    renderManagerAIProposals([]);
+    setManagerAIStatus("已填入");
+    return;
+  }
+  renderManagerAIProposals(normalized);
+  setManagerAIStatus(`已提取 ${normalized.length} 项事项`);
 }
 
 function readManagerImageDataUrl(file) {
@@ -517,18 +691,17 @@ function readableManagerAIError(error) {
 async function summarizeManagerAISource() {
   if (managerAISummaryBusy) return;
   const source = String(els.aiSourceText?.value || "").trim();
-  if (!source && !managerAIImageAttachments.length) { setManagerAIStatus("先粘贴文字或添加图片", true); return; }
+  if (!source && !managerAIImageAttachments.length && !managerAIFileAttachments.length) { setManagerAIStatus("先粘贴文字、添加图片或文件", true); return; }
   if (managerAIKeyInvalid) { setManagerAIStatus("AI 密钥已失效，请在设置里重新填写 API Key", true); return; }
   if (!managerAIConfigAvailable || !window.deskWeek?.summarizeTask) { setManagerAIStatus("先在设置里配置 AI 接口", true); return; }
-  managerAISummaryBusy = true; els.aiSummarizeButton.disabled = true; els.aiSummarizeButton.textContent = "整理中…"; setManagerAIStatus("正在整理…");
+  managerAISummaryBusy = true; els.aiSummarizeButton.disabled = true; els.aiSummarizeButton.textContent = "整理中…"; setManagerAIStatus("正在读取资料并整理…");
   try {
-    const result = await window.deskWeek.summarizeTask({ text: source, images: managerAIImageAttachments.map((image) => image.dataUrl) });
-    if (result?.title) els.addTitle.value = result.title;
-    if (result?.detail !== undefined) els.addDetail.value = result.detail;
-    if (result?.date !== undefined) els.addDate.value = result.date;
-    if (result?.time !== undefined) els.addTime.value = result.time;
-    window.DeskWeekDefer?.set?.(els.addDefer, result?.defer || "none");
-    setManagerAIStatus("已填入");
+    const result = await window.deskWeek.summarizeTask({
+      text: source,
+      images: managerAIImageAttachments.map((image) => image.dataUrl),
+      files: managerAIFileAttachments.map((file) => ({ name: file.name, dataUrl: file.dataUrl })),
+    });
+    applyManagerAIItems(result?.items || (result?.title ? [result] : []));
   } catch (error) {
     setManagerAIStatus(readableManagerAIError(error), true);
   } finally {
@@ -648,6 +821,7 @@ els.managerNewDetailButton.addEventListener("click", () => {
 els.settingsOpenDataFolder.addEventListener("click", openDataFolder);
 els.detailedForm.addEventListener("submit", (event) => {
   event.preventDefault();
+  if (els.singleTaskFields?.hidden) { addAllManagerAIProposals(); return; }
   const title = clampText(els.addTitle.value);
   const rawDate = readTaskDate(els.addDate);
   if (rawDate === null) return;
@@ -699,6 +873,8 @@ els.closeAddDialog.addEventListener("click", closeManagerAddDialog); els.cancelA
 els.addDialog.addEventListener("click", (event) => { if (event.target === els.addDialog) closeManagerAddDialog(); });
 els.aiSummarizeButton.addEventListener("click", summarizeManagerAISource);
 els.aiImageInput.addEventListener("change", () => addManagerAIImages(els.aiImageInput.files));
+els.aiFileInput.addEventListener("change", () => addManagerAIFiles(els.aiFileInput.files));
+els.aiAddAllButton.addEventListener("click", addAllManagerAIProposals);
 els.aiSourceText.addEventListener("paste", (event) => {
   const images = [...(event.clipboardData?.items || [])].filter((item) => item.kind === "file" && item.type.startsWith("image/")).map((item) => item.getAsFile()).filter(Boolean);
   if (!images.length) return;
