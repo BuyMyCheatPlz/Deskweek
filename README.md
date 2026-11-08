@@ -56,7 +56,7 @@ npm run package
 
 默认数据文件为程序旁的 `data/data.json`，不会自动上传。AI 总结是可选功能，只有在管理中心配置接口并主动点击总结时，输入内容才会发送到你配置的接口。
 
-API Key 使用 Electron `safeStorage` 加密保存为本机文件；界面和 IPC 不返回明文 Key。不要把 `data/`、`ai-config.json` 或本地生成的安装包提交到仓库。
+API Key 使用 Electron `safeStorage` 加密后独立保存在 `data/ai-key.dat`，并保留 `data/ai-key.backup.dat` 备份。界面和 IPC 不返回明文 Key。不要把 `data/`、`ai-config*.json`、`ai-key*.dat` 或本地生成的安装包提交到仓库。
 
 ## AI 接口
 

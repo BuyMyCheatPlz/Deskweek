@@ -10,8 +10,9 @@ release/
 
 # Local application data and secrets
 data/
-ai-config.json
+ai-config*.json
 window-state.json
+ai-key*.dat
 .env
 .env.*
 *.log
