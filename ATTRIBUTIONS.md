@@ -12,4 +12,3 @@ No separate license is granted for third-party artwork beyond the rights held by
 随程序内置，运行时不联网。
 
 Document parsing uses [mammoth](https://github.com/mwilliamson/mammoth.js) (BSD-2-Clause), [SheetJS](https://github.com/SheetJS/sheetjs) (Apache-2.0), [pdf-parse](https://gitlab.com/autokent/pdf-parse) (MIT), [word-extractor](https://github.com/morungos/node-word-extractor) (MIT), and [JSZip](https://github.com/Stuk/jszip) (MIT option).
-
