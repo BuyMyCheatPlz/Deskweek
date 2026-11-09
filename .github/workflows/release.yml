@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag (e.g. v1.3.0, defaults to v + package.json version)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Publish Release
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Run verification checks
+        run: |
+          npm run check
+          npm test
+
+      - name: Determine release version and tag
+        id: vars
+        shell: pwsh
+        run: |
+          $pkgVersion = (Get-Content package.json | ConvertFrom-Json).version
+          $inputTag = "${{ github.event.inputs.tag_name }}".Trim()
+          if ($inputTag) {
+            $tag = $inputTag
+          } elseif ($env:GITHUB_REF_TYPE -eq 'tag') {
+            $tag = $env:GITHUB_REF_NAME
+          } else {
+            $tag = "v$pkgVersion"
+          }
+          $cleanVersion = $tag.TrimStart('v')
+          Write-Output "tag=$tag" >> $env:GITHUB_OUTPUT
+          Write-Output "version=$cleanVersion" >> $env:GITHUB_OUTPUT
+          Write-Output "title=DeskWeek $tag · 全透明浮窗与核心架构优化" >> $env:GITHUB_OUTPUT
+          Write-Host "Releasing DeskWeek $tag (version $cleanVersion)"
+
+      - name: Package Windows portable executable
+        run: npm run package
+
+      - name: Create release zip archive and SHA-256 checksum
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.vars.outputs.version }}"
+          $zipName = "DeskWeek-v$ver-windows-x64-portable.zip"
+          $zipPath = "dist/$zipName"
+          Write-Host "Creating archive: $zipPath"
+          if (Get-Command tar.exe -ErrorAction SilentlyContinue) {
+            tar.exe -a -c -f $zipPath -C dist DeskWeek-win32-x64
+          } else {
+            Compress-Archive -Path dist/DeskWeek-win32-x64 -DestinationPath $zipPath -CompressionLevel Optimal
+          }
+          
+          $hash = (Get-FileHash -Path $zipPath -Algorithm SHA256).Hash.ToLower()
+          $shaFile = "$zipPath.sha256"
+          "$hash *$zipName" | Out-File -FilePath $shaFile -Encoding utf8
+          Write-Host "SHA-256: $hash"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          name: ${{ steps.vars.outputs.title }}
+          body_path: RELEASE_NOTES.md
+          files: |
+            dist/*.zip
+            dist/*.sha256
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
