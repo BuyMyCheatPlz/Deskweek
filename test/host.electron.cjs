@@ -67,6 +67,13 @@ app.whenReady().then(async () => {
   await until(() => js("!document.querySelector('#editDialog').open"), "Concurrent edit did not complete");
   const concurrent = await js("window.deskWeek.loadStore()");
   assert.equal(concurrent.items[0].title, "双窗口同步成功 v2"); assert.equal(concurrent.items[0].detail, "只修改详情");
+  await js(`(async()=>{const s=await window.deskWeek.loadStore();return await window.deskWeek.saveStore({items:s.items,prefs:{...s.prefs,widgetBackground:'transparent',autoTheme:true}});})()`);
+  await until(() => js("document.documentElement.dataset.widgetBackground === 'transparent'"), "Transparent background did not apply in packaged app");
+  const backgroundSample = await js("refreshBackgroundTheme(true)");
+  assert.ok(backgroundSample && ["light", "dark"].includes(backgroundSample.theme), "Background sampling failed in packaged app");
+  assert.equal(backgroundSample.samples, 25);
+  assert.equal(await js(`document.documentElement.dataset.theme === '${backgroundSample.theme}'`), true);
+  await js(`(async()=>{const s=await window.deskWeek.loadStore();return await window.deskWeek.saveStore({items:s.items,prefs:{...s.prefs,widgetBackground:'standard',autoTheme:false,theme:'dark'}});})()`);
   windowController.toggle(); await sleep(1700);
   assert.equal(await manager.webContents.executeJavaScript("window.DeskWeekRuntime.paused()"), false);
   windowController.toggle(); await sleep(1700);
@@ -135,7 +142,7 @@ app.whenReady().then(async () => {
   assert.equal(restoredData.prefs.theme, "dark");
   await sleep(2000);
   assert.equal(errors.length, 0, errors.join("\n"));
-  console.log("HOST_REGRESSION_PASS", JSON.stringify({ desktopLayer, displays: screen.getAllDisplays().map(d => ({ bounds: d.bounds, scaleFactor: d.scaleFactor })), monitorMoves, active, suspended, resumed: metrics(), checks: ["real preload and IPC", "task persistence", "two-window synchronization", "theme", "mini restore", "physical mixed-DPI monitor moves", "desktop host recovery injection", "fullscreen detection", "refresh pause", "draft protection", "renderer release", "automatic resume", "data retained", "no renderer console errors"] }));
+  console.log("HOST_REGRESSION_PASS", JSON.stringify({ desktopLayer, displays: screen.getAllDisplays().map(d => ({ bounds: d.bounds, scaleFactor: d.scaleFactor })), monitorMoves, active, suspended, resumed: metrics(), checks: ["real preload and IPC", "task persistence", "two-window synchronization", "theme", "background theme sampling", "mini restore", "physical mixed-DPI monitor moves", "desktop host recovery injection", "fullscreen detection", "refresh pause", "draft protection", "renderer release", "automatic resume", "data retained", "no renderer console errors"] }));
   app.quit();
 }).catch(error => {
   console.error("HOST_REGRESSION_FAIL", error.stack);

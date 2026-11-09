@@ -63,20 +63,35 @@ function applyTheme(theme, remember = false) {
 }
 function renderThemeChoice(theme = currentTheme()) {
   const value = normalizedTheme(theme);
+  const transparent = window.DeskWeekBackground.normalize(state.prefs.widgetBackground) === "transparent";
+  const autoActive = transparent && state.prefs.autoTheme !== false;
+  const activeChoice = autoActive ? "auto" : value;
   document.querySelectorAll("[data-theme-choice]").forEach((button) => {
-    const active = button.dataset.themeChoice === value;
+    if (button.dataset.themeChoice === "auto") button.hidden = !transparent;
+    const active = button.dataset.themeChoice === activeChoice;
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
 }
-async function setThemePreference(theme) {
+async function setThemePreference(choice) {
+  if (choice === "auto") {
+    state.prefs.autoTheme = true;
+    renderThemeChoice(currentTheme());
+    try { await persist(); toast("跟随背景亮度"); }
+    catch { toast("主题保存失败"); }
+    return;
+  }
+  const theme = normalizedTheme(choice);
+  state.prefs.autoTheme = false;
   applyTheme(theme, true);
   try { await persist(); toast(theme === "dark" ? "深色" : "浅色"); }
   catch { toast("主题保存失败"); }
 }
+
 async function setWidgetBackground(value) {
   const previous = window.DeskWeekBackground.normalize(state.prefs.widgetBackground);
   state.prefs.widgetBackground = window.DeskWeekBackground.apply(value);
+  renderThemeChoice(currentTheme());
   try { await persist(); toast(value === "transparent" ? "浮窗背景已透明" : "已恢复标准背景"); }
   catch {
     state.prefs.widgetBackground = window.DeskWeekBackground.apply(previous);
@@ -801,14 +816,18 @@ function compactUpdateNotes(notes) {
   return String(notes || "")
     .split(/\r?\n/)
     .map((line) => line.trim())
+    .filter((line) => !/^-{3,}$/.test(line))
+    .map((line) => line
+      .replace(/^#{1,6}\s*/, "")
+      .replace(/^>\s*/, "")
+      .replace(/^[-*•]\s*/, "")
+      .replace(/^\d+[.)、]\s*/, "")
+      .replace(/\*\*/g, "")
+      .replace(/`/g, "")
+      .trim())
     .filter(Boolean)
-    .filter((line) => !/^DeskWeek\s+v?\d/i.test(line))
-    .map((line) => line.replace(/^[-*•]\s*/, "").replace(/^\d+[.)、]\s*/, "").replace(/\*\*/g, "").replace(/`/g, "").trim())
-    .filter(Boolean)
-    .slice(0, 4)
-    .map((line) => line.length > 72 ? line.slice(0, 72).trimEnd() + "…" : line);
+    .filter((line) => !/^DeskWeek\s+v?\d/i.test(line));
 }
-
 function setUpdateNotes(notes) {
   if (!els.updateNotes) return;
   const entries = compactUpdateNotes(notes);
@@ -860,7 +879,7 @@ async function syncStartupUpdateState() {
 
 function setUpdateStatus(message, state = "idle", install = false, detail = "") {
   els.updateStatus.dataset.state = state;
-  els.updateStatusText.textContent = message;
+  els.updateStatusText.textContent = state === "error" && detail ? `${message}：${detail}` : message;
   els.updateStatusText.title = detail;
   els.installUpdateButton.hidden = !install;
   els.installUpdateButton.disabled = state === "busy";

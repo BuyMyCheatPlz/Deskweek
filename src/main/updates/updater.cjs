@@ -47,7 +47,7 @@ async function checkGithubUpdate() {
     hasUpdate: compareVersions(latestVersion, currentVersion) > 0,
     releaseUrl: release.html_url || GITHUB_RELEASES_URL,
     publishedAt: release.published_at || "",
-    notes: String(release.body || "").slice(0, 2000),
+    notes: String(release.body || ""),
     asset: asset ? {
       name: String(asset.name || "DeskWeek-update.zip"),
       size: Number(asset.size) || 0,
@@ -57,6 +57,31 @@ async function checkGithubUpdate() {
   };
 }
 
+function waitForUpdaterStarted(updater, markerPath, timeoutMs = 10000) {
+  return new Promise((resolve, reject) => {
+    let settled = false, timer;
+    const finish = error => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      updater.removeListener("error", onError);
+      updater.removeListener("exit", onExit);
+      if (error) reject(error); else resolve();
+    };
+    const onError = error => finish(error);
+    const onExit = code => finish(new Error(`更新程序未能启动（退出码 ${code ?? "未知"}）`));
+    updater.once("error", onError);
+    updater.once("exit", onExit);
+    const deadline = Date.now() + timeoutMs;
+    const poll = () => {
+      if (settled) return;
+      if (fs.existsSync(markerPath)) return finish();
+      if (Date.now() >= deadline) return finish(new Error("更新程序启动超时"));
+      timer = setTimeout(poll, 50);
+    };
+    poll();
+  });
+}
 function buildUpdaterScript() {
   return fs.readFileSync(path.join(__dirname, "install-update.ps1"), "utf8");
 }
@@ -64,7 +89,7 @@ function buildUpdaterScript() {
 async function downloadAndInstallUpdate(event, portableDataDir) {
   const { app } = require("electron");
   if (!app.isPackaged) throw new Error("开发模式不执行自动替换，请使用打包版本");
-  const report = data => { if (!event.sender.isDestroyed()) event.sender.send("deskweek:update-progress", data); };
+  const report = data => { try { if (!event.sender.isDestroyed()) event.sender.send("deskweek:update-progress", data); } catch { /* manager may close during download */ } };
   const info = await checkGithubUpdate();
   if (!info.hasUpdate) return { ok: true, updated: false, info };
   if (!info.asset?.downloadUrl) throw new Error("最新版本没有可下载的便携包");
@@ -109,14 +134,25 @@ async function downloadAndInstallUpdate(event, portableDataDir) {
   fs.renameSync(tempPath, finalPath);
   const targetDir = path.dirname(process.execPath);
   const scriptPath = path.join(os.tmpdir(), `DeskWeek-update-${Date.now()}.ps1`);
+  const startedPath = `${scriptPath}.started`;
   const logPath = path.join(updateDir, "update.log");
+  try { if (fs.existsSync(startedPath)) fs.unlinkSync(startedPath); } catch { /* stale marker */ }
   fs.writeFileSync(scriptPath, "\ufeff" + buildUpdaterScript(), "utf8");
-  const updater = spawn("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-WindowStyle", "Hidden", "-File", scriptPath, String(process.pid), finalPath, targetDir, process.execPath, logPath], { detached: true, stdio: "ignore", windowsHide: true });
-  await new Promise((resolve, reject) => { updater.once("spawn", resolve); updater.once("error", reject); });
+  const powershell = path.join((process.env && process.env.SystemRoot) || "C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
+  const updater = spawn(powershell, ["-NoProfile", "-ExecutionPolicy", "Bypass", "-WindowStyle", "Hidden", "-File", scriptPath, String(process.pid), finalPath, targetDir, process.execPath, logPath, startedPath], { detached: true, stdio: "ignore", windowsHide: true });
+  try {
+    await waitForUpdaterStarted(updater, startedPath);
+  } catch (error) {
+    try { updater.kill(); } catch { /* already exited */ }
+    try { fs.unlinkSync(startedPath); } catch { /* no marker */ }
+    try { fs.unlinkSync(scriptPath); } catch { /* no script */ }
+    throw error;
+  }
+  try { fs.unlinkSync(startedPath); } catch { /* best effort */ }
   updater.unref();
   report({ phase: "ready", downloaded, total, percent: 100 });
   setTimeout(() => app.quit(), 700);
   return { ok: true, updated: true, info };
 }
 
-module.exports = { checkGithubUpdate, downloadAndInstallUpdate, buildUpdaterScript };
+module.exports = { checkGithubUpdate, downloadAndInstallUpdate, buildUpdaterScript, waitForUpdaterStarted };

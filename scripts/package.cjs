@@ -8,7 +8,8 @@ async function build() {
   const output = path.resolve(root, process.env.DESKWEEK_BUILD_DIR || "dist");
   const dist = path.join(root, "dist");
   if (output !== dist && !output.startsWith(dist + path.sep)) throw new Error("Build output must stay inside dist");
-  const outputs = await packager({ dir: root, name: "DeskWeek", platform: "win32", arch: "x64", out: output, overwrite: true,
+  const electronZipDir = process.env.DESKWEEK_ELECTRON_ZIP_DIR ? path.resolve(process.env.DESKWEEK_ELECTRON_ZIP_DIR) : undefined;
+  const outputs = await packager({ dir: root, name: "DeskWeek", platform: "win32", arch: "x64", out: output, overwrite: true, ...(electronZipDir ? { electronZipDir } : {}),
     asar: { unpack: "**/*.node" }, icon: path.join(root, "assets/icons/app-icon.ico"),
     ignore: [/^\/(?:data|dist|release|test|scripts|\.git|\.github)(?:\/|$)/, /\.(?:log|tmp)$/],
   });

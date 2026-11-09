@@ -34,6 +34,7 @@ async function saveStore(data, replace = false) {
 contextBridge.exposeInMainWorld("deskWeek", {
   quit: () => ipcRenderer.send("deskweek:quit"),
   setMiniMode: (enabled) => ipcRenderer.invoke("deskweek:set-mini-mode", Boolean(enabled)),
+  sampleBackground: () => ipcRenderer.invoke("deskweek:sample-background"),
   focusSync: () => ipcRenderer.sendSync("deskweek:focus-sync"),
   dragStart: () => ipcRenderer.send("deskweek:drag-start"),
   resizeStart: (edge) => ipcRenderer.send("deskweek:resize-start", edge),

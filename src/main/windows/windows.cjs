@@ -6,6 +6,7 @@ const { createDesktopManager } = require("../desktop/desktop.cjs");
 const { fitBounds, resizeBounds, RESIZE_EDGES } = require("./geometry.cjs");
 const { writeAtomic } = require("../storage/store.cjs");
 const { liveContents, sendToWindow, onWindowLoaded } = require("./lifecycle.cjs");
+const { sampleWindowBackground } = require("./background-sampler.cjs");
 function managerRuntimeState(state) { return { ...state, paused: state.paused && state.reason !== "hidden", releaseRequested: false }; }
 
 function createWindows({ app, BrowserWindow, screen, shell, root, dataDir, onStatus = () => {}, onWidgetLoaded = () => {}, onManagerLoaded = () => {} }) {
@@ -13,7 +14,7 @@ function createWindows({ app, BrowserWindow, screen, shell, root, dataDir, onSta
   const desktop = createDesktopManager();
   const stateFile = path.join(dataDir, "window-state.json");
   let widget, mini = false, preMini, normalBounds, hidden = false, gesture, gestureTimer, displayTimer;
-  let stopping = false, status = "正在启动", fallbackRetry = 0, draft = null;
+  let stopping = false, status = "正在启动", fallbackRetry = 0, draft = null, backgroundSampling = null;
   const managers = new Set();
   function fit(bounds, manager = false) {
     const primary = screen.getPrimaryDisplay();
@@ -152,6 +153,12 @@ function createWindows({ app, BrowserWindow, screen, shell, root, dataDir, onSta
     widget: () => widget,
     isWidgetSender: sender => Boolean(widget && !widget.isDestroyed() && widget.webContents === sender),
     isHidden: () => hidden,
+    async sampleBackground(desktopCapturer) {
+      if (!widget || widget.isDestroyed() || hidden || mini) return null;
+      if (backgroundSampling) return backgroundSampling;
+      backgroundSampling = sampleWindowBackground({ win: widget, screen, desktopCapturer, bounds: getBounds() }).finally(() => { backgroundSampling = null; });
+      return backgroundSampling;
+    },
     init() { for (const event of ["display-added", "display-removed", "display-metrics-changed"]) screen.on(event, displayChanged); createWidget(); },
     toggle() { hidden = !hidden; if (hidden) { endGesture(); widget?.hide(); } else { createWidget(); if (widget) { shell.moveToCurrent(widget); widget.showInactive(); } } },
     reset() { normalBounds = fit(null); preMini = normalBounds; if (widget) desktop.setBounds(widget, normalBounds, screen); else createWidget(); persist(); },

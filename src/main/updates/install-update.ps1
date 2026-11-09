@@ -1,4 +1,4 @@
-param([int]$WaitPid, [string]$ZipPath, [string]$TargetDir, [string]$ExePath, [string]$LogPath)
+param([int]$WaitPid, [string]$ZipPath, [string]$TargetDir, [string]$ExePath, [string]$LogPath, [string]$StartedPath)
 $ErrorActionPreference = 'Stop'
 function Log([string]$Message) { try { "$(Get-Date -Format o) $Message" | Out-File -LiteralPath $LogPath -Append -Encoding utf8 } catch { } }
 function Child([string]$Root, [string]$Name) {
@@ -17,6 +17,7 @@ $extractRoot = $null
 $moved = [Collections.Generic.List[string]]::new()
 $installed = [Collections.Generic.List[string]]::new()
 try {
+  Set-Content -LiteralPath $StartedPath -Value ([DateTime]::UtcNow.ToString('o')) -Encoding utf8
   $TargetDir = [IO.Path]::GetFullPath($TargetDir).TrimEnd('\')
   if ([IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($ExePath)) -ne $TargetDir -or [IO.Path]::GetFileName($ExePath) -ne 'DeskWeek.exe') { throw 'Invalid application directory' }
   $deadline = [DateTime]::UtcNow.AddSeconds(60)

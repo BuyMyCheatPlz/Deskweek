@@ -553,6 +553,8 @@ body.theme-dark .update-panel { border-color: var(--ui-line); background: rgba(2
 .about-head h3 { font-size: 18px; letter-spacing: -.035em; }
 .about-credit { margin-top: 6px !important; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; color: var(--ui-muted); }
 .about-credit .about-link { padding: 0; border: 0; background: transparent; font-size: 11.5px; font-weight: 700; }
+.about-credit-separator { color: var(--ui-faint); }
+.about-credit-ack { margin-left: 4px; color: var(--ui-muted); }
 .about-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .about-links .about-link { min-height: 34px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border: 1px solid var(--ui-line); border-radius: 9px; background: var(--ui-surface); color: var(--ui-ink); font-size: 11px; font-weight: 650; text-decoration: none; }
 .about-links .about-link::after { content: "↗"; color: var(--ui-muted); font-size: 10px; }
@@ -577,7 +579,7 @@ body.theme-dark .about-card { background: linear-gradient(145deg, color-mix(in s
 .update-status[data-state="checking"] .update-dot { background: #c28b2c; animation: updateDotPulse 1s ease-in-out infinite; }
 .update-status[data-state="update"] { color: var(--ui-ink); }
 .update-status[data-state="update"] .update-dot { background: var(--ui-accent); box-shadow: 0 0 0 3px var(--ui-accent-soft); }
-.update-status[data-state="error"] { color: var(--ui-danger); cursor: help; }
+.update-status[data-state="error"] { color: var(--ui-danger); cursor: help; max-width: 520px; white-space: normal; line-height: 1.35; text-align: right; }
 .update-status[data-state="error"] .update-dot { background: var(--ui-danger); }
 .update-install-button { min-height: 28px; margin-left: 3px; padding: 0 9px; border: 1px solid color-mix(in srgb, var(--ui-accent) 32%, var(--ui-line)); border-radius: 8px; background: var(--ui-accent-soft); color: var(--ui-accent); font-size: 10px; font-weight: 700; cursor: pointer; }
 .update-install-button:hover { border-color: color-mix(in srgb, var(--ui-accent) 55%, var(--ui-line)); }
@@ -648,7 +650,8 @@ body.theme-dark #managerAIExtraPrompt { border-color: var(--ui-line); background
 .update-notes { flex: 1 0 100%; display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; border: 1px solid color-mix(in srgb, var(--ui-accent) 16%, var(--ui-line)); border-radius: 9px; background: color-mix(in srgb, var(--ui-accent-soft) 38%, var(--ui-surface-soft)); color: var(--ui-muted); font-size: 10px; line-height: 1.55; }
 .update-notes[hidden] { display: none !important; }
 .update-notes > strong { flex: 0 0 auto; color: var(--ui-accent); font-size: 10px; font-weight: 700; white-space: nowrap; }
-.update-notes ul { min-width: 0; display: flex; flex-wrap: wrap; gap: 2px 10px; margin: 0; padding: 0; list-style: none; }
+.update-notes ul { min-width: 0; display: block; margin: 0; padding: 0; list-style: none; }
 .update-notes li { position: relative; min-width: 0; padding-left: 9px; overflow-wrap: anywhere; }
+.update-notes li + li { margin-top: 2px; }
 .update-notes li::before { content: ""; position: absolute; left: 0; top: .62em; width: 3px; height: 3px; border-radius: 50%; background: var(--ui-accent); }
 body.theme-dark .update-notes { border-color: color-mix(in srgb, var(--ui-accent) 20%, var(--ui-line)); background: rgba(128,207,186,.07); }

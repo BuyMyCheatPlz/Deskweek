@@ -74,8 +74,8 @@
         <section id="settingsView" class="view">
           <header class="view-header"><div><h2>设置</h2></div></header>
           <div class="settings-grid">
-            <article class="settings-card appearance-card"><div class="settings-card-head"><div><h3>外观主题</h3></div><div class="theme-choice" role="group" aria-label="选择外观主题"><button id="themeLightButton" class="theme-choice-button" type="button" data-theme-choice="light"><span aria-hidden="true">☀</span>浅色</button><button id="themeDarkButton" class="theme-choice-button" type="button" data-theme-choice="dark"><span aria-hidden="true">☾</span>深色</button></div></div></article>
-            <article class="settings-card appearance-card"><div class="settings-card-head"><div><h3>浮窗背景</h3><p>透明模式只保留日历与事项。浅色主题适合浅壁纸，深色主题适合深壁纸。</p></div><div class="theme-choice" role="group" aria-label="选择浮窗背景"><button class="theme-choice-button" type="button" data-widget-background-choice="standard" aria-pressed="true">标准</button><button class="theme-choice-button" type="button" data-widget-background-choice="transparent" aria-pressed="false">透明</button></div></div></article>
+            <article class="settings-card appearance-card"><div class="settings-card-head"><div><h3>外观主题</h3></div><div class="theme-choice" role="group" aria-label="选择外观主题"><button id="themeAutoButton" class="theme-choice-button" type="button" data-theme-choice="auto" hidden><span aria-hidden="true">◐</span>自动</button><button id="themeLightButton" class="theme-choice-button" type="button" data-theme-choice="light"><span aria-hidden="true">☀</span>浅色</button><button id="themeDarkButton" class="theme-choice-button" type="button" data-theme-choice="dark"><span aria-hidden="true">☾</span>深色</button></div></div></article>
+            <article class="settings-card appearance-card"><div class="settings-card-head"><div><h3>浮窗背景</h3><p>自动模式会采样壁纸亮度并切换黑字或白字；手动选择会固定主题。</p></div><div class="theme-choice" role="group" aria-label="选择浮窗背景"><button class="theme-choice-button" type="button" data-widget-background-choice="standard" aria-pressed="true">标准</button><button class="theme-choice-button" type="button" data-widget-background-choice="transparent" aria-pressed="false">透明</button></div></div></article>
             <article class="settings-card ai-settings-card">
               <div class="settings-card-head"><div><h3>AI 总结</h3></div><span id="aiConfigStatus" class="ai-config-status">未配置</span></div>
               <div class="ai-config-grid">
@@ -93,7 +93,7 @@
               <div class="about-head">
                 <div>
                   <h3>DeskWeek</h3>
-                  <p class="about-credit">开发：小虾 × <a class="about-link" href="https://space.bilibili.com/520978347" data-external-url="https://space.bilibili.com/520978347">菜鸡咕</a></p>
+                  <p class="about-credit">开发：小虾 × <a class="about-link" href="https://space.bilibili.com/520978347" data-external-url="https://space.bilibili.com/520978347">菜鸡咕</a><span class="about-credit-separator" aria-hidden="true">·</span><span class="about-credit-ack">鸣谢：<a class="about-link" href="https://github.com/BuyMyCheatPlz" data-external-url="https://github.com/BuyMyCheatPlz">BuyMyCheatPlz</a></span></p>
                   <p class="about-star-note">如果你觉得这个软件对你有所帮助，可以来 <a class="about-star-link" href="https://github.com/EasonGuuu/Deskweek" data-external-url="https://github.com/EasonGuuu/Deskweek">GitHub</a> 给我们点个 star 吗！</p>
                 </div>
                 <span class="version-pill">v1.3.0</span>

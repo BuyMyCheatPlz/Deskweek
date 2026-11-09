@@ -26,7 +26,7 @@ test("Windows installer restores partial backup even when its log cannot be writ
     $zip = Join-Path $caseRoot 'update.zip'
     $locked = [IO.File]::Open((Join-Path $target 'chrome_100_percent.pak'), [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::None)
     try {
-      . $env:DESKWEEK_INSTALLER_SCRIPT -WaitPid 0 -ZipPath $zip -TargetDir $target -ExePath (Join-Path $target 'DeskWeek.exe') -LogPath (Join-Path $caseRoot 'missing\\update.log')
+      . $env:DESKWEEK_INSTALLER_SCRIPT -WaitPid 0 -ZipPath $zip -TargetDir $target -ExePath (Join-Path $target 'DeskWeek.exe') -LogPath (Join-Path $caseRoot 'missing\\update.log') -StartedPath (Join-Path $caseRoot 'started.flag')
       if ($moved.Count -lt 1) { throw 'Test did not reach a partial backup' }
     } finally { $locked.Dispose() }
   `;
@@ -35,6 +35,7 @@ test("Windows installer restores partial backup even when its log cannot be writ
     env: { ...process.env, DESKWEEK_INSTALLER_TEST_DIR: dir, DESKWEEK_INSTALLER_SCRIPT: path.resolve(__dirname, "../src/main/updates/install-update.ps1") }, encoding: "utf8", timeout: 20000, windowsHide: true,
   });
   assert.equal(result.status, 0, result.stderr);
+  assert.equal(fs.existsSync(path.join(dir, "started.flag")), true);
   assert.match(fs.readFileSync(path.join(dir, "app/DeskWeek.exe"), "utf8"), /old-exe/);
   assert.equal(fs.readFileSync(path.join(dir, "app/personal.txt"), "utf8").trim(), "keep");
   assert.match(fs.readFileSync(path.join(dir, "app/chrome_100_percent.pak"), "utf8"), /old-pak/);

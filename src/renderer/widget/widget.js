@@ -100,19 +100,50 @@ let layoutRevealTimer = 0;
 let calendarFocusDate = new Date();
 let hoveredDateKey = "";
 let calendarDateClickTimer = 0;
+let backgroundThemeBusy = false;
+let backgroundThemeTimer = 0;
+let backgroundThemeReady = false;
 function normalizedTheme(value) { return value === "dark" ? "dark" : "light"; }
-function applyTheme(theme) {
+function applyTheme(theme, remember = true) {
   const value = normalizedTheme(theme);
-  state.theme = value;
+  if (remember) state.theme = value;
   document.documentElement.dataset.theme = value;
   document.body.classList.toggle("theme-dark", value === "dark");
   document.body.classList.toggle("theme-light", value === "light");
   document.querySelectorAll("#dwDatePopover, #dwTimePopover, #dwDeferPopover").forEach((popover) => { popover.dataset.theme = value; });
   const meta = document.querySelector("meta[name=\"color-scheme\"]");
   if (meta) meta.setAttribute("content", value);
-  try { localStorage.setItem(THEME_KEY, value); } catch { /* optional */ }
+  if (remember) try { localStorage.setItem(THEME_KEY, value); } catch { /* optional */ }
 }
 
+function backgroundThemeEligible() {
+  return state.widgetBackground === "transparent" && state.autoTheme !== false && !miniModeActive;
+}
+
+function scheduleBackgroundThemeRefresh(delay = 0, force = false) {
+  clearTimeout(backgroundThemeTimer);
+  backgroundThemeTimer = setTimeout(() => {
+    backgroundThemeTimer = 0;
+    refreshBackgroundTheme(force);
+  }, Math.max(0, delay));
+}
+
+async function refreshBackgroundTheme(force = false) {
+  if (!backgroundThemeEligible() || !window.deskWeek?.sampleBackground || backgroundThemeBusy) return null;
+  backgroundThemeBusy = true;
+  try {
+    const result = await window.deskWeek.sampleBackground();
+    if (!result?.theme || !backgroundThemeEligible()) return result;
+    const current = document.documentElement.dataset.theme;
+    if (force || !backgroundThemeReady || (result.theme !== current && result.confidence >= 0.06)) applyTheme(result.theme, false);
+    backgroundThemeReady = true;
+    return result;
+  } catch {
+    return null;
+  } finally {
+    backgroundThemeBusy = false;
+  }
+}
 function pad(value) { return String(value).padStart(2, "0"); }
 function dateKey(date) { return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`; }
 function todayKey() { return dateKey(new Date()); }
@@ -192,7 +223,7 @@ function loadPrefs() {
 function storePayload() {
   return {
     items: state.items,
-    prefs: { showDone: state.showDone, taskPanelHeight: state.taskPanelHeight, theme: state.theme, widgetBackground: state.widgetBackground, showCalendar: state.showCalendar, showTasks: state.showTasks, calendarMode: state.calendarMode },
+    prefs: { showDone: state.showDone, taskPanelHeight: state.taskPanelHeight, theme: state.theme, autoTheme: state.autoTheme, widgetBackground: state.widgetBackground, showCalendar: state.showCalendar, showTasks: state.showTasks, calendarMode: state.calendarMode },
   };
 }
 
@@ -210,16 +241,19 @@ function applyStore(data) {
     if (typeof data.prefs.showCalendar === "boolean") state.showCalendar = data.prefs.showCalendar;
     if (typeof data.prefs.showTasks === "boolean") state.showTasks = data.prefs.showTasks;
     state.calendarMode = normalizeCalendarMode(data.prefs.calendarMode);
+    state.autoTheme = data.prefs.autoTheme !== false;
+    if (state.widgetBackground !== "transparent" || state.autoTheme === false) backgroundThemeReady = false;
     if (data.prefs.theme === "light" || data.prefs.theme === "dark") applyTheme(data.prefs.theme);
     state.widgetBackground = window.DeskWeekBackground.apply(data.prefs.widgetBackground);
   }
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ items: state.items }));
-    localStorage.setItem(PREF_KEY, JSON.stringify({ showDone: state.showDone, taskPanelHeight: state.taskPanelHeight, theme: state.theme, showCalendar: state.showCalendar, showTasks: state.showTasks, calendarMode: state.calendarMode }));
+    localStorage.setItem(PREF_KEY, JSON.stringify({ showDone: state.showDone, taskPanelHeight: state.taskPanelHeight, theme: state.theme, autoTheme: state.autoTheme, showCalendar: state.showCalendar, showTasks: state.showTasks, calendarMode: state.calendarMode }));
   } catch { /* local backup is optional */ }
   applyViewState(false, false, true);
   renderAll();
   applyTaskPanelHeight(state.taskPanelHeight || 292, false, false);
+  scheduleBackgroundThemeRefresh(120);
 }
 
 function saveState() {
@@ -228,7 +262,7 @@ function saveState() {
   persistStore();
 }
 function savePrefs() {
-  try { localStorage.setItem(PREF_KEY, JSON.stringify({ showDone: state.showDone, taskPanelHeight: state.taskPanelHeight, theme: state.theme, showCalendar: state.showCalendar, showTasks: state.showTasks, calendarMode: state.calendarMode })); } catch { /* ignore */ }
+  try { localStorage.setItem(PREF_KEY, JSON.stringify({ showDone: state.showDone, taskPanelHeight: state.taskPanelHeight, theme: state.theme, autoTheme: state.autoTheme, showCalendar: state.showCalendar, showTasks: state.showTasks, calendarMode: state.calendarMode })); } catch { /* ignore */ }
   persistStore();
 }
 function applyTaskPanelHeight(height, persist = false, updateState = true) {
@@ -320,6 +354,7 @@ const prefs = loadPrefs();
 state.showDone = Boolean(prefs.showDone);
 state.taskPanelHeight = Number(prefs.taskPanelHeight) || null;
 state.theme = normalizedTheme(prefs.theme || document.documentElement.dataset.theme || window.DeskWeekThemeBootstrap?.get?.() || "light");
+state.autoTheme = prefs.autoTheme !== false;
 state.widgetBackground = window.DeskWeekBackground.apply(window.DeskWeekBackground.get());
 state.showCalendar = prefs.showCalendar !== false;
 state.showTasks = prefs.showTasks !== false;
@@ -1167,6 +1202,7 @@ function applyViewState(persist = false, animate = false, preserveDialogs = fals
     result?.catch?.(() => {});
   }
   if (!mini) requestAnimationFrame(() => applyTaskPanelHeight(state.taskPanelHeight || 292, false, false));
+  if (!mini) scheduleBackgroundThemeRefresh(120);
   if (persist) savePrefs();
   if (animate) playLayoutReveal();
 }
@@ -1635,7 +1671,7 @@ function finishGesture() {
   clearGestureVisuals();
   window.deskWeek?.gestureEnd?.();
 }
-window.deskWeek?.onGestureEnded?.(clearGestureVisuals);
+window.deskWeek?.onGestureEnded?.(() => { clearGestureVisuals(); scheduleBackgroundThemeRefresh(120); });
 document.addEventListener("pointerup", finishGesture);
 document.addEventListener("pointercancel", finishGesture);
 
@@ -1669,6 +1705,7 @@ selectedDate = initialDate;
 applyViewState(false);
 renderAll();
 applyTaskPanelHeight(state.taskPanelHeight || 292, false, false);
+scheduleBackgroundThemeRefresh(120);
 if (window.deskWeek?.loadStore) {
   window.deskWeek.loadStore().then((data) => {
     if (data?.loadError) { toast("数据没读出来，原文件还在"); return; }
@@ -1676,9 +1713,11 @@ if (window.deskWeek?.loadStore) {
     else persistStore();
   }).catch(() => {}).finally(startDraftTracking);
   window.deskWeek.onStoreChanged?.((data) => applyStore(data));
+  window.deskWeek.onRuntimeState?.((runtimeState) => { if (!runtimeState?.paused) scheduleBackgroundThemeRefresh(150); });
 }
 window.DeskWeekRuntime.start({
   refresh: () => {
+  scheduleBackgroundThemeRefresh();
   const today = todayKey();
   if (selectedDate < today && els.newDate.value === selectedDate) { selectedDate = today; els.newDate.value = today; }
   renderAll();

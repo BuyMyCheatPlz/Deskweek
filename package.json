@@ -17,7 +17,8 @@
     "test:packaged": "node scripts/run.cjs --host-test --packaged-code",
     "test:visibility": "node scripts/run.cjs --visibility-test",
     "test:resume": "node scripts/run.cjs --resume-test",
-    "test:appearance": "node scripts/run.cjs --appearance-test"
+    "test:appearance": "node scripts/run.cjs --appearance-test",
+    "test:concurrency": "node scripts/run.cjs --concurrency-test"
   },
   "dependencies": {
     "jszip": "3.10.1",

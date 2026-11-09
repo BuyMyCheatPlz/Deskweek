@@ -5,7 +5,7 @@ const { fileURLToPath } = require("node:url");
 const { createPaths } = require("../paths.cjs");
 
 function registerIPC({ electron, windows, store, aiConfig, ai, updates, runtime, dataDir, root }) {
-  const { app, ipcMain, BrowserWindow, shell } = electron;
+  const { app, ipcMain, BrowserWindow, shell, desktopCapturer } = electron;
   const paths = createPaths(root);
   function trusted(event) {
     try {
@@ -24,6 +24,7 @@ function registerIPC({ electron, windows, store, aiConfig, ai, updates, runtime,
   handle("draft-load", event => windows.isWidgetSender(event.sender) ? windows.loadDraft() : null);
   on("draft-save", (event, value) => { if (windows.isWidgetSender(event.sender)) windows.saveDraft(value); });
   handle("set-mini-mode", (event, enabled) => windows.isWidgetSender(event.sender) ? windows.setMini(Boolean(enabled)) : { enabled: false });
+  handle("sample-background", event => windows.isWidgetSender(event.sender) ? windows.sampleBackground(desktopCapturer) : null);
   on("quit", () => app.quit());
   on("drag-start", event => { if (windows.isWidgetSender(event.sender)) windows.beginGesture("move"); });
   on("resize-start", (event, edge) => { if (windows.isWidgetSender(event.sender)) windows.beginGesture(edge); });
