@@ -2,6 +2,7 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
+const path = require("node:path");
 const vm = require("node:vm");
 const crypto = require("node:crypto");
 const { EventEmitter } = require("node:events");
@@ -29,7 +30,7 @@ test("successful verified download starts installer and calls the actual app qui
   vm.createContext(sandbox); vm.runInContext(fs.readFileSync(require.resolve("../src/main/updates/updater.cjs"), "utf8"), sandbox);
   const result = await sandbox.module.exports.downloadAndInstallUpdate({ sender: { isDestroyed: () => false, send() { throw new Error("manager closed"); } } }, "memory-data");
   assert.equal(result.updated, true); assert.equal(spawned, true);
-  assert.equal(spawnedCommand, "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe");
+  assert.equal(spawnedCommand, path.join("C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe"));
   assert.equal(spawnedArgs.at(-1).endsWith(".started"), true);
   timer(); assert.equal(quit, 1);
 });
@@ -42,5 +43,5 @@ test("updater launch handshake times out instead of quitting blindly", async () 
   const { EventEmitter } = require("node:events");
   const { waitForUpdaterStarted } = require("../src/main/updates/updater.cjs");
   const child = new EventEmitter();
-  await assert.rejects(waitForUpdaterStarted(child, require("node:path").join(require("node:os").tmpdir(), `missing-update-marker-${Date.now()}`), 80), /启动超时/);
+  await assert.rejects(waitForUpdaterStarted(child, path.join(require("node:os").tmpdir(), `missing-update-marker-${Date.now()}`), 80), /启动超时/);
 });
