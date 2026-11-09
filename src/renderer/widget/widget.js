@@ -80,6 +80,7 @@ const els = {
 let calendarWheelLock = false;
 let selectedDate = todayKey();
 let editingId = null;
+let editingSnapshot = null;
 let toastTimer = null;
 let confirmResolver = null;
 let calendarAddWillCommit = false;
@@ -191,13 +192,13 @@ function loadPrefs() {
 function storePayload() {
   return {
     items: state.items,
-    prefs: { showDone: state.showDone, taskPanelHeight: state.taskPanelHeight, theme: state.theme, showCalendar: state.showCalendar, showTasks: state.showTasks, calendarMode: state.calendarMode },
+    prefs: { showDone: state.showDone, taskPanelHeight: state.taskPanelHeight, theme: state.theme, widgetBackground: state.widgetBackground, showCalendar: state.showCalendar, showTasks: state.showTasks, calendarMode: state.calendarMode },
   };
 }
 
 function persistStore() {
   const result = window.deskWeek?.saveStore?.(storePayload());
-  if (result?.catch) result.catch(() => toast("数据保存失败"));
+  if (result?.catch) result.catch(error => toast(String(error.message || "数据保存失败").replace(/^Error invoking remote method[^:]+:\s*/, "")));
 }
 
 function applyStore(data) {
@@ -210,12 +211,13 @@ function applyStore(data) {
     if (typeof data.prefs.showTasks === "boolean") state.showTasks = data.prefs.showTasks;
     state.calendarMode = normalizeCalendarMode(data.prefs.calendarMode);
     if (data.prefs.theme === "light" || data.prefs.theme === "dark") applyTheme(data.prefs.theme);
+    state.widgetBackground = window.DeskWeekBackground.apply(data.prefs.widgetBackground);
   }
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ items: state.items }));
     localStorage.setItem(PREF_KEY, JSON.stringify({ showDone: state.showDone, taskPanelHeight: state.taskPanelHeight, theme: state.theme, showCalendar: state.showCalendar, showTasks: state.showTasks, calendarMode: state.calendarMode }));
   } catch { /* local backup is optional */ }
-  applyViewState(false);
+  applyViewState(false, false, true);
   renderAll();
   applyTaskPanelHeight(state.taskPanelHeight || 292, false, false);
 }
@@ -318,6 +320,7 @@ const prefs = loadPrefs();
 state.showDone = Boolean(prefs.showDone);
 state.taskPanelHeight = Number(prefs.taskPanelHeight) || null;
 state.theme = normalizedTheme(prefs.theme || document.documentElement.dataset.theme || window.DeskWeekThemeBootstrap?.get?.() || "light");
+state.widgetBackground = window.DeskWeekBackground.apply(window.DeskWeekBackground.get());
 state.showCalendar = prefs.showCalendar !== false;
 state.showTasks = prefs.showTasks !== false;
 state.calendarMode = normalizeCalendarMode(prefs.calendarMode);
@@ -422,6 +425,7 @@ function renderAIImageList() {
     item.append(preview, remove);
     els.aiImageList.append(item);
   });
+  window.DeskWeekDrafts?.save();
 }
 
 function renderAIFileList() {
@@ -446,6 +450,7 @@ function renderAIFileList() {
     item.append(name, remove);
     els.aiFileList.append(item);
   });
+  window.DeskWeekDrafts?.save();
 }
 
 function clearAIProposalResults() {
@@ -528,6 +533,7 @@ function updateAIAddAllButton() {
   els.addAllButton.hidden = aiProposalEntries.length < 2 || pending === 0;
   els.addAllButton.disabled = pending === 0;
   els.addAllButton.textContent = `一键添加（${pending}）`;
+  window.DeskWeekDrafts?.save();
 }
 
 function readAIProposal(entry) {
@@ -600,11 +606,11 @@ function addAllAIProposals() {
   toast(`已添加 ${prepared.length} 项`);
 }
 
-function renderAIProposals(items) {
+function renderAIProposals(items, forceMultiple = false) {
   aiProposalEntries = [];
   if (!els.aiProposals) return;
   els.aiProposals.replaceChildren();
-  const multiple = items.length > 1;
+  const multiple = forceMultiple || items.length > 1;
   els.aiProposals.hidden = !multiple;
   if (els.singleTaskFields) els.singleTaskFields.hidden = multiple;
   if (els.calendarAddSubmit) els.calendarAddSubmit.hidden = multiple;
@@ -743,6 +749,7 @@ async function summarizeAISource() {
     aiSummaryBusy = false;
     els.aiSummarizeButton.disabled = false;
     els.aiSummarizeButton.textContent = "总结并填入";
+    window.DeskWeekDrafts?.save();
   }
 }
 
@@ -1040,6 +1047,7 @@ function renderDay() {
 }
 
 function renderCalendarView() {
+  if (window.DeskWeekRuntime?.paused()) return;
   document.querySelectorAll("[data-floating-cal-mode]").forEach((button) => {
     const active = button.dataset.floatingCalMode === state.calendarMode;
     button.classList.toggle("active", active);
@@ -1137,7 +1145,7 @@ function playLayoutReveal() {
   layoutRevealTimer = setTimeout(() => document.body.classList.remove("layout-reveal"), 380);
 }
 
-function applyViewState(persist = false, animate = false) {
+function applyViewState(persist = false, animate = false, preserveDialogs = false) {
   const calendarOn = Boolean(state.showCalendar);
   const tasksOn = Boolean(state.showTasks);
   const mini = !calendarOn && !tasksOn;
@@ -1145,7 +1153,7 @@ function applyViewState(persist = false, animate = false) {
   document.body.classList.toggle("view-calendar-only", calendarOn && !tasksOn);
   document.body.classList.toggle("view-tasks-only", !calendarOn && tasksOn);
   document.body.classList.toggle("mini-mode", mini);
-  if (tasksOn || !calendarOn || mini) closeCalendarAddDialog();
+  if (!preserveDialogs && (tasksOn || !calendarOn || mini)) closeCalendarAddDialog();
   els.calendarToggle.classList.toggle("active", calendarOn);
   els.calendarToggle.setAttribute("aria-pressed", String(calendarOn));
   els.calendarToggle.setAttribute("aria-expanded", String(calendarOn));
@@ -1214,6 +1222,7 @@ function weekItem(item) {
 }
 
 function renderTasks() {
+  if (window.DeskWeekRuntime?.paused()) return;
   const doneView = Boolean(state.showDone);
   const sorted = state.items
     .filter((item) => !item.deleted && (doneView ? item.done : !item.done && isTaskVisible(item)))
@@ -1286,12 +1295,13 @@ function renderTasks() {
   });
 }
 
-function renderAll() { renderCalendarView(); renderTasks(); }
+function renderAll() {
+  if (window.DeskWeekRuntime?.paused()) return; renderCalendarView(); renderTasks(); }
 
 function openEditor(id) {
   const item = state.items.find((entry) => entry.id === id);
   if (!item) return;
-  editingId = id;
+  editingId = id; editingSnapshot = structuredClone(item);
   els.editTitle.value = item.title;
   els.editDetail.value = item.detail || "";
   els.editDate.value = item.date;
@@ -1303,6 +1313,7 @@ function openEditor(id) {
 }
 
 function closeEditor() {
+  editingSnapshot = null;
   editingId = null;
   if (els.dialog.open) els.dialog.close();
 }
@@ -1518,22 +1529,21 @@ els.calendarAddForm.addEventListener("submit", (event) => {
   toast("已添加");
 });
 
-els.editForm.addEventListener("submit", (event) => {
+els.editForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const item = state.items.find((entry) => entry.id === editingId);
-  if (!item) return closeEditor();
+  if (!editingSnapshot) return;
+  const before = structuredClone(editingSnapshot), item = structuredClone(before);
   item.title = clampText(els.editTitle.value) || item.title;
   item.detail = clampText(els.editDetail.value, 4000);
-  const rawDate = readTaskDate(els.editDate);
-  if (rawDate === null) return;
-  const time = readOptionalTime(els.editTime); if (time === null) return; item.time = time;
-  item.date = resolveTaskDate(rawDate, time);
+  const rawDate = readTaskDate(els.editDate); if (rawDate === null) return;
+  const time = readOptionalTime(els.editTime); if (time === null) return;
+  item.time = time; item.date = resolveTaskDate(rawDate, time);
   item.defer = item.date ? window.DeskWeekDefer?.read?.(els.editDefer) || "none" : "none";
   setItemDoneState(item, els.editDone.checked);
-  saveState();
-  closeEditor();
-  renderAll();
-  toast("已保存");
+  try {
+    await window.deskWeek.editTask(before, item);
+    closeEditor(); renderAll(); toast("已保存");
+  } catch (error) { toast(String(error.message || "保存失败").replace(/^Error invoking remote method[^:]+:\s*/, "")); }
 });
 
 els.deleteTask.addEventListener("click", async () => {
@@ -1653,8 +1663,6 @@ els.splitter?.addEventListener("pointerup", finishSplitterDrag);
 els.splitter?.addEventListener("pointercancel", finishSplitterDrag);
 window.addEventListener("resize", () => applyTaskPanelHeight(state.taskPanelHeight || 292, false, false));
 
-
-
 const initialDate = todayKey();
 els.newDate.value = initialDate;
 selectedDate = initialDate;
@@ -1666,32 +1674,36 @@ if (window.deskWeek?.loadStore) {
     if (data?.loadError) { toast("数据没读出来，原文件还在"); return; }
     if (data?.initialized && Array.isArray(data.items)) applyStore(data);
     else persistStore();
-  }).catch(() => {});
+  }).catch(() => {}).finally(startDraftTracking);
   window.deskWeek.onStoreChanged?.((data) => applyStore(data));
 }
-setInterval(() => {
+window.DeskWeekRuntime.start({
+  refresh: () => {
   const today = todayKey();
   if (selectedDate < today && els.newDate.value === selectedDate) { selectedDate = today; els.newDate.value = today; }
   renderAll();
-}, 60000);
-document.addEventListener("visibilitychange", () => { if (!document.hidden) renderAll(); });
+  },
+  canRelease: () => !activeGesture && !aiSummaryBusy && !window.DeskWeekDrafts.hasDraft(),
+});
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+function startDraftTracking() {
+  let lastImages = [], lastFiles = [];
+  window.DeskWeekDrafts.start({
+    clear: () => { lastImages = []; lastFiles = []; },
+    hasDraft: () => Boolean(document.querySelector("dialog[open]") || els.newTitle.value.trim() || els.newTime.value.trim() || aiImageAttachments.length || aiFileAttachments.length || aiSourceTextValue()),
+    capture: () => {
+      const changed = aiImageAttachments.length !== lastImages.length || aiFileAttachments.length !== lastFiles.length || aiImageAttachments.some((x, i) => x !== lastImages[i]) || aiFileAttachments.some((x, i) => x !== lastFiles[i]);
+      lastImages = [...aiImageAttachments]; lastFiles = [...aiFileAttachments];
+      return { editingId, editingSnapshot, calendarAddOrigin,
+        ...(changed ? { assets: { images: aiImageAttachments, files: aiFileAttachments } } : {}),
+        proposals: aiProposalEntries.filter(entry => !entry.added).map(entry => ({ title: entry.titleInput.value, detail: entry.detailInput.value, date: entry.dateInput.value, time: entry.timeInput.value, defer: window.DeskWeekDefer?.read?.(entry.deferPicker) || "none" })),
+      };
+    },
+    restore: draft => {
+      editingId = draft.editingId; editingSnapshot = draft.editingSnapshot; calendarAddOrigin = draft.calendarAddOrigin || "calendar";
+      aiImageAttachments = draft.assets?.images || []; aiFileAttachments = draft.assets?.files || [];
+      renderAIImageList(); renderAIFileList(); renderAIProposals(draft.proposals || [], Boolean(draft.proposals?.length));
+    },
+  }).catch(error => console.error("Draft restore:", error));
+}
+function aiSourceTextValue() { return Boolean(els.aiSourceText?.value.trim()); }

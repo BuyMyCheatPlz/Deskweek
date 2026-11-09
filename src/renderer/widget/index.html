@@ -5,16 +5,19 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="color-scheme" content="light">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:;">
-  <script src="theme-bootstrap.js"></script>
+  <script src="../shared/theme/theme-bootstrap.js"></script>
+  <script src="../shared/theme/widget-background.js"></script>
   <title>DeskWeek · 周历清单</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="floating.css">
-  <link rel="stylesheet" href="time-picker.css">
-  <link rel="stylesheet" href="date-picker.css">
-  <link rel="stylesheet" href="defer-picker.css">
-  <link rel="stylesheet" href="floating-refresh.css">
-  <link rel="stylesheet" href="typography.css">
-  <link rel="stylesheet" href="calendar-holidays.css">
+  <link rel="stylesheet" href="./base.css">
+  <link rel="stylesheet" href="./widget.css">
+  <link rel="stylesheet" href="../shared/pickers/time-picker.css">
+  <link rel="stylesheet" href="../shared/pickers/date-picker.css">
+  <link rel="stylesheet" href="../shared/pickers/defer-picker.css">
+  <link rel="stylesheet" href="./appearance.css">
+  <link rel="stylesheet" href="../shared/styles/typography.css">
+  <link rel="stylesheet" href="../shared/calendar/calendar-holidays.css">
+  <link rel="stylesheet" href="../shared/runtime/runtime.css">
+  <link rel="stylesheet" href="./transparent.css">
 </head>
 <body class="theme-light">
   <main class="desk">
@@ -43,7 +46,7 @@
     </div>
 
     <section id="fishWidget" class="fish-widget" aria-label="大肥鱼挂件">
-      <img src="dafeiyu.png" alt="大肥鱼">
+      <img src="../../../assets/images/fish.png" alt="大肥鱼">
     </section>
 
     <section class="week-card" aria-label="日历">
@@ -200,12 +203,14 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="defer-picker.js"></script>
-  <script src="date-picker.js"></script>
-  <script src="time-picker.js"></script>
-  <script src="lunar.js"></script>
-  <script src="calendar-info.js"></script>
-  <script src="app.js"></script>
+  <script src="../shared/pickers/defer-picker.js"></script>
+  <script src="../shared/pickers/date-picker.js"></script>
+  <script src="../shared/pickers/time-picker.js"></script>
+  <script src="../../../vendor/lunar/lunar.js"></script>
+  <script src="../shared/calendar/calendar-info.js"></script>
+  <script src="../shared/runtime/ui-runtime.js"></script>
+  <script src="../shared/runtime/draft-state.js"></script>
+  <script src="./widget.js"></script>
 </body>
 </html>
 

@@ -1,0 +1,4 @@
+.runtime-paused *, .runtime-paused *::before, .runtime-paused *::after {
+  animation-play-state: paused !important;
+  transition: none !important;
+}

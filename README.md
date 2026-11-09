@@ -1,82 +1,123 @@
 # DeskWeek · 周历清单
 
 <p align="center">
-  <img src="app-icon.png" width="112" alt="DeskWeek icon">
+  <img src="assets/icons/app-icon.png" width="112" alt="DeskWeek icon">
 </p>
 
-DeskWeek 是一个面向 Windows 的桌面周历与待办浮窗。它附着在桌面层工作，不替换壁纸；任务数据默认只保存在本机。
+DeskWeek 是一款专为 Windows 设计的桌面周历与待办事项工具。它直接贴合在桌面背景上显示，不替换也不破坏系统壁纸；所有待办和日历数据默认仅保存在你的本地电脑中。
 
-## 下载
+## 下载使用
 
-可在 [GitHub Releases](https://github.com/EasonGuuu/Deskweek/releases/latest) 下载 Windows x64 便携版。
+你可以在 [GitHub Releases](https://github.com/EasonGuuu/Deskweek/releases/latest) 下载最新的 Windows x64 便携版（绿色解压即用）。
 
-## 功能
+> 提示：如果使用便携版，升级时只需保留 `data/` 文件夹即可完整迁移已有日程和配置。
 
-- 桌面浮窗与独立管理中心
-- 年、月、周、日四种日历视图
-- 按逾期、默认、日期和时间排序的待办列表
-- 任务主标题、详细内容、完成状态、垃圾箱与恢复
-- 延后显示：任务可以提前 N 天或一个月进入列表，日历中始终可见
-- 浅色与深色主题
-- 公历、农历、二十四节气、中国传统节日与法定节假日
-- 法定节日当天和假期期间使用不同颜色区分
-- 同一天存在多个节日时尽量完整显示
-- 可选 AI 总结：支持文字、图片、PDF、Word、Excel、PPTX、文本等资料
-- 一次资料可提取多件待办，并支持逐项添加或一键添加全部
-- AI 自动翻译开关，可把非中文内容整理为中文
-- 内置 GitHub 更新检查，用户确认后自动下载、替换旧版本并重启
-- 更新过程保留 data 中的任务、设置和开机启动配置
-- 便携数据：任务保存在程序旁的 `data/data.json`
+## 相关文档
 
-## 开发
+- [使用说明](docs/使用说明.txt)：软件启动、桌面显示、托盘图标操作、数据迁移与常见使用技巧。
+- [故障排查](docs/故障排查.md)：浮窗不显示、短暂闪退、报错提示或保存失败时的解决方法。
+- [修复与排错记录](docs/修复与排错记录.md)：近期功能改进、问题修复的详细记录与验证说明。
+- [桌面层与动态壁纸兼容性](docs/桌面层与动态壁纸兼容性.md)：多显示器使用、Wallpaper Engine 动态壁纸兼容性与显示说明。
 
-需要 Node.js 与 npm。
+## 主要功能
+
+- **桌面小部件与独立管理中心**：既可在桌面随时浏览日程，也可打开管理中心高效录入和整理任务。
+- **多种日历视图**：支持年、月、周、日四种视图随时切换。
+- **灵活的待办排序**：支持按到期、创建顺序、日期和具体时间等多种规则排序。
+- **完整的任务管理**：支持标题、详细备忘、完成打勾、废纸篓与一键恢复。
+- **提前与延后提醒**：任务可设置提前数天或一个月出现在待办清单中，日历视图中始终清晰可见。
+- **浅色与深色主题**：自动适配明暗环境，日夜皆宜。
+- **全透明浮窗模式**：去除白色底板和卡片阴影，仅保留日程文字与必要操作，完美融入各类电脑壁纸；可在“管理中心 → 设置 → 浮窗背景”中开启。
+- **农历、节气与节假日**：支持公历、农历对照、二十四节气、法定节假日与休假调休标记。
+- **可选 AI 助手总结**：支持导入文本、截图以及 PDF、Word、Excel、PPTX 等资料，自动提取多条待办事项并支持一键添加。
+- **自动翻译整理**：可将外语资料自动提炼整理为中文待办。
+- **内置检查更新**：检测到新版本后，用户确认即可自动下载更新并平滑重启，保留所有本地数据。
+- **纯本地便携数据**：所有待办保存在程序旁的 `data/data.json` 中，随时打包带走。
+
+## 本地开发与构建
+
+环境需求：Node.js 与 npm。
 
 ```powershell
 npm install
 npm start
 ```
 
-打包 Windows x64 便携版本：
+### 测试命令
+
+| 命令 | 用途 |
+| --- | --- |
+| `npm run check` | 检查 JavaScript 代码语法 |
+| `npm test` | 核心功能自动化测试（数据读写、多屏计算、全屏检测等） |
+| `npm run test:host` | 桌面环境集成测试（多屏拖动、双窗口同步、全屏休眠等） |
+| `npm run test:visibility` | 桌面可见性测试（验证后台辅助软件不会误触发浮窗隐藏） |
+| `npm run test:resume` | 休眠唤醒测试（验证频繁休眠恢复时的稳定性） |
+| `npm run test:appearance` | 外观测试（深浅主题与透明背景渲染效果） |
+| `npm run test:packaged` | 打包产物自动化测试 |
+
+### 打包 Windows 便携版
 
 ```powershell
+$env:DESKWEEK_BUILD_DIR = 'dist/build-verify'
 npm run package
+npm run test:packaged
 ```
 
-构建结果会写入 `dist/`。产物没有购买 Windows 代码签名证书，首次运行时可能出现 SmartScreen“未知发布者”提示。
+打包产物将输出至指定的构建目录中。提示：打包时请勿将输出路径设置为正在使用的日常数据目录，以免覆盖已有的 `data/` 文件。
 
 ## 项目结构
 
-- `main.cjs`：Electron 主进程、窗口、数据存储与 AI 请求
-- `index.html` / `app.js`：桌面浮窗
-- `manager.html` / `manager.js`：管理中心
-- `date-picker.*` / `time-picker.*` / `defer-picker.*`：自定义日期、时间与延后控件
-- `calendar-info.js` / `lunar.js`：农历、节气与节假日信息
-- `lib/`：Windows 桌面层附着相关代码
-- `floating*.css` / `manager*.css` / `style.css`：界面样式
+代码按功能模块清晰拆分，启动入口位于 `src/main/index.cjs`。
 
-## 数据与隐私
+| 目录 | 功能说明 |
+| --- | --- |
+| `src/main/` | Electron 主进程入口与核心逻辑 |
+| `src/main/desktop/` | Windows 桌面层附着与系统接口 |
+| `src/main/windows/` | 浮窗与管理窗口生命周期、拖动与多屏幕适配 |
+| `src/main/storage/` | 数据本地保存、自动备份与多窗口合并 |
+| `src/main/ai/` | AI 接口调用与文档资料解析工作线程 |
+| `src/main/runtime/` | 全屏省电休眠、锁屏监听与后台资源调度 |
+| `src/main/updates/` | 自动检查更新与安全安装升级 |
+| `src/main/ipc/` | 内部通信通道与窗口来源校验 |
+| `src/preload/` | 页面安全桥接脚本 |
+| `src/renderer/widget/` | 桌面周历浮窗的前端页面与样式 |
+| `src/renderer/manager/` | 管理中心前端页面与样式 |
+| `src/renderer/shared/` | 共用的日历组件、主题样式与状态管理 |
+| `assets/` | 应用图标、托盘图标及静态图片 |
+| `vendor/lunar/` | 内置农历与节气离线算法库 |
+| `docs/` | 使用手册、故障排查与技术说明文档 |
+| `scripts/` / `test/` | 工程脚本与自动化测试套件 |
+| `dist/` | 打包生成的便携程序目录 |
 
-默认数据文件为程序旁的 `data/data.json`，不会自动上传。AI 总结是可选功能，只有在管理中心配置接口并主动点击总结时，输入内容才会发送到你配置的接口。
+## 数据安全与隐私
 
-API Key 使用 Electron `safeStorage` 加密后独立保存在 `data/ai-key.dat`，并保留 `data/ai-key.backup.dat` 备份。界面和 IPC 不返回明文 Key。不要把 `data/`、`ai-config*.json`、`ai-key*.dat` 或本地生成的安装包提交到仓库。
+- **默认纯本地**：所有日程数据保存在本地 `data/data.json` 中，不联网、不上传。
+- **安全防损坏机制**：保存时写入临时文件再安全替换，并自动生成 `.backup` 备份文件。即使意外断电导致主文件损坏，程序也会尝试自动从备份中还原，保护你的日程不丢失。
+- **多窗口编辑防覆盖**：如果在浮窗和管理中心同时编辑了同一个任务，程序会自动合并不同字段的改动；若发生直接文字冲突，会弹窗提示确认。
+- **API 密钥加密**：AI 总结功能所需的 API Key 采用 Windows 系统内置加密存储在 `data/ai-key.dat`，界面不会显示明文密钥。
+- **输入草稿保护**：编辑中的文字在程序运行时会自动暂存，遇到系统桌面重置也能保留内容。建议在退出或更新前点击保存。
 
-## AI 接口
+## 桌面适配与省电策略
+
+- **贴合桌面底层**：浮窗附着在桌面背景层上，始终在常规应用软件下方，不会遮挡日常办公、浏览网页和游戏。
+- **智能省电休眠**：当检测到全屏打游戏、全屏播放视频或电脑锁屏休眠时，浮窗会自动暂停刷新和动画；长时间全屏且无未保存输入时，会进一步释放界面渲染资源，退出全屏后即刻自动恢复。
+- **多显示器自由移动**：支持跨多个不同分辨率、不同缩放比（DPI）的显示器随意拖动；当增减显示器或调整屏幕排列时，会自动确保浮窗处于可视区域内。如果不小心找不到浮窗，可在托盘菜单选择“找回浮窗并重置位置”。
+- **透明浮窗选项**：在“管理中心 → 设置 → 浮窗背景”选择“透明”，即可消除卡片底板，根据壁纸自由搭配浅色或深色文字。
+
+## AI 接口配置
 
 在“管理中心 → 设置 → AI 总结”中填写：
 
-- OpenAI 兼容接口地址，例如 `https://api.openai.com/v1`
-- 模型名称
-- API Key
+- **接口地址**：兼容 OpenAI 标准的 API 地址（例如 `https://api.openai.com/v1`）
+- **模型名称**：对应服务商的模型名称（例如 `gpt-4o-mini`、`gemini-2.0-flash` 等）
+- **API Key**：你的访问密钥
 
-接口需要兼容 `POST /chat/completions`。AI 总结为可选功能，关闭时程序仍可完全离线使用。
+AI 总结为完全可选功能，不配置或关闭时，DeskWeek 仍然是一个纯净、完全离线可用的周历清单工具。
 
-可添加 PDF、DOC/DOCX、XLS/XLSX/ODS/CSV、PPTX、ODT、RTF、TXT、Markdown、JSON、XML、YAML 等资料；单个文件上限 20MB，一次最多 5 个。扫描版 PDF 如果没有文字层，可把页面截图作为图片添加。
+支持导入的文件类型包括：PDF、Word (DOC/DOCX)、Excel (XLS/XLSX/CSV)、PPTX、Markdown、TXT、JSON、XML 等。单文件最大支持 20MB。
 
-## 许可
+## 开源许可
 
-源代码使用 [MIT License](LICENSE)。
+本项目源代码采用 [MIT 许可证](LICENSE)。
 
-桌面层附着代码改编自 MIT 许可的 [Dayboard](https://github.com/nowsummer/Dayboard)；农历与节日数据使用 [lunar-javascript](https://github.com/6tail/lunar-javascript)。第三方代码、图片与字体的具体归属见 [ATTRIBUTIONS.md](ATTRIBUTIONS.md)。
-
-MIT 许可仅覆盖本项目有权许可的代码与内容；第三方资源仍归其各自权利人所有。
+第三方开源库与素材归属见 [ATTRIBUTIONS.md](docs/ATTRIBUTIONS.md)。

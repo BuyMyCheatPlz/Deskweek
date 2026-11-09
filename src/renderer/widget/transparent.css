@@ -1,0 +1,115 @@
+/* Optional desktop typography: no white plates, gradients or frosted panels. */
+html[data-widget-background="transparent"] body {
+  --clear-ink: #1d1d1f;
+  --clear-muted: rgba(29,29,31,.76);
+  --clear-faint: rgba(29,29,31,.55);
+  --clear-line: rgba(29,29,31,.16);
+  --clear-accent: #006bd6;
+  --clear-shadow: 0 1px 2px rgba(255,255,255,.25);
+  --ink: var(--clear-ink);
+  --muted: var(--clear-muted);
+  --faint: var(--clear-faint);
+  --accent: var(--clear-accent);
+  --panel-soft: transparent;
+  --panel-hover: transparent;
+  --dw-time-field: transparent;
+  --dw-time-soft: transparent;
+  --dw-time-ink: var(--clear-ink);
+  --dw-time-muted: var(--clear-muted);
+  --dw-time-placeholder: var(--clear-faint);
+  --defer-field: transparent;
+  --defer-page: transparent;
+  --defer-muted: var(--clear-muted);
+  color: var(--clear-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+  text-shadow: var(--clear-shadow);
+}
+html[data-widget-background="transparent"] body.theme-dark {
+  --clear-ink: #f5f5f7;
+  --clear-muted: rgba(245,245,247,.8);
+  --clear-faint: rgba(245,245,247,.58);
+  --clear-line: rgba(245,245,247,.2);
+  --clear-accent: #64b5ff;
+  --clear-shadow: 0 1px 3px rgba(0,0,0,.4);
+}
+html[data-widget-background="transparent"] :is(.desk, .week-card, .task-card,
+  .day-column, .week-item, .floating-month-day, .floating-day-panel,
+  .calendar-mode-menu, .count-pill, .deferred-count, .add-form, .task-row,
+  .add-form input, .add-form .dw-date-control, .add-form .dw-time-control,
+  .add-form .defer-trigger, .add-form .defer-select, .task-check, .calendar-task-toggle, .ghost-button, .icon-button,
+  .today-button, .add-button, .floating-day-add, .detail-open-button) {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition-property: color, opacity, transform, border-color !important;
+}
+html[data-widget-background="transparent"] .desk { padding: 18px 20px; gap: 10px; }
+html[data-widget-background="transparent"] :is(.week-card, .task-card) { padding-inline: 6px; }
+html[data-widget-background="transparent"] :is(.brand-mark, .drag-grip, .fish-widget, .empty-day) { display: none !important; }
+html[data-widget-background="transparent"] .brand-row { text-shadow: inherit; padding-inline: 6px; }
+html[data-widget-background="transparent"] .brand strong { font-size: 12px; font-weight: 500; letter-spacing: .02em; color: var(--clear-muted); }
+html[data-widget-background="transparent"] .brand-actions { gap: 2px; }
+html[data-widget-background="transparent"] .brand-actions .ghost-button { padding-inline: 7px; }
+html[data-widget-background="transparent"] :is(h1,h2) { font-weight: 600; letter-spacing: -.04em; color: var(--clear-ink); }
+html[data-widget-background="transparent"] h1 { font-size: 29px; }
+html[data-widget-background="transparent"] h2 { font-size: 20px; }
+html[data-widget-background="transparent"] :is(.task-title, .week-item, .floating-month-day, .floating-day-panel,
+  .add-form input, .add-form .dw-date-control > input, .add-form .dw-time-control > input) { color: var(--clear-ink) !important; }
+html[data-widget-background="transparent"] :is(.subtitle, .weekday, .week-item-time,
+  .task-due, .more-items, .ghost-button, .icon-button, .today-button, .count-pill,
+  .deferred-count) { color: var(--clear-muted); }
+html[data-widget-background="transparent"] .add-form input::placeholder { color: var(--clear-faint); }
+html[data-widget-background="transparent"] :is(.day-head, .task-head, .task-row, .add-form) { border-color: var(--clear-line) !important; }
+html[data-widget-background="transparent"] .day-column { border-radius: 0; padding-inline: 8px; }
+html[data-widget-background="transparent"] .day-number { font-weight: 400; font-variant-numeric: tabular-nums; }
+html[data-widget-background="transparent"] :is(.today .day-number, .today .weekday, .floating-month-day.today .floating-month-number,
+  .calendar-mode-menu button.active, .view-toggle.active, .add-button, .floating-day-add) { color: var(--clear-accent) !important; }
+html[data-widget-background="transparent"] .calendar-mode-menu button { background: transparent !important; color: var(--clear-muted); }
+html[data-widget-background="transparent"] .calendar-mode-menu button.active { box-shadow: inset 0 -1px currentColor; border-radius: 0; }
+html[data-widget-background="transparent"] :is(.selected-day, .floating-month-day.selected) { border-color: var(--clear-line) !important; box-shadow: none; }
+html[data-widget-background="transparent"] .week-item { border-left-color: var(--item-color,var(--clear-accent)) !important; border-radius: 0; }
+html[data-widget-background="transparent"] .task-title { font-weight: 500; }
+html[data-widget-background="transparent"] .task-row.done .task-title { color: var(--clear-faint) !important; }
+html[data-widget-background="transparent"] .task-due.overdue { color: #d73340; }
+html[data-widget-background="transparent"] .task-due.today { color: #b56500; }
+html[data-widget-background="transparent"] body.theme-dark .task-due.overdue { color: #ff8c94; }
+html[data-widget-background="transparent"] body.theme-dark .task-due.today { color: #ffd194; }
+html[data-widget-background="transparent"] .task-check { border-color: var(--clear-muted) !important; }
+html[data-widget-background="transparent"] .task-check:checked { border-color: var(--clear-accent) !important; }
+html[data-widget-background="transparent"] .task-check:checked::after { border-color: var(--clear-accent); }
+html[data-widget-background="transparent"] .calendar-task-toggle { border-color: var(--clear-muted) !important; }
+html[data-widget-background="transparent"] .calendar-task-toggle.done { color: var(--clear-accent); border-color: var(--clear-accent) !important; }
+html[data-widget-background="transparent"] .add-form { padding: 9px 0 0; border-radius: 0; }
+html[data-widget-background="transparent"] .add-form :is(input, button) { text-shadow: inherit; }
+html[data-widget-background="transparent"] .add-form :is(input, .dw-date-control, .dw-time-control):focus-within { outline: 1px solid var(--clear-accent); outline-offset: 1px; }
+html[data-widget-background="transparent"] .splitter::after { background: var(--clear-line); height: 1px; }
+html[data-widget-background="transparent"] .resize-grip { opacity: .25; background: repeating-linear-gradient(135deg,transparent 0 3px,var(--clear-muted) 3px 4px); }
+/* Editing is a temporary, charcoal translucent layer; no white/cream surfaces. */
+html[data-widget-background="transparent"] :is(dialog, #dwDatePopover, #dwTimePopover, #dwDeferPopover) {
+  --ink: #f5f5f7; --muted: #d0d0d5; --faint: #a6a6ad;
+  --dw-time-ink: #f5f5f7; --dw-time-muted: #c3c3ca; --dw-time-field: transparent;
+  --dw-time-line: rgba(255,255,255,.2); --dw-time-placeholder: #b2b2ba;
+  --dw-time-soft: transparent;
+  color: #f5f5f7; background: rgba(24,24,27,.88) !important;
+  border: 1px solid rgba(255,255,255,.16); box-shadow: 0 12px 36px rgba(0,0,0,.18);
+  backdrop-filter: none !important; text-shadow: none;
+}
+html[data-widget-background="transparent"] :is(#dwDatePopover, #dwTimePopover, #dwDeferPopover) {
+  --dp-bg: transparent; --dp-soft: transparent; --dp-soft-strong: rgba(100,181,255,.15);
+  --dp-ink: #f5f5f7; --dp-muted: #c3c3ca; --dp-outside: #8e8e96;
+  --dp-line: rgba(255,255,255,.16); --dp-accent: #83c4ff; --dp-accent-ink: #102339;
+  --tp-bg: transparent; --tp-soft: transparent; --tp-soft-strong: rgba(100,181,255,.15);
+  --tp-ink: #f5f5f7; --tp-muted: #c3c3ca; --tp-line: rgba(255,255,255,.16);
+  --tp-accent: #83c4ff; --tp-accent-ink: #102339;
+  -webkit-backdrop-filter: none !important;
+}
+html[data-widget-background="transparent"] dialog::backdrop { background: transparent; backdrop-filter: none; }
+html[data-widget-background="transparent"] dialog :is(input, textarea, .field > span, .done-field, .ai-summary-head h3, .ai-proposal-head strong) { color: #f5f5f7 !important; }
+html[data-widget-background="transparent"] dialog :is(input, textarea, .dw-date-control, .dw-time-control,
+  .ai-summary-box, .ai-file-item, .ai-proposal-card, .ai-proposal-add, .defer-trigger,
+  .dialog-actions .ghost-button) { background: transparent !important; box-shadow: none !important; border-color: rgba(255,255,255,.2); }
+@media (max-width: 620px), (max-height: 560px) {
+  html[data-widget-background="transparent"] .desk { padding: 10px 12px; }
+}

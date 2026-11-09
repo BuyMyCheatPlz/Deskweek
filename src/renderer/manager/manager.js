@@ -27,6 +27,7 @@ const els = {
 };
 let state = { items: [], prefs: {}, section: "tasks", filter: "todo", calMode: "month", calDate: new Date(), calFocusDate: new Date() };
 let editingId = null;
+let editingSnapshot = null;
 let toastTimer = null;
 let confirmResolver = null;
 let wheelLocked = false;
@@ -72,6 +73,15 @@ async function setThemePreference(theme) {
   applyTheme(theme, true);
   try { await persist(); toast(theme === "dark" ? "深色" : "浅色"); }
   catch { toast("主题保存失败"); }
+}
+async function setWidgetBackground(value) {
+  const previous = window.DeskWeekBackground.normalize(state.prefs.widgetBackground);
+  state.prefs.widgetBackground = window.DeskWeekBackground.apply(value);
+  try { await persist(); toast(value === "transparent" ? "浮窗背景已透明" : "已恢复标准背景"); }
+  catch {
+    state.prefs.widgetBackground = window.DeskWeekBackground.apply(previous);
+    toast("浮窗背景保存失败，请重试");
+  }
 }
 
 function pad(value) { return String(value).padStart(2, "0"); }
@@ -157,7 +167,7 @@ function toast(message) { clearTimeout(toastTimer); els.toast.textContent = mess
 function finishConfirm(result) { const resolve = confirmResolver; confirmResolver = null; if (els.confirmDialog.open) els.confirmDialog.close(); resolve?.(result); }
 function requestConfirm({ title, message, okText = "确认" }) { els.confirmTitle.textContent = title; els.confirmMessage.textContent = message; els.confirmAccept.textContent = okText; return new Promise((resolve) => { confirmResolver = resolve; els.confirmDialog.showModal(); }); }
 function persist() { return window.deskWeek?.saveStore?.({ items: state.items, prefs: state.prefs }) || Promise.resolve(); }
-async function commit(message) { reconcileTaskColors(state.items); try { await persist(); if (message) toast(message); renderAll(); } catch { toast("保存失败"); } }
+async function commit(message) { reconcileTaskColors(state.items); try { await persist(); if (message) toast(message); renderAll(); } catch (error) { toast(String(error.message || "保存失败").replace(/^Error invoking remote method[^:]+:\s*/, "")); } }
 function switchSection(section) {
   state.section = section;
   document.querySelectorAll("[data-section]").forEach((node) => {
@@ -215,11 +225,13 @@ function renderDeferredShelf() {
   });
 }
 function renderSidebarCounts() {
+  if (window.DeskWeekRuntime?.paused()) return;
   els.countTodo.textContent = state.items.filter((item) => !item.deleted && !item.done && isTaskVisible(item)).length;
   els.countDone.textContent = state.items.filter((item) => !item.deleted && item.done).length;
   els.countTrash.textContent = state.items.filter((item) => item.deleted).length;
 }
 function renderTasks() {
+  if (window.DeskWeekRuntime?.paused()) return;
   const items = taskFilterItems();
   const titles = { todo: "未完成", done: "已完成", trash: "垃圾箱" };
   els.taskViewTitle.textContent = titles[state.filter];
@@ -257,9 +269,10 @@ function makeTaskRow(item) {
 }
 function openEditor(id) {
   const item = state.items.find((entry) => entry.id === id); if (!item) return;
-  editingId = id; els.editTitle.value = item.title; els.editDetail.value = item.detail || ""; els.editDate.value = item.date; els.editTime.value = item.time || ""; window.DeskWeekDefer?.set?.(els.editDefer, normalizeDefer(item.defer)); els.editDone.checked = item.done; els.deleteTask.textContent = item.deleted ? "永久删除" : "移到垃圾箱"; els.dialog.showModal(); setTimeout(() => { els.editTitle.focus(); els.editTitle.select(); }, 30);
+  editingId = id; editingSnapshot = structuredClone(item); els.editTitle.value = item.title; els.editDetail.value = item.detail || ""; els.editDate.value = item.date; els.editTime.value = item.time || ""; window.DeskWeekDefer?.set?.(els.editDefer, normalizeDefer(item.defer)); els.editDone.checked = item.done; els.deleteTask.textContent = item.deleted ? "永久删除" : "移到垃圾箱"; els.dialog.showModal(); setTimeout(() => { els.editTitle.focus(); els.editTitle.select(); }, 30);
 }
-function closeEditor() { editingId = null; if (els.dialog.open) els.dialog.close(); }
+function closeEditor() {
+  editingSnapshot = null; editingId = null; if (els.dialog.open) els.dialog.close(); }
 function fitMonthTaskLists() {
   monthFitFrame = 0;
   if (state.section !== "calendar" || state.calMode !== "month") return;
@@ -300,6 +313,7 @@ function scheduleMonthFit() {
 }
 
 function renderCalendar() {
+  if (window.DeskWeekRuntime?.paused()) return;
   const previousMode = lastCalendarMode || state.calMode;
   lastCalendarMode = state.calMode;
   els.calendarBody.dataset.calendarMode = state.calMode;
@@ -421,6 +435,7 @@ function renderYear() {
   els.calendarBody.append(grid);
 }
 function renderAll() {
+  if (window.DeskWeekRuntime?.paused()) return;
   renderSidebarCounts();
   renderTasks();
   if (state.section === "calendar") renderCalendar();
@@ -920,7 +935,7 @@ async function importData(file) {
   try {
     const parsed = JSON.parse(await file.text()); if (!Array.isArray(parsed.items)) throw new Error("没有 items 数据");
     const incoming = normalizeItems(parsed.items); if (!(await requestConfirm({ title: "导入并替换？", message: `将导入 ${incoming.length} 条事项，当前数据会被替换。`, okText: "导入" }))) return;
-    state.items = incoming; if (parsed.prefs && typeof parsed.prefs === "object") state.prefs = parsed.prefs; applyTheme(currentTheme()); await commit("导入完成");
+    await window.deskWeek.replaceStore({ items: incoming, prefs: parsed.prefs && typeof parsed.prefs === "object" ? parsed.prefs : state.prefs }); toast("导入完成");
   } catch (error) { toast(`导入失败：${error.message}`); }
 }
 function changeCalendarPeriod(direction) {
@@ -1031,10 +1046,23 @@ els.managerAddForm.addEventListener("submit", (event) => {
   state.items.push(normalizeItem({ id: uid(), title, detail: "", date, time, defer, done: false, color: nextTaskColor(date), createdAt: new Date().toISOString() }));
   els.managerNewTitle.value = ""; els.managerNewDate.value = date; els.managerNewTime.value = ""; window.DeskWeekDefer?.set?.(els.managerNewDefer, "none"); commit("已添加"); els.managerNewTitle.focus();
 });
-els.editForm.addEventListener("submit", (event) => {
-  event.preventDefault(); const item = state.items.find((entry) => entry.id === editingId); if (!item) return closeEditor();
-  item.title = clampText(els.editTitle.value) || item.title; item.detail = clampText(els.editDetail.value, 4000); const rawDate = readTaskDate(els.editDate); if (rawDate === null) return; const time = readOptionalTime(els.editTime); if (time === null) return; item.time = time; item.date = resolveTaskDate(rawDate, time); item.defer = item.date ? window.DeskWeekDefer?.read?.(els.editDefer) || "none" : "none"; setItemDoneState(item, els.editDone.checked); closeEditor(); commit("已保存");
+els.editForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!editingSnapshot) return;
+  const before = structuredClone(editingSnapshot), item = structuredClone(before);
+  item.title = clampText(els.editTitle.value) || item.title;
+  item.detail = clampText(els.editDetail.value, 4000);
+  const rawDate = readTaskDate(els.editDate); if (rawDate === null) return;
+  const time = readOptionalTime(els.editTime); if (time === null) return;
+  item.time = time; item.date = resolveTaskDate(rawDate, time);
+  item.defer = item.date ? window.DeskWeekDefer?.read?.(els.editDefer) || "none" : "none";
+  setItemDoneState(item, els.editDone.checked);
+  try {
+    await window.deskWeek.editTask(before, item);
+    closeEditor(); renderAll(); toast("已保存");
+  } catch (error) { toast(String(error.message || "保存失败").replace(/^Error invoking remote method[^:]+:\s*/, "")); }
 });
+
 els.deleteTask.addEventListener("click", async () => {
   const item = state.items.find((entry) => entry.id === editingId); if (!item) return closeEditor();
   if (item.deleted) {
@@ -1074,6 +1102,7 @@ els.managerExport.addEventListener("click", exportData);
 els.managerImport.addEventListener("click", () => els.managerImportFile.click());
 els.managerImportFile.addEventListener("change", () => { const file = els.managerImportFile.files?.[0]; els.managerImportFile.value = ""; if (file) importData(file); });
 document.querySelectorAll("[data-theme-choice]").forEach((button) => button.addEventListener("click", () => setThemePreference(button.dataset.themeChoice)));
+document.querySelectorAll("[data-widget-background-choice]").forEach(button => button.addEventListener("click", () => setWidgetBackground(button.dataset.widgetBackgroundChoice)));
 els.saveAIConfig?.addEventListener("click", () => persistAIConfig(false));
 els.clearAIKey?.addEventListener("click", () => persistAIConfig(true));
 document.querySelectorAll("[data-external-url]").forEach((link) => link.addEventListener("click", (event) => { event.preventDefault(); window.deskWeek?.openExternal?.(link.dataset.externalUrl); }));
@@ -1124,6 +1153,7 @@ async function init() {
     if (data?.initialized && Array.isArray(data.items)) {
       state.items = normalizeItems(data.items);
       state.prefs = data.prefs && typeof data.prefs === "object" ? data.prefs : {};
+      window.DeskWeekBackground.apply(state.prefs.widgetBackground);
       applyTheme(state.prefs.theme || document.documentElement.dataset.theme || "light");
     } else {
       try {
@@ -1137,10 +1167,11 @@ async function init() {
     if (!data || !data.initialized || !Array.isArray(data.items)) return;
     state.items = normalizeItems(data.items);
     state.prefs = data.prefs && typeof data.prefs === "object" ? data.prefs : state.prefs;
+    window.DeskWeekBackground.apply(state.prefs.widgetBackground);
     applyTheme(state.prefs.theme || document.documentElement.dataset.theme || "light");
     renderAll();
   });
   syncStartupUpdateState();
 }
-setInterval(() => { renderSidebarCounts(); renderTasks(); }, 60000);
+window.DeskWeekRuntime.start({ refresh: () => { renderSidebarCounts(); renderTasks(); renderCalendar(); } });
 init();

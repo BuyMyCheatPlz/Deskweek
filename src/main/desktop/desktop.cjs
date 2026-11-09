@@ -5,7 +5,7 @@ const { tr } = require('./i18n.cjs');
 // creation messages, Explorer restarts, registry changes, or shell-wide hooks.
 let nativeApi;
 function getNativeApi() {
-  if (process.platform !== 'win32') throw new Error(tr('바탕화면 고정은 Windows에서 사용할 수 있습니다.'));
+  if (process.platform !== 'win32') throw new Error(tr('桌面附着仅适用于 Windows'));
   if (nativeApi) return nativeApi;
   const koffi = require('koffi');
   const user32 = koffi.load('user32.dll');
@@ -31,6 +31,8 @@ function getNativeApi() {
     GetLastError: kernel32.func('uint __stdcall GetLastError()'),
     SetWindowRgn: user32.func('int __stdcall SetWindowRgn(void * hwnd, void * region, bool redraw)'),
     GetDpiForWindow: user32.func('uint __stdcall GetDpiForWindow(void * hwnd)'),
+    GetWindowDpiAwarenessContext: user32.func('void * __stdcall GetWindowDpiAwarenessContext(void * hwnd)'),
+    GetAwarenessFromDpiAwarenessContext: user32.func('int __stdcall GetAwarenessFromDpiAwarenessContext(void * context)'),
     SetFocus: user32.func('void * __stdcall SetFocus(void * hwnd)'),
     CreateRoundRectRgn: gdi32.func('void * __stdcall CreateRoundRectRgn(int left, int top, int right, int bottom, int width, int height)'),
     CreateRectRgn: gdi32.func('void * __stdcall CreateRectRgn(int left, int top, int right, int bottom)')
@@ -55,7 +57,7 @@ function findDesktopHost(api) {
     if (api.IsWindowVisible(candidate) && api.FindWindowEx(candidate, null, 'SHELLDLL_DefView', null)) return candidate;
     after = candidate;
   }
-  throw new Error(tr('Windows 바탕화면 창을 찾지 못했습니다. 항상 위 모드로 표시합니다.'));
+  throw new Error(tr('未找到 Windows 桌面宿主，使用普通兼容窗口'));
 }
 
 // Must match renderer/styles.css: .widget-surface border-radius and the widget
@@ -85,14 +87,15 @@ function createDesktopManager({ native = getNativeApi, handle = nativeHandle } =
       const diameter = Math.max(2, Math.round(radius * scale) * 2);
       region = api.CreateRoundRectRgn(0, 0, Math.max(1, width) + 1, Math.max(1, height) + 1, diameter, diameter);
     }
-    if (!region) throw new Error(tr('위젯 모양을 적용할 수 없습니다.'));
+    if (!region) throw new Error(tr('无法设置浮窗形状'));
     api.SetWindowRgn(hwnd, region, true); // Windows owns the region from here on.
+    if (entry) { entry.regionWidth = width; entry.regionHeight = height; }
   }
   function position(api, hwnd, parent, rect, entry) {
     const point = { x: rect.left, y: rect.top };
-    if (parent && !api.ScreenToClient(parent, point)) throw new Error(tr('바탕화면 좌표를 변환할 수 없습니다.'));
+    if (parent && !api.ScreenToClient(parent, point)) throw new Error(tr('无法转换桌面坐标'));
     const width = rect.right - rect.left; const height = rect.bottom - rect.top;
-    if (!api.SetWindowPos(hwnd, null, point.x, point.y, width, height, 0x0010 | 0x0004)) throw new Error(tr('위젯 위치와 크기를 변경할 수 없습니다.'));
+    if (!api.SetWindowPos(hwnd, null, point.x, point.y, width, height, 0x0010 | 0x0004)) throw new Error(tr('无法更改浮窗位置与尺寸'));
     if (entry) shape(api, hwnd, width, height, entry);
   }
   function detach(win) {
@@ -101,11 +104,11 @@ function createDesktopManager({ native = getNativeApi, handle = nativeHandle } =
     const api = native();
     const hwnd = handle(win);
     const rect = {};
-    if (!api.GetWindowRect(hwnd, rect)) throw new Error(tr('위젯 위치를 읽을 수 없습니다.'));
+    if (!api.GetWindowRect(hwnd, rect)) throw new Error(tr('无法读取浮窗位置'));
     api.SetLastError(0);
     const previous = api.SetParent(hwnd, original.parent);
     const error = api.GetLastError();
-    if (!previous && error !== 0) throw new Error(tr("바탕화면 위젯 모드를 변경할 수 없습니다 ({0}).", [error]));
+    if (!previous && error !== 0) throw new Error(tr("无法切换桌面模式（{0}）", [error]));
     api.SetStyle(hwnd, -16, original.style);
     api.SetWindowRgn(hwnd, null, true);
     attached.delete(win.id);
@@ -118,19 +121,23 @@ function createDesktopManager({ native = getNativeApi, handle = nativeHandle } =
       detach(win);
       if (!attached.has(win.id)) { try { native().SetWindowRgn(handle(win), null, true); } catch { /* no native API: nothing was concealed */ } }
       win.setAlwaysOnTop(true, 'normal');
-      return { mode: 'top', desktopStatus: 'top', desktopMessage: tr('다른 창 위에 표시') };
+      return { mode: 'top', desktopStatus: 'top', desktopMessage: tr('置顶显示') };
     }
     try {
       const api = native();
       const hwnd = handle(win);
       if (attached.has(win.id)) {
         const entry = attached.get(win.id);
-        if (api.IsWindow(entry.host)) return { mode: 'desktop', desktopStatus: 'attached', desktopMessage: tr('Windows 바탕화면에 고정됨') };
+        if (api.IsWindow(entry.host)) return { mode: 'desktop', desktopStatus: 'attached', desktopMessage: tr('已附着 Windows 桌面') };
         attached.delete(win.id);
       }
       const host = findDesktopHost(api);
+      // Cross-process SetParent can reset the child's DPI awareness. Never attach
+      // incompatible windows; an ordinary background window is a safe fallback.
+      const awareness = hwnd => api.GetAwarenessFromDpiAwarenessContext(api.GetWindowDpiAwarenessContext(hwnd));
+      if (awareness(hwnd) !== awareness(host)) throw new Error('桌面与浮窗的 DPI 模式不兼容');
       const bounds = {};
-      if (!api.GetWindowRect(hwnd, bounds)) throw new Error(tr('위젯 위치를 읽을 수 없습니다.'));
+      if (!api.GetWindowRect(hwnd, bounds)) throw new Error(tr('无法读取浮窗位置'));
       const style = Number(api.GetStyle(hwnd, -16));
       const parent = api.GetParent(hwnd);
       win.setAlwaysOnTop(false);
@@ -141,18 +148,18 @@ function createDesktopManager({ native = getNativeApi, handle = nativeHandle } =
       const error = api.GetLastError();
       if (!previous && error !== 0) {
         api.SetStyle(hwnd, -16, style);
-        throw new Error(tr("Windows 바탕화면 고정 실패 ({0}).", [error]));
+        throw new Error(tr("Windows 桌面附着失败（{0}）", [error]));
       }
       const entry = { parent, style, host, shape: initialShape, scale: null };
       attached.set(win.id, entry);
       // HWND_TOP only among this desktop parent's children, never system topmost.
       position(api, hwnd, host, bounds, entry);
-      return { mode: 'desktop', desktopStatus: 'attached', desktopMessage: tr('Windows 바탕화면에 고정됨') };
+      return { mode: 'desktop', desktopStatus: 'attached', desktopMessage: tr('已附着 Windows 桌面') };
     } catch (error) {
       try { detach(win); } catch { /* native failure fallback */ }
       try { if (!attached.has(win.id) && !win.isDestroyed()) native().SetWindowRgn(handle(win), null, true); } catch { /* nothing was concealed */ }
-      win.setAlwaysOnTop(true, 'normal');
-      return { mode: 'top', desktopStatus: 'fallback', desktopMessage: tr("{0} 항상 위 모드를 사용합니다.", [error.message]) };
+      win.setAlwaysOnTop(false);
+      return { mode: 'window', desktopStatus: 'fallback', desktopMessage: String(error.message) };
     }
   }
   return {
@@ -160,6 +167,15 @@ function createDesktopManager({ native = getNativeApi, handle = nativeHandle } =
     detach,
     release(win) { attached.delete(win.id); },
     isAttached(win) { return attached.has(win.id); },
+    healthy(win) {
+      if (win.isDestroyed()) return false;
+      const entry = attached.get(win.id);
+      if (!entry) return true;
+      try {
+        const api = native();
+        return Boolean(api.IsWindow(handle(win)) && api.IsWindow(entry.host) && api.GetParent(handle(win)) === entry.host && findDesktopHost(api) === entry.host);
+      } catch { return false; }
+    },
     shapeOf(win) { return attached.get(win.id)?.shape || null; },
     // Undo conceal() on a window that did not end up attached (attached windows own their shape).
     unconceal(win) {
@@ -205,7 +221,8 @@ function createDesktopManager({ native = getNativeApi, handle = nativeHandle } =
       const api = native();
       const rect = screen.dipToScreenRect(null, bounds);
       const entry = attached.get(win.id);
-      position(api, handle(win), entry.host, { left: rect.x, top: rect.y, right: rect.x + rect.width, bottom: rect.y + rect.height }, reshape ? entry : null);
+      const changedSize = entry.regionWidth !== rect.width || entry.regionHeight !== rect.height;
+      position(api, handle(win), entry.host, { left: rect.x, top: rect.y, right: rect.x + rect.width, bottom: rect.y + rect.height }, reshape || changedSize ? entry : null);
     },
     getBounds(win, screen) {
       if (!attached.has(win.id)) return win.getBounds();
@@ -219,45 +236,4 @@ function createDesktopManager({ native = getNativeApi, handle = nativeHandle } =
   };
 }
 
-// True when enough of the rectangle lies on a connected screen to grab and use it (same margins as clampBounds).
-function onScreen(rect, displays) {
-  return Boolean(rect) && ['x', 'y', 'width', 'height'].every(key => Number.isFinite(rect[key]))
-    && displays.some(({ workArea: a }) => rect.x + 80 > a.x && rect.x < a.x + a.width - 80 && rect.y + 60 > a.y && rect.y < a.y + a.height - 60);
-}
-
-function clampBounds(bounds, displays, defaults, { minWidth = 280, minHeight = 220 } = {}) {
-  const safe = { ...defaults };
-  if (bounds && ['x', 'y', 'width', 'height'].every(key => Number.isFinite(bounds[key]))) Object.assign(safe, bounds);
-  safe.width = Math.round(Math.min(1000, Math.max(minWidth, safe.width)));
-  safe.height = Math.round(Math.min(1200, Math.max(minHeight, safe.height)));
-  const visible = displays.find(({ workArea: a }) => safe.x + 80 > a.x && safe.x < a.x + a.width - 80 && safe.y + 60 > a.y && safe.y < a.y + a.height - 60);
-  const area = (visible || displays[0]).workArea;
-  safe.width = Math.min(safe.width, area.width);
-  safe.height = Math.min(safe.height, area.height);
-  safe.x = Math.round(Math.min(area.x + area.width - safe.width, Math.max(area.x, safe.x)));
-  safe.y = Math.round(Math.min(area.y + area.height - safe.height, Math.max(area.y, safe.y)));
-  return safe;
-}
-
-// A widget resized from one of its four edges or corners (2026-10-30 owner: 「위젯 창 크기 조절할 때 오른쪽 하단부에서만 가능한데 … 그냥
-// 양 사방 어디서든 잡고 크기를 늘리는 게 낫지 않을까?」): the edges not dragged stay where they are — dragged from the left, the right edge
-// holds; from the top, the bottom — and a dragged edge stops at the screen's work area instead of pushing the widget across it (the
-// old corner grip slid a widget left once it reached the screen's right side). Then the usual minimum, maximum and on-screen rules.
-// edge: 'n' 's' 'e' 'w' 'ne' 'nw' 'se' 'sw' — the sides that move.
-function resizedBounds(current, { width, height, edge = 'se' }, displays, { minWidth = 280, minHeight = 220 } = {}) {
-  const area = (displays.find(({ workArea: a }) => current.x + 80 > a.x && current.x < a.x + a.width - 80 && current.y + 60 > a.y && current.y < a.y + a.height - 60) || displays[0]).workArea;
-  let w = Math.round(Math.min(1000, area.width, Math.max(minWidth, width)));
-  let h = Math.round(Math.min(1200, area.height, Math.max(minHeight, height)));
-  let x = current.x, y = current.y;
-  // The screen stops a growing side, but never takes away size the widget already has (one a pixel past the work area keeps it).
-  if (/w/.test(edge)) { const right = current.x + current.width; x = Math.max(Math.min(area.x, current.x), right - w); w = right - x; }
-  else w = Math.min(w, Math.max(current.width, area.x + area.width - x));
-  if (/n/.test(edge)) { const bottom = current.y + current.height; y = Math.max(Math.min(area.y, current.y), bottom - h); h = bottom - y; }
-  else h = Math.min(h, Math.max(current.height, area.y + area.height - y));
-  return clampBounds({ x, y, width: w, height: h }, displays, current, { minWidth, minHeight });
-}
-const RESIZE_EDGES = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
-
-module.exports = { createDesktopManager, clampBounds, resizedBounds, RESIZE_EDGES, onScreen, SURFACE_RADIUS_DIP, SURFACE_MARGIN_DIP };
-
-
+module.exports = { createDesktopManager, SURFACE_RADIUS_DIP, SURFACE_MARGIN_DIP };

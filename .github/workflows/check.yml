@@ -6,7 +6,10 @@ on:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -17,5 +20,7 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Check JavaScript syntax
         run: npm run check
+      - name: Regression tests
+        run: npm test
       - name: Load document parsers
         run: node -e "for (const name of ['jszip','mammoth','xlsx','pdf-parse','word-extractor']) require(name)"

@@ -28,6 +28,7 @@ async function checkGithubUpdate() {
   const { app } = require("electron");
   const currentVersion = app.getVersion();
   const response = await fetch(GITHUB_RELEASE_API, {
+    signal: AbortSignal.timeout(15000),
     headers: {
       "Accept": "application/vnd.github+json",
       "User-Agent": `DeskWeek/${currentVersion}`,
@@ -57,63 +58,23 @@ async function checkGithubUpdate() {
 }
 
 function buildUpdaterScript() {
-  const lines = [
-    'param([int]$WaitPid, [string]$ZipPath, [string]$TargetDir, [string]$ExePath, [string]$LogPath)',
-    '$ErrorActionPreference = "Stop"',
-    'function Log([string]$Message) { "$(Get-Date -Format o) $Message" | Out-File -LiteralPath $LogPath -Append -Encoding utf8 }',
-    'try {',
-    '  while (Get-Process -Id $WaitPid -ErrorAction SilentlyContinue) { Start-Sleep -Milliseconds 500 }',
-    '  Start-Sleep -Milliseconds 700',
-    '  $extractRoot = Join-Path $env:TEMP ("DeskWeek-update-" + [Guid]::NewGuid().ToString("N"))',
-    '  $backupRoot = Join-Path $env:TEMP ("DeskWeek-backup-" + [Guid]::NewGuid().ToString("N"))',
-    '  New-Item -ItemType Directory -Path $extractRoot -Force | Out-Null',
-    '  New-Item -ItemType Directory -Path $backupRoot -Force | Out-Null',
-    '  Expand-Archive -LiteralPath $ZipPath -DestinationPath $extractRoot -Force',
-    '  $source = Get-ChildItem -LiteralPath $extractRoot -Directory -ErrorAction SilentlyContinue | Where-Object { Test-Path (Join-Path $_.FullName "DeskWeek.exe") } | Select-Object -First 1',
-    '  if (-not $source -and (Test-Path (Join-Path $extractRoot "DeskWeek.exe"))) { $source = Get-Item -LiteralPath $extractRoot }',
-    '  if (-not $source) { throw "更新包中未找到 DeskWeek.exe" }',
-    '  Get-ChildItem -LiteralPath $TargetDir -Force | Where-Object { $_.Name -ne "data" } | ForEach-Object { __MOVE__ -LiteralPath $_.FullName -Destination (Join-Path $backupRoot $_.Name) -Force }',
-    '  try {',
-    '    Get-ChildItem -LiteralPath $source.FullName -Force | Where-Object { $_.Name -ne "data" } | ForEach-Object {',
-    '      $destination = Join-Path $TargetDir $_.Name',
-    '      if ($_.PSIsContainer) { New-Item -ItemType Directory -Path $destination -Force | Out-Null; __COPY__ -Path (Join-Path $_.FullName "*") -Destination $destination __RECURSE__ -Force } else { __COPY__ -LiteralPath $_.FullName -Destination $destination -Force }',
-    '    }',
-    '    Start-Process -FilePath $ExePath -WorkingDirectory $TargetDir',
-    '    try { __DEL_DIR__($backupRoot, $true) } catch { }',
-    '    try { __DEL_DIR__($extractRoot, $true) } catch { }',
-    '    try { __DEL_FILE__($ZipPath) } catch { }',
-    '    try { __DEL_FILE__($MyInvocation.MyCommand.Path) } catch { }',
-    '  } catch {',
-    '    Log "copy failed: $($_.Exception.Message)"',
-    '    Get-ChildItem -LiteralPath $TargetDir -Force | Where-Object { $_.Name -ne "data" } | ForEach-Object { __REMOVE__ -LiteralPath $_.FullName __RECURSE__ -Force }',
-    '    Get-ChildItem -LiteralPath $backupRoot -Force | ForEach-Object { __MOVE__ -LiteralPath $_.FullName -Destination (Join-Path $TargetDir $_.Name) -Force }',
-    '    if (Test-Path -LiteralPath $ExePath) { Start-Process -FilePath $ExePath -WorkingDirectory $TargetDir }',
-    '    throw',
-    '  }',
-    '} catch { Log "update failed: $($_.Exception.Message)"; if (Test-Path -LiteralPath $ExePath) { Start-Process -FilePath $ExePath -WorkingDirectory $TargetDir } }',
-  ];
-  const commandName = (word) => ["Remove", "Item"].join("-").replace("Remove", word === "REMOVE" ? "Remove" : word === "MOVE" ? "Move" : "Copy");
-  const tokens = {
-    __MOVE__: commandName("MOVE"),
-    __COPY__: commandName("COPY"),
-    __REMOVE__: commandName("REMOVE"),
-    __RECURSE__: ["-Recurse"].join(""),
-    __DEL_DIR__: ["[System.IO.", "Directory]::", "Del", "ete"].join(""),
-    __DEL_FILE__: ["[System.IO.", "File]::", "Del", "ete"].join(""),
-  };
-  return lines.map((line) => line.replace(/__(MOVE|COPY|REMOVE|RECURSE|DEL_DIR|DEL_FILE)__/g, (token) => tokens[token])).join("\r\n");
+  return fs.readFileSync(path.join(__dirname, "install-update.ps1"), "utf8");
 }
 
 async function downloadAndInstallUpdate(event, portableDataDir) {
+  const { app } = require("electron");
+  if (!app.isPackaged) throw new Error("开发模式不执行自动替换，请使用打包版本");
+  const report = data => { if (!event.sender.isDestroyed()) event.sender.send("deskweek:update-progress", data); };
   const info = await checkGithubUpdate();
   if (!info.hasUpdate) return { ok: true, updated: false, info };
   if (!info.asset?.downloadUrl) throw new Error("最新版本没有可下载的便携包");
+  if (!/^sha256:[a-f0-9]{64}$/i.test(info.asset.digest)) throw new Error("更新包缺少 SHA-256 校验信息");
   const updateDir = path.join(portableDataDir, "updates");
   fs.mkdirSync(updateDir, { recursive: true });
   const safeName = info.asset.name.replace(/[^\w.\-]+/g, "_");
   const finalPath = path.join(updateDir, safeName);
   const tempPath = `${finalPath}.download`;
-  const response = await fetch(info.asset.downloadUrl, { headers: { "User-Agent": `DeskWeek/${info.currentVersion}` } });
+  const response = await fetch(info.asset.downloadUrl, { signal: AbortSignal.timeout(180000), headers: { "User-Agent": `DeskWeek/${info.currentVersion}` } });
   if (!response.ok) throw new Error(`下载更新失败（${response.status}）`);
   const total = Number(response.headers.get("content-length")) || info.asset.size || 0;
   let downloaded = 0;
@@ -132,7 +93,7 @@ async function downloadAndInstallUpdate(event, portableDataDir) {
       const now = Date.now();
       if (now - lastReport > 250) {
         lastReport = now;
-        event.sender.send("deskweek:update-progress", { phase: "download", downloaded, total, percent: total ? Math.min(100, Math.round(downloaded / total * 100)) : 0 });
+        report({ phase: "download", downloaded, total, percent: total ? Math.min(100, Math.round(downloaded / total * 100)) : 0 });
       }
     }
   } finally {
@@ -151,8 +112,9 @@ async function downloadAndInstallUpdate(event, portableDataDir) {
   const logPath = path.join(updateDir, "update.log");
   fs.writeFileSync(scriptPath, "\ufeff" + buildUpdaterScript(), "utf8");
   const updater = spawn("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-WindowStyle", "Hidden", "-File", scriptPath, String(process.pid), finalPath, targetDir, process.execPath, logPath], { detached: true, stdio: "ignore", windowsHide: true });
+  await new Promise((resolve, reject) => { updater.once("spawn", resolve); updater.once("error", reject); });
   updater.unref();
-  event.sender.send("deskweek:update-progress", { phase: "ready", downloaded, total, percent: 100 });
+  report({ phase: "ready", downloaded, total, percent: 100 });
   setTimeout(() => app.quit(), 700);
   return { ok: true, updated: true, info };
 }

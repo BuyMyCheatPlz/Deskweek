@@ -6,14 +6,16 @@
   <meta name="color-scheme" content="light">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:;">
   <title>DeskWeek 管理中心</title>
-  <script src="theme-bootstrap.js"></script>
-  <link rel="stylesheet" href="manager.css">
-  <link rel="stylesheet" href="time-picker.css">
-  <link rel="stylesheet" href="date-picker.css">
-  <link rel="stylesheet" href="defer-picker.css">
-  <link rel="stylesheet" href="manager-refresh.css">
-  <link rel="stylesheet" href="typography.css">
-  <link rel="stylesheet" href="calendar-holidays.css">
+  <script src="../shared/theme/theme-bootstrap.js"></script>
+  <script src="../shared/theme/widget-background.js"></script>
+  <link rel="stylesheet" href="./manager.css">
+  <link rel="stylesheet" href="../shared/pickers/time-picker.css">
+  <link rel="stylesheet" href="../shared/pickers/date-picker.css">
+  <link rel="stylesheet" href="../shared/pickers/defer-picker.css">
+  <link rel="stylesheet" href="./appearance.css">
+  <link rel="stylesheet" href="../shared/styles/typography.css">
+  <link rel="stylesheet" href="../shared/calendar/calendar-holidays.css">
+  <link rel="stylesheet" href="../shared/runtime/runtime.css">
 </head>
 <body class="theme-light">
   <div class="app-shell">
@@ -73,6 +75,7 @@
           <header class="view-header"><div><h2>设置</h2></div></header>
           <div class="settings-grid">
             <article class="settings-card appearance-card"><div class="settings-card-head"><div><h3>外观主题</h3></div><div class="theme-choice" role="group" aria-label="选择外观主题"><button id="themeLightButton" class="theme-choice-button" type="button" data-theme-choice="light"><span aria-hidden="true">☀</span>浅色</button><button id="themeDarkButton" class="theme-choice-button" type="button" data-theme-choice="dark"><span aria-hidden="true">☾</span>深色</button></div></div></article>
+            <article class="settings-card appearance-card"><div class="settings-card-head"><div><h3>浮窗背景</h3><p>透明模式只保留日历与事项。浅色主题适合浅壁纸，深色主题适合深壁纸。</p></div><div class="theme-choice" role="group" aria-label="选择浮窗背景"><button class="theme-choice-button" type="button" data-widget-background-choice="standard" aria-pressed="true">标准</button><button class="theme-choice-button" type="button" data-widget-background-choice="transparent" aria-pressed="false">透明</button></div></div></article>
             <article class="settings-card ai-settings-card">
               <div class="settings-card-head"><div><h3>AI 总结</h3></div><span id="aiConfigStatus" class="ai-config-status">未配置</span></div>
               <div class="ai-config-grid">
@@ -159,12 +162,13 @@
   </dialog>
 
   <div id="managerToast" class="toast" role="status" aria-live="polite"></div>
-  <script src="defer-picker.js"></script>
-  <script src="date-picker.js"></script>
-  <script src="time-picker.js"></script>
-  <script src="lunar.js"></script>
-  <script src="calendar-info.js"></script>
-  <script src="manager.js"></script>
+  <script src="../shared/pickers/defer-picker.js"></script>
+  <script src="../shared/pickers/date-picker.js"></script>
+  <script src="../shared/pickers/time-picker.js"></script>
+  <script src="../../../vendor/lunar/lunar.js"></script>
+  <script src="../shared/calendar/calendar-info.js"></script>
+  <script src="../shared/runtime/ui-runtime.js"></script>
+  <script src="./manager.js"></script>
 </body>
 </html>
 

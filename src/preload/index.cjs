@@ -1,6 +1,36 @@
 "use strict";
 const { contextBridge, ipcRenderer } = require("electron");
 
+let base = { items: [], prefs: {}, revision: 0 }, pending = 0, failed = false, deferred = null, runtimeState = null;
+const subscribers = new Set(), runtimeSubscribers = new Set();
+const clone = value => JSON.parse(JSON.stringify(value));
+function receive(data) {
+  if (pending) { deferred = data; return; }
+  base = clone(data);
+  for (const callback of subscribers) callback(data);
+}
+ipcRenderer.on("deskweek:store-changed", (_event, data) => receive(data));
+ipcRenderer.on("deskweek:runtime-state", (_event, data) => { runtimeState = data; for (const callback of runtimeSubscribers) callback(data); });
+async function saveStore(data, replace = false) {
+  const request = { base: clone(base), next: clone(data), replace };
+  base = { ...clone(data), revision: base.revision };
+  pending++;
+  try {
+    const saved = await ipcRenderer.invoke("deskweek:store-save", request);
+    if (!deferred || saved.revision >= deferred.revision) deferred = saved;
+    failed = false;
+    return saved;
+  } catch (error) {
+    failed = true;
+    const latest = await ipcRenderer.invoke("deskweek:store-load").catch(() => null);
+    if (latest) deferred = latest;
+    throw error;
+  } finally {
+    pending--;
+    if (!pending && deferred) { const latest = deferred; deferred = null; receive(latest); }
+  }
+}
+
 contextBridge.exposeInMainWorld("deskWeek", {
   quit: () => ipcRenderer.send("deskweek:quit"),
   setMiniMode: (enabled) => ipcRenderer.invoke("deskweek:set-mini-mode", Boolean(enabled)),
@@ -18,12 +48,25 @@ managerClose: () => ipcRenderer.send("deskweek:manager-close"),
     ipcRenderer.on("deskweek:manager-window-state", listener);
     return () => ipcRenderer.removeListener("deskweek:manager-window-state", listener);
   },
-  loadStore: () => ipcRenderer.invoke("deskweek:store-load"),
-  saveStore: (data) => ipcRenderer.invoke("deskweek:store-save", data),
+  loadStore: async () => { const data = await ipcRenderer.invoke("deskweek:store-load"); if (!pending) base = clone(data); return data; },
+  saveStore: (data) => saveStore(data),
+  replaceStore: (data) => saveStore(data, true),
+  editTask: async (before, after) => {
+    pending++;
+    try {
+      const saved = await ipcRenderer.invoke("deskweek:store-edit", clone(before), clone(after));
+      deferred = saved; failed = false; return saved;
+    } catch (error) { failed = true; throw error; }
+    finally { pending--; if (!pending && deferred) { const saved = deferred; deferred = null; receive(saved); } }
+  },
+  saveDraft: data => ipcRenderer.send("deskweek:draft-save", data),
+  loadDraft: () => ipcRenderer.invoke("deskweek:draft-load"),
+  canSuspend: () => !pending && !failed,
+  runtimeReady: (data) => ipcRenderer.send("deskweek:runtime-ready", data),
+  onRuntimeState: (callback) => { runtimeSubscribers.add(callback); if (runtimeState) callback(runtimeState); return () => runtimeSubscribers.delete(callback); },
   onStoreChanged: (callback) => {
-    const listener = (_event, data) => callback(data);
-    ipcRenderer.on("deskweek:store-changed", listener);
-    return () => ipcRenderer.removeListener("deskweek:store-changed", listener);
+    subscribers.add(callback);
+    return () => subscribers.delete(callback);
   },
   getAIConfig: () => ipcRenderer.invoke("deskweek:ai-config-get"),
   saveAIConfig: (config) => ipcRenderer.invoke("deskweek:ai-config-save", config),
