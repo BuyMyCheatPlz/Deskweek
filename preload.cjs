@@ -30,6 +30,12 @@ managerClose: () => ipcRenderer.send("deskweek:manager-close"),
   summarizeTask: (payload) => ipcRenderer.invoke("deskweek:ai-summarize", payload),
   openExternal: (url) => ipcRenderer.invoke("deskweek:open-external", url),
   checkForUpdates: () => ipcRenderer.invoke("deskweek:update-check"),
+  getUpdateState: () => ipcRenderer.invoke("deskweek:update-state"),
+  onUpdateState: (callback) => {
+    const listener = (_event, state) => callback(state);
+    ipcRenderer.on("deskweek:update-state", listener);
+    return () => ipcRenderer.removeListener("deskweek:update-state", listener);
+  },
   downloadUpdate: () => ipcRenderer.invoke("deskweek:update-download"),
   onUpdateProgress: (callback) => {
     const listener = (_event, progress) => callback(progress);

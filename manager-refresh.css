@@ -644,3 +644,11 @@ body.theme-dark #managerAIExtraPrompt { border-color: var(--ui-line); background
 .about-star-note { margin: 8px 0 0 !important; color: var(--ui-muted); font-size: 11px; line-height: 1.55; }
 .about-star-link { color: var(--ui-accent); font-weight: 700; text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--ui-accent) 38%, transparent); transition: color .15s ease, border-color .15s ease; }
 .about-star-link:hover { color: color-mix(in srgb, var(--ui-accent) 82%, var(--ui-ink)); border-bottom-color: currentColor; }
+/* Compact release notes shown with an available update. */
+.update-notes { flex: 1 0 100%; display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; border: 1px solid color-mix(in srgb, var(--ui-accent) 16%, var(--ui-line)); border-radius: 9px; background: color-mix(in srgb, var(--ui-accent-soft) 38%, var(--ui-surface-soft)); color: var(--ui-muted); font-size: 10px; line-height: 1.55; }
+.update-notes[hidden] { display: none !important; }
+.update-notes > strong { flex: 0 0 auto; color: var(--ui-accent); font-size: 10px; font-weight: 700; white-space: nowrap; }
+.update-notes ul { min-width: 0; display: flex; flex-wrap: wrap; gap: 2px 10px; margin: 0; padding: 0; list-style: none; }
+.update-notes li { position: relative; min-width: 0; padding-left: 9px; overflow-wrap: anywhere; }
+.update-notes li::before { content: ""; position: absolute; left: 0; top: .62em; width: 3px; height: 3px; border-radius: 50%; background: var(--ui-accent); }
+body.theme-dark .update-notes { border-color: color-mix(in srgb, var(--ui-accent) 20%, var(--ui-line)); background: rgba(128,207,186,.07); }

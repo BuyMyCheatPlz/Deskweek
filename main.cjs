@@ -26,6 +26,9 @@ let gesture = null;
 let gestureImmediate = null;
 let miniMode = false;
 let preMiniBounds = null;
+let startupUpdateState = { phase: "idle", info: null, error: "" };
+let startupUpdateCheckPromise = null;
+let startupUpdateCheckStarted = false;
 const user32 = koffi.load("user32.dll");
 const GetAsyncKeyState = user32.func("short __stdcall GetAsyncKeyState(int vKey)");
 
@@ -611,6 +614,30 @@ function createWindow() {
   });
 }
 
+function emitUpdateState() {
+  if (!managerWindow || managerWindow.isDestroyed()) return;
+  managerWindow.webContents.send("deskweek:update-state", startupUpdateState);
+}
+
+function runStartupUpdateCheck() {
+  if (startupUpdateCheckStarted) return startupUpdateCheckPromise;
+  startupUpdateCheckStarted = true;
+  startupUpdateState = { phase: "checking", info: null, error: "" };
+  emitUpdateState();
+  startupUpdateCheckPromise = checkGithubUpdate()
+    .then((info) => {
+      startupUpdateState = { phase: "done", info, error: "" };
+      emitUpdateState();
+      return info;
+    })
+    .catch((error) => {
+      startupUpdateState = { phase: "error", info: null, error: String(error?.message || error || "检查更新失败") };
+      emitUpdateState();
+      return null;
+    });
+  return startupUpdateCheckPromise;
+}
+
 function createManagerWindow() {
   if (managerWindow && !managerWindow.isDestroyed()) {
     managerWindow.show();
@@ -643,6 +670,7 @@ function createManagerWindow() {
   });
 managerWindow.setMenu(null);
   managerWindow.loadFile("manager.html");
+  managerWindow.webContents.on("did-finish-load", emitUpdateState);
   const sendManagerWindowState = () => {
     if (!managerWindow || managerWindow.isDestroyed()) return;
     managerWindow.webContents.send("deskweek:manager-window-state", { maximized: managerWindow.isMaximized() });
@@ -777,6 +805,7 @@ app.whenReady().then(() => {
   createTray();
   createWindow();
   if (openManagerOnStart) setTimeout(() => createManagerWindow(), 350);
+  setTimeout(runStartupUpdateCheck, 1800);
 });
 
 app.on("window-all-closed", () => app.quit());
@@ -818,7 +847,13 @@ ipcMain.handle("deskweek:ai-config-get", () => publicAIConfig());
 ipcMain.handle("deskweek:ai-config-save", (_event, next) => saveAIConfig(next));
 ipcMain.handle("deskweek:ai-summarize", (_event, payload) => summarizeWithAI(payload));
 
-ipcMain.handle("deskweek:update-check", () => checkGithubUpdate());
+ipcMain.handle("deskweek:update-state", () => startupUpdateState);
+ipcMain.handle("deskweek:update-check", async () => {
+  const info = await checkGithubUpdate();
+  startupUpdateState = { phase: "done", info, error: "" };
+  emitUpdateState();
+  return info;
+});
 ipcMain.handle("deskweek:update-download", (event) => downloadAndInstallUpdate(event, portableDataDir()));
 
 ipcMain.handle("deskweek:open-external", async (_event, url) => {

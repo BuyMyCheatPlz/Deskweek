@@ -20,7 +20,7 @@ const els = {
   themeLightButton: $("#themeLightButton"), themeDarkButton: $("#themeDarkButton"),
   managerExport: $("#managerExport"), managerImport: $("#managerImport"), managerImportFile: $("#managerImportFile"),
   settingsOpenDataFolder: $("#settingsOpenDataFolder"),
-  checkUpdateButton: $("#checkUpdateButton"), updateStatus: $("#updateStatus"), updateStatusText: $("#updateStatusText"), installUpdateButton: $("#installUpdateButton"),
+  checkUpdateButton: $("#checkUpdateButton"), updateStatus: $("#updateStatus"), updateStatusText: $("#updateStatusText"), updateNotes: $("#updateNotes"), installUpdateButton: $("#installUpdateButton"),
   dialog: $("#managerEditDialog"), editForm: $("#managerEditForm"), editTitle: $("#managerEditTitle"), editDetail: $("#managerEditDetail"), editDate: $("#managerEditDate"), editTime: $("#managerEditTime"), editDefer: $("#managerEditDefer"), editDone: $("#managerEditDone"),
   deleteTask: $("#managerDeleteTask"), closeDialog: $("#managerCloseDialog"), cancelEdit: $("#managerCancelEdit"), toast: $("#managerToast"),
   confirmDialog: $("#managerConfirmDialog"), confirmTitle: $("#managerConfirmTitle"), confirmMessage: $("#managerConfirmMessage"), confirmCancel: $("#managerConfirmCancel"), confirmAccept: $("#managerConfirmAccept"),
@@ -782,6 +782,67 @@ function readableUpdateError(error) {
     .replace(/^Error:\s*/i, "");
 }
 
+function compactUpdateNotes(notes) {
+  return String(notes || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !/^DeskWeek\s+v?\d/i.test(line))
+    .map((line) => line.replace(/^[-*•]\s*/, "").replace(/^\d+[.)、]\s*/, "").replace(/\*\*/g, "").replace(/`/g, "").trim())
+    .filter(Boolean)
+    .slice(0, 4)
+    .map((line) => line.length > 72 ? line.slice(0, 72).trimEnd() + "…" : line);
+}
+
+function setUpdateNotes(notes) {
+  if (!els.updateNotes) return;
+  const entries = compactUpdateNotes(notes);
+  els.updateNotes.replaceChildren();
+  els.updateNotes.hidden = entries.length === 0;
+  if (!entries.length) return;
+  const title = document.createElement("strong");
+  title.textContent = "更新内容";
+  const list = document.createElement("ul");
+  entries.forEach((entry) => { const item = document.createElement("li"); item.textContent = entry; list.append(item); });
+  els.updateNotes.append(title, list);
+}
+
+function applyStartupUpdateState(updateState) {
+  if (!updateState || updateBusy) return;
+  if (updateState.phase === "checking") {
+    els.checkUpdateButton.hidden = false;
+    els.checkUpdateButton.disabled = true;
+    els.checkUpdateButton.textContent = "检查中…";
+    setUpdateStatus("检查中…", "checking");
+    setUpdateNotes("");
+    return;
+  }
+  els.checkUpdateButton.disabled = false;
+  els.checkUpdateButton.textContent = "检查更新";
+  if (updateState.phase === "error") {
+    els.checkUpdateButton.hidden = false;
+    setUpdateStatus("未检查", "idle", false, updateState.error || "");
+    setUpdateNotes("");
+    return;
+  }
+  const info = updateState.info;
+  if (!info) return;
+  latestUpdateInfo = info;
+  if (!info.hasUpdate) {
+    els.checkUpdateButton.hidden = false;
+    setUpdateStatus("已是最新", "latest");
+    setUpdateNotes("");
+    return;
+  }
+  els.checkUpdateButton.hidden = true;
+  setUpdateStatus(`可更新 v${info.latestVersion}`, "update", true);
+  setUpdateNotes(info.notes);
+}
+
+async function syncStartupUpdateState() {
+  try { applyStartupUpdateState(await window.deskWeek?.getUpdateState?.()); } catch { /* keep manual check available */ }
+}
+
 function setUpdateStatus(message, state = "idle", install = false, detail = "") {
   els.updateStatus.dataset.state = state;
   els.updateStatusText.textContent = message;
@@ -798,6 +859,7 @@ async function checkForManagerUpdate() {
   els.checkUpdateButton.disabled = true;
   els.checkUpdateButton.textContent = "检查中…";
   setUpdateStatus("检查中…", "checking");
+  setUpdateNotes("");
   try {
     const info = await window.deskWeek?.checkForUpdates?.();
     if (!info) throw new Error("检查更新接口不可用");
@@ -805,13 +867,16 @@ async function checkForManagerUpdate() {
     if (!info.hasUpdate) {
       els.checkUpdateButton.hidden = false;
       setUpdateStatus("已是最新", "latest");
+      setUpdateNotes("");
       return;
     }
     els.checkUpdateButton.hidden = true;
     setUpdateStatus(`可更新 v${info.latestVersion}`, "update", true);
+    setUpdateNotes(info.notes);
   } catch (error) {
     els.checkUpdateButton.hidden = false;
     setUpdateStatus("检查失败", "error", false, readableUpdateError(error));
+    setUpdateNotes("");
   } finally {
     updateBusy = false;
     els.checkUpdateButton.disabled = false;
@@ -1014,6 +1079,7 @@ els.clearAIKey?.addEventListener("click", () => persistAIConfig(true));
 document.querySelectorAll("[data-external-url]").forEach((link) => link.addEventListener("click", (event) => { event.preventDefault(); window.deskWeek?.openExternal?.(link.dataset.externalUrl); }));
 els.checkUpdateButton.addEventListener("click", checkForManagerUpdate);
 els.installUpdateButton.addEventListener("click", installManagerUpdate);
+window.deskWeek?.onUpdateState?.((updateState) => applyStartupUpdateState(updateState));
 window.deskWeek?.onUpdateProgress?.((progress) => {
   if (!progress || !latestUpdateInfo) return;
   const percent = Number(progress.percent) || 0;
@@ -1074,6 +1140,7 @@ async function init() {
     applyTheme(state.prefs.theme || document.documentElement.dataset.theme || "light");
     renderAll();
   });
+  syncStartupUpdateState();
 }
 setInterval(() => { renderSidebarCounts(); renderTasks(); }, 60000);
 init();
