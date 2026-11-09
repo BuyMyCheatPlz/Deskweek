@@ -8,9 +8,11 @@ DeskWeek 是一款专为 Windows 设计的桌面周历与待办事项工具。�
 
 ## 下载使用
 
-你可以在 [GitHub Releases](https://github.com/EasonGuuu/Deskweek/releases/latest) 下载最新的 Windows x64 便携版（绿色解压即用）。
+你可以在 [GitHub Releases](https://github.com/EasonGuuu/Deskweek/releases/latest) 下载：
+- **安装包（Setup.exe）**：适合多数用户，支持安装向导、自动创建桌面与开始菜单快捷方式，支持开机自启和控制面板一键卸载。
+- **便携版（Portable.zip）**：适合喜欢绿色免安装的用户，解压到任意文件夹后双击 `DeskWeek.exe` 即可使用。
 
-> 提示：如果使用便携版，升级时只需保留 `data/` 文件夹即可完整迁移已有日程和配置。
+> 提示：如果使用便携版，升级时只需保留 `data/` 文件夹即可完整迁移已有日程和配置。安装版覆盖安装时会自动保留用户数据。
 
 ## 相关文档
 
@@ -55,15 +57,15 @@ npm start
 | `npm run test:appearance` | 外观测试（深浅主题与透明背景渲染效果） |
 | `npm run test:packaged` | 打包产物自动化测试 |
 
-### 打包 Windows 便携版
+### 打包 Windows 程序与安装包
 
 ```powershell
-$env:DESKWEEK_BUILD_DIR = 'dist/build-verify'
+# 1. 打包生成绿色便携版目录 (dist/DeskWeek-win32-x64/)
 npm run package
-npm run test:packaged
-```
 
-打包产物将输出至指定的构建目录中。提示：打包时请勿将输出路径设置为正在使用的日常数据目录，以免覆盖已有的 `data/` 文件。
+# 2. 构建 Windows 安装包 (dist/DeskWeek-v1.3.0-windows-x64-Setup.exe)
+npm run package:installer
+```
 
 ## 项目结构
 

@@ -10,6 +10,7 @@
   "scripts": {
     "start": "node scripts/run.cjs",
     "package": "node scripts/package.cjs",
+    "package:installer": "node scripts/build-installer.cjs",
     "check": "node scripts/check.cjs",
     "test": "node --test test/*.test.cjs",
     "test:host": "node scripts/run.cjs --host-test",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@electron/packager": "20.3.0",
-    "electron": "44.9.0"
+    "electron": "44.9.0",
+    "innosetup": "^6.4.1"
   }
 }
