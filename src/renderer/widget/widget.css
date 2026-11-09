@@ -104,7 +104,7 @@ h2{font-size:19px}
   .task-card{flex:1 1 auto;min-height:0;max-height:none;padding:14px 16px 11px}
   .add-form{grid-template-columns:1fr 1fr}
   .add-form .title-input{grid-column:1/-1}
-  .add-form .add-button{grid-column:1/-1}
+  body.view-tasks-only .add-form .add-button{grid-column:1/-1}
 }
 
 
@@ -1018,6 +1018,5 @@ body.theme-light .add-form .defer-select:focus, body.theme-light .field .defer-s
 
 .add-form { grid-template-columns: minmax(0,1fr) 110px 78px 166px 70px; }
 .add-form .defer-picker { min-width: 0; }
-@media(max-width:760px) { .add-form .defer-picker { grid-column: 1/-1; } }
 
 .add-form { grid-template-columns: minmax(0,1fr) 126px 78px 38px 70px; }
