@@ -87,6 +87,10 @@ function createWindows({ app, BrowserWindow, screen, shell, root, dataDir, onSta
     persist();
     return { enabled: mini };
   }
+  function refreshManagerWindow(win) {
+    if (!liveContents(win)) return;
+    try { win.webContents.invalidate(); } catch { /* renderer may be closing */ }
+  }
   function showManager() {
     let win = [...managers].find(w => !w.isDestroyed() && shell.isCurrent(w) !== false);
     if (!win) {
@@ -99,10 +103,10 @@ function createWindows({ app, BrowserWindow, screen, shell, root, dataDir, onSta
       managers.add(created); created.setMenu(null); created.loadFile(paths.manager);
       onWindowLoaded(created, () => !stopping && managers.has(created), onManagerLoaded);
       const emit = () => { if (liveContents(created)) sendToWindow(created, "deskweek:manager-window-state", { maximized: created.isMaximized() }); };
-      created.on("maximize", emit); created.on("unmaximize", emit);
+      created.on("maximize", emit); created.on("unmaximize", emit); created.on("focus", () => refreshManagerWindow(created));
       created.once("ready-to-show", () => { if (!stopping && managers.has(created) && liveContents(created)) created.show(); });
       created.on("closed", () => managers.delete(created));
-    } else { if (!win.isMaximized()) win.setBounds(fit(win.getBounds(), true)); win.show(); win.focus(); }
+    } else { if (!win.isMaximized()) win.setBounds(fit(win.getBounds(), true)); win.show(); win.focus(); refreshManagerWindow(win); }
     return win;
   }
   function endGesture() {

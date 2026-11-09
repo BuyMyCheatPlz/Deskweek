@@ -1192,5 +1192,6 @@ async function init() {
   });
   syncStartupUpdateState();
 }
-window.DeskWeekRuntime.start({ refresh: () => { renderSidebarCounts(); renderTasks(); renderCalendar(); } });
+window.addEventListener("focus", () => requestAnimationFrame(renderAll));
+document.addEventListener("visibilitychange", () => { if (!document.hidden) requestAnimationFrame(renderAll); });window.DeskWeekRuntime.start({ refresh: () => { renderSidebarCounts(); renderTasks(); renderCalendar(); } });
 init();
