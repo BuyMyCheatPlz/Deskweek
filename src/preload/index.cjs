@@ -69,6 +69,8 @@ managerClose: () => ipcRenderer.send("deskweek:manager-close"),
     return () => subscribers.delete(callback);
   },
   getAIConfig: () => ipcRenderer.invoke("deskweek:ai-config-get"),
+  syncStatus: () => ipcRenderer.invoke("deskweek:sync-status"),
+  syncToggle: (enabled) => ipcRenderer.invoke("deskweek:sync-toggle", Boolean(enabled)),
   saveAIConfig: (config) => ipcRenderer.invoke("deskweek:ai-config-save", config),
   summarizeTask: (payload) => ipcRenderer.invoke("deskweek:ai-summarize", payload),
   openExternal: (url) => ipcRenderer.invoke("deskweek:open-external", url),

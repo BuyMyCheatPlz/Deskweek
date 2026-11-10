@@ -4,7 +4,7 @@ const fs = require("node:fs");
 const { fileURLToPath } = require("node:url");
 const { createPaths } = require("../paths.cjs");
 
-function registerIPC({ electron, windows, store, aiConfig, ai, updates, runtime, dataDir, root }) {
+function registerIPC({ electron, windows, store, aiConfig, ai, updates, runtime, dataDir, root, sync }) {
   const { app, ipcMain, BrowserWindow, shell } = electron;
   const paths = createPaths(root);
   function trusted(event) {
@@ -37,6 +37,13 @@ function registerIPC({ electron, windows, store, aiConfig, ai, updates, runtime,
     if (!win) return false;
     if (win.isMaximized()) win.unmaximize(); else win.maximize();
     return win.isMaximized();
+  });
+  handle("sync-status", () => sync ? sync.status() : { running: false });
+  handle("sync-toggle", async (_event, enabled) => {
+    if (!sync) return { running: false };
+    if (enabled) await sync.start();
+    else sync.stop();
+    return sync.status();
   });
   handle("ai-config-get", () => aiConfig.publicAIConfig());
   handle("ai-config-save", (_event, next) => aiConfig.saveAIConfig(next));

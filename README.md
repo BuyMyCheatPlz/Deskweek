@@ -36,6 +36,19 @@ DeskWeek 是一款专为 Windows 设计的桌面周历与待办事项工具。�
 - **内置检查更新**：检测到新版本后，用户确认即可自动下载更新并平滑重启，保留所有本地数据。
 - **纯本地便携数据**：所有待办保存在程序旁的 `data/data.json` 中，随时打包带走。
 
+## 局域网同步（原型，默认关闭）
+
+桌面端已把同步模块接进应用：设置 `DESKWEEK_SYNC=1` 启动，或在托盘菜单点「开启局域网同步」。
+
+- 本机每次保存都会把真实差异转成带 ECDSA 签名的操作，写入本地操作日志
+- 收到的远端操作先验签，再通过合并投影写回 `data.json`（网络不直接写文件）
+- 通过 mDNS 广播 `_deskweek-sync._tcp`，端口由系统分配
+- 状态可通过托盘菜单查看；renderer 侧接口 `deskWeek.syncStatus()/syncToggle()`
+
+未完成：管理中心里的同步面板与配对向导、Windows 防火墙自动放行、操作日志的崩溃恢复。
+
+协议细节见 [docs/lan-sync-protocol.md](docs/lan-sync-protocol.md)。
+
 ## 本地开发与构建
 
 环境需求：Node.js 与 npm。
