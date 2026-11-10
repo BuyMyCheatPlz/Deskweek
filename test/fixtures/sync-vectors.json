@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "name": "empty-object",
+      "input": {},
+      "canonical": "{}",
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "name": "key-order",
+      "input": {
+        "b": 1,
+        "a": 2,
+        "c": 3
+      },
+      "canonical": "{\"a\":2,\"b\":1,\"c\":3}",
+      "sha256": "e145110e712e3ed0a6b233551b27a90aa39b4c93ed67e111ba2002d16e5ed1fa"
+    },
+    {
+      "name": "nested",
+      "input": {
+        "z": [
+          1,
+          2,
+          {
+            "y": true,
+            "x": null
+          }
+        ],
+        "a": "hello"
+      },
+      "canonical": "{\"a\":\"hello\",\"z\":[1,2,{\"x\":null,\"y\":true}]}",
+      "sha256": "0422f35556e241cc442de74e90a7cb25d5b3181450eb0b1f61c2226cbf447ad2"
+    },
+    {
+      "name": "chinese",
+      "input": {
+        "title": "评审 Android 方案"
+      },
+      "canonical": "{\"title\":\"评审 Android 方案\"}",
+      "sha256": "8a37bac8ef22ad58e9e2be961ab64e3fb14338ae4d91657836b7c6adac67d42d"
+    },
+    {
+      "name": "escapes",
+      "input": {
+        "text": "line1\nline2\t\"quoted\"\\back"
+      },
+      "canonical": "{\"text\":\"line1\\nline2\\t\\\"quoted\\\"\\\\back\"}",
+      "sha256": "6c4a7eab4489d7543f56ca8e4e5656db7e90c5f620d5861901d6f747feef2a79"
+    },
+    {
+      "name": "control-chars",
+      "input": {
+        "text": "\u0000\u001f"
+      },
+      "canonical": "{\"text\":\"\\u0000\\u001f\"}",
+      "sha256": "0794383054e8289a3ea380987ec84d3e6d489b019b1b2d2624645430bf603d2e"
+    },
+    {
+      "name": "emoji",
+      "input": {
+        "text": "😀周历"
+      },
+      "canonical": "{\"text\":\"😀周历\"}",
+      "sha256": "cb38eb05ccd29972ea74300e695dc7ef034d71fa939a6f279de17b54f5a9e716"
+    },
+    {
+      "name": "negative",
+      "input": {
+        "n": -42,
+        "z": 0,
+        "big": 9007199254740991
+      },
+      "canonical": "{\"big\":9007199254740991,\"n\":-42,\"z\":0}",
+      "sha256": "8e901dcae6914701d50c124f8fb43501102bbda9a030d450a2a6b006b4b560a5"
+    },
+    {
+      "name": "bool-array",
+      "input": {
+        "flags": [
+          true,
+          false,
+          true
+        ]
+      },
+      "canonical": "{\"flags\":[true,false,true]}",
+      "sha256": "d4bc6ecc1564d1bef12c9ef746444da7ea96973f1bbba21dde59deeb2f66ea07"
+    },
+    {
+      "name": "sync-hello",
+      "input": {
+        "type": "HELLO",
+        "protocolVersion": 1,
+        "groupId": "11111111-2222-3333-4444-555555555555",
+        "actorId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+        "nonce": "n-001",
+        "capabilities": [
+          "ops",
+          "tls13"
+        ]
+      },
+      "canonical": "{\"actorId\":\"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",\"capabilities\":[\"ops\",\"tls13\"],\"groupId\":\"11111111-2222-3333-4444-555555555555\",\"nonce\":\"n-001\",\"protocolVersion\":1,\"type\":\"HELLO\"}",
+      "sha256": "7976bd6fff1afe56a3c6397c3135542964ab241d561f1f465971de4259851a76"
+    },
+    {
+      "name": "sync-op",
+      "input": {
+        "protocolVersion": 1,
+        "groupId": "g-1",
+        "opId": "actor-1:42",
+        "actorId": "actor-1",
+        "seq": 42,
+        "context": {
+          "actor-1": 41,
+          "actor-2": 8
+        },
+        "taskId": "task-1",
+        "kind": "patch",
+        "changes": {
+          "title": "完成周计划",
+          "done": true
+        },
+        "recordedAt": "2026-11-10T02:00:00Z",
+        "signature": "c2ln"
+      },
+      "canonical": "{\"actorId\":\"actor-1\",\"changes\":{\"done\":true,\"title\":\"完成周计划\"},\"context\":{\"actor-1\":41,\"actor-2\":8},\"groupId\":\"g-1\",\"kind\":\"patch\",\"opId\":\"actor-1:42\",\"protocolVersion\":1,\"recordedAt\":\"2026-11-10T02:00:00Z\",\"seq\":42,\"signature\":\"c2ln\",\"taskId\":\"task-1\"}",
+      "sha256": "326df49ce1d69fd2077ba98487d45bb2a82ad42472378c5e2f19ca80194c4afc"
+    }
+  ]
+}
