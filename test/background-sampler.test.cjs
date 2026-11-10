@@ -51,3 +51,21 @@ test("sampling excludes the widget from capture and restores protection", async 
   assert.deepEqual(requestedSize, { width: 450, height: 360 });
   assert.equal(protection, false);
 });
+
+test("capture failure uses native sampling and restores the original protection", async () => {
+  for (const empty of [false, true]) {
+    let protectedWindow = false;
+    let sampled = 0;
+    const result = await sampleWindowBackground({
+      win: { isDestroyed: () => false, isVisible: () => true, getBounds: () => ({x: 0,y: 0,width: 100,height: 100}),
+        isContentProtected: () => false, setContentProtection: value => { protectedWindow = value; } },
+      screen: { getDisplayMatching: () => ({id: 1,size: {width: 100,height: 100},bounds: {x: 0,y: 0,width: 100,height: 100}}) },
+      desktopCapturer: { getSources: async () => { if (empty) return []; throw new Error("desktop capture unavailable"); } },
+      nativeSampler: ({ bounds }) => { assert.equal(protectedWindow, true); assert.equal(bounds.width, 100); sampled++; return chooseTheme(Array(25).fill({r: 240,g: 240,b: 240})); },
+      delayMs: 0,
+    });
+    assert.equal(sampled, 1);
+    assert.equal(result.theme, "light");
+    assert.equal(protectedWindow, false);
+  }
+});

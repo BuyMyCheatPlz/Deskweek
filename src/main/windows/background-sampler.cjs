@@ -64,7 +64,34 @@ function sampleImageRegion(image, windowBounds, displayBounds) {
   return chooseTheme(samples);
 }
 
-async function sampleWindowBackground({ win, screen, desktopCapturer, bounds, delayMs = 180 }) {
+// GDI needs no capture-worker desktop reassignment (Electron can fail that with ERROR_BUSY).
+// Only sample 25 pixels; never retain a second full-screen capture.
+function sampleNativeRegion({ screen, bounds }) {
+  if (process.platform !== "win32" || typeof screen.dipToScreenPoint !== "function") return null;
+  const koffi = require("koffi"), user32 = koffi.load("user32.dll"), gdi32 = koffi.load("gdi32.dll");
+  const getDC = user32.func("void * __stdcall GetDC(void * hwnd)");
+  const releaseDC = user32.func("int __stdcall ReleaseDC(void * hwnd, void * hdc)");
+  const getPixel = gdi32.func("uint32 __stdcall GetPixel(void * hdc, int x, int y)");
+  const dc = getDC(null);
+  if (!dc) return null;
+  try {
+    const samples = [];
+    for (let row = 0; row < 5; row++) {
+      for (let column = 0; column < 5; column++) {
+        const point = screen.dipToScreenPoint({
+          x: Math.round(bounds.x + bounds.width * (0.08 + 0.84 * (column + 0.5) / 5)),
+          y: Math.round(bounds.y + bounds.height * (0.08 + 0.84 * (row + 0.5) / 5)),
+        });
+        const color = getPixel(dc, point.x, point.y);
+        if (color === 0xffffffff) return null;
+        samples.push({ r: color & 255, g: (color >>> 8) & 255, b: (color >>> 16) & 255 });
+      }
+    }
+    return chooseTheme(samples);
+  } finally { releaseDC(null, dc); }
+}
+
+async function sampleWindowBackground({ win, screen, desktopCapturer, bounds, delayMs = 180, nativeSampler = sampleNativeRegion }) {
   if (!win || win.isDestroyed() || !win.isVisible()) return null;
   const windowBounds = bounds || win.getBounds();
   const display = screen.getDisplayMatching(windowBounds);
@@ -74,9 +101,12 @@ async function sampleWindowBackground({ win, screen, desktopCapturer, bounds, de
   try {
     win.setContentProtection(true);
     await new Promise(resolve => setTimeout(resolve, delayMs));
-    const sources = await desktopCapturer.getSources({ types: ["screen"], thumbnailSize, fetchWindowIcons: false });
+    const sources = await desktopCapturer.getSources({ types: ["screen"], thumbnailSize, fetchWindowIcons: false }).catch(() => []);
     const source = sources.find(item => String(item.display_id) === String(display.id)) || sources[0];
-    if (!source || source.thumbnail.isEmpty()) return null;
+    if (!source || source.thumbnail.isEmpty()) {
+      if (win.isDestroyed() || !win.isVisible()) return null;
+      return nativeSampler({ screen, bounds: windowBounds });
+    }
     return sampleImageRegion(source.thumbnail, windowBounds, display.bounds);
   } finally {
     try { win.setContentProtection(wasProtected); } catch { /* window may have closed during capture */ }

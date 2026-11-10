@@ -20,6 +20,16 @@ DeskWeek 是一款专为 Windows 设计的桌面周历与待办事项工具。�
 - [故障排查](docs/故障排查.md)：浮窗不显示、短暂闪退、报错提示或保存失败时的解决方法。
 - [修复与排错记录](docs/修复与排错记录.md)：近期功能改进、问题修复的详细记录与验证说明。
 - [桌面层与动态壁纸兼容性](docs/桌面层与动态壁纸兼容性.md)：多显示器使用、Wallpaper Engine 动态壁纸兼容性与显示说明。
+- [Android 移动端协同说明](docs/android-lan-integration.md)：配套 Android 客户端介绍及局域网多设备协同方案。
+
+## 📱 Android 移动端配套
+
+DeskWeek 现已推出 Android 原生版本，手机与平板均可畅享桌面周历：
+- **全透明桌面小组件**：完美融入壁纸，直接在桌面上查看本周日程并打勾完成。
+- **拖拽改期与农历节气**：长按拖动即可修改任务日期，内置农历与节气标注。
+- **跨端数据互通**：支持与 Windows 桌面版的 `data.json` 互相导入导出，正在持续迭代局域网点对点自动同步。
+- 欢迎前往配套开源仓库下载 APK 安装包：[BuyMyCheatPlz/DeskWeek-Android](https://github.com/BuyMyCheatPlz/DeskWeek-Android)
+
 
 ## 主要功能
 
