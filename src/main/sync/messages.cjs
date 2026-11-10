@@ -60,7 +60,7 @@ function validateOp(op) {
 
   if (changes === null || typeof changes !== "object" || Array.isArray(changes)) fail("ECONTRACT", "op.changes must be an object");
   for (const [field, val] of Object.entries(changes)) {
-    if (["title", "detail", "date", "time", "defer", "completedAt", "deletedAt"].includes(field)) text(val, "op.changes." + field);
+    if (["title", "detail", "date", "time", "defer", "completedAt", "deletedAt", "createdAt"].includes(field)) text(val, "op.changes." + field);
     else if (["done", "deleted"].includes(field)) {
       if (typeof val !== "boolean") fail("ECONTRACT", "op.changes." + field + " must be boolean");
     } else fail("ECONTRACT", "op.changes unknown field: " + field);

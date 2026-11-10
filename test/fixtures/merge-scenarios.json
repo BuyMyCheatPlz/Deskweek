@@ -1,0 +1,858 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "name": "single-create",
+      "groupId": "g-merge",
+      "ops": [
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:1",
+          "actorId": "A",
+          "seq": 1,
+          "context": {},
+          "taskId": "t1",
+          "kind": "create",
+          "changes": {
+            "title": "周计划",
+            "date": "2026-11-10",
+            "done": false,
+            "createdAt": "2026-11-10T00:00:00Z"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        }
+      ],
+      "expected": {
+        "tasks": [
+          {
+            "taskId": "t1",
+            "title": "周计划",
+            "detail": "",
+            "date": "2026-11-10",
+            "time": "",
+            "defer": "none",
+            "done": false,
+            "completedAt": "",
+            "deleted": false,
+            "deletedAt": "",
+            "createdAt": "2026-11-10T00:00:00Z",
+            "color": "#9bd3c7"
+          }
+        ],
+        "conflicts": []
+      },
+      "expectedCanonical": "{\"conflicts\":[],\"tasks\":[{\"color\":\"#9bd3c7\",\"completedAt\":\"\",\"createdAt\":\"2026-11-10T00:00:00Z\",\"date\":\"2026-11-10\",\"defer\":\"none\",\"deleted\":false,\"deletedAt\":\"\",\"detail\":\"\",\"done\":false,\"taskId\":\"t1\",\"time\":\"\",\"title\":\"周计划\"}]}",
+      "vectors": {
+        "A": 1
+      },
+      "gaps": {}
+    },
+    {
+      "name": "concurrent-different-groups-merge",
+      "groupId": "g-merge",
+      "ops": [
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:1",
+          "actorId": "A",
+          "seq": 1,
+          "context": {},
+          "taskId": "t1",
+          "kind": "create",
+          "changes": {
+            "title": "周计划",
+            "date": "2026-11-10",
+            "done": false,
+            "createdAt": "2026-11-10T00:00:00Z"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:2",
+          "actorId": "A",
+          "seq": 2,
+          "context": {
+            "A": 1
+          },
+          "taskId": "t1",
+          "kind": "patch",
+          "changes": {
+            "title": "周计划（改标题）"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "B:1",
+          "actorId": "B",
+          "seq": 1,
+          "context": {
+            "A": 1
+          },
+          "taskId": "t1",
+          "kind": "patch",
+          "changes": {
+            "date": "2026-11-12",
+            "defer": "3d"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        }
+      ],
+      "expected": {
+        "tasks": [
+          {
+            "taskId": "t1",
+            "title": "周计划（改标题）",
+            "detail": "",
+            "date": "2026-11-12",
+            "time": "",
+            "defer": "3d",
+            "done": false,
+            "completedAt": "",
+            "deleted": false,
+            "deletedAt": "",
+            "createdAt": "2026-11-10T00:00:00Z",
+            "color": "#9bd3c7"
+          }
+        ],
+        "conflicts": []
+      },
+      "expectedCanonical": "{\"conflicts\":[],\"tasks\":[{\"color\":\"#9bd3c7\",\"completedAt\":\"\",\"createdAt\":\"2026-11-10T00:00:00Z\",\"date\":\"2026-11-12\",\"defer\":\"3d\",\"deleted\":false,\"deletedAt\":\"\",\"detail\":\"\",\"done\":false,\"taskId\":\"t1\",\"time\":\"\",\"title\":\"周计划（改标题）\"}]}",
+      "vectors": {
+        "A": 2,
+        "B": 1
+      },
+      "gaps": {}
+    },
+    {
+      "name": "concurrent-same-field-conflict",
+      "groupId": "g-merge",
+      "ops": [
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:1",
+          "actorId": "A",
+          "seq": 1,
+          "context": {},
+          "taskId": "t1",
+          "kind": "create",
+          "changes": {
+            "title": "周计划",
+            "date": "2026-11-10",
+            "done": false,
+            "createdAt": "2026-11-10T00:00:00Z"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:2",
+          "actorId": "A",
+          "seq": 2,
+          "context": {
+            "A": 1
+          },
+          "taskId": "t1",
+          "kind": "patch",
+          "changes": {
+            "title": "A 的标题"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "B:1",
+          "actorId": "B",
+          "seq": 1,
+          "context": {
+            "A": 1
+          },
+          "taskId": "t1",
+          "kind": "patch",
+          "changes": {
+            "title": "B 的标题"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        }
+      ],
+      "expected": {
+        "tasks": [
+          {
+            "taskId": "t1",
+            "title": "A 的标题",
+            "detail": "",
+            "date": "2026-11-10",
+            "time": "",
+            "defer": "none",
+            "done": false,
+            "completedAt": "",
+            "deleted": false,
+            "deletedAt": "",
+            "createdAt": "2026-11-10T00:00:00Z",
+            "color": "#9bd3c7"
+          }
+        ],
+        "conflicts": [
+          {
+            "taskId": "t1",
+            "group": "title",
+            "winner": "A",
+            "candidates": [
+              {
+                "actorId": "A",
+                "seq": 2
+              },
+              {
+                "actorId": "B",
+                "seq": 1
+              }
+            ]
+          }
+        ]
+      },
+      "expectedCanonical": "{\"conflicts\":[{\"candidates\":[{\"actorId\":\"A\",\"seq\":2},{\"actorId\":\"B\",\"seq\":1}],\"group\":\"title\",\"taskId\":\"t1\",\"winner\":\"A\"}],\"tasks\":[{\"color\":\"#9bd3c7\",\"completedAt\":\"\",\"createdAt\":\"2026-11-10T00:00:00Z\",\"date\":\"2026-11-10\",\"defer\":\"none\",\"deleted\":false,\"deletedAt\":\"\",\"detail\":\"\",\"done\":false,\"taskId\":\"t1\",\"time\":\"\",\"title\":\"A 的标题\"}]}",
+      "vectors": {
+        "A": 2,
+        "B": 1
+      },
+      "gaps": {}
+    },
+    {
+      "name": "trash-versus-patch",
+      "groupId": "g-merge",
+      "ops": [
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:1",
+          "actorId": "A",
+          "seq": 1,
+          "context": {},
+          "taskId": "t1",
+          "kind": "create",
+          "changes": {
+            "title": "周计划",
+            "date": "2026-11-10",
+            "done": false,
+            "createdAt": "2026-11-10T00:00:00Z"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:2",
+          "actorId": "A",
+          "seq": 2,
+          "context": {
+            "A": 1
+          },
+          "taskId": "t1",
+          "kind": "trash",
+          "changes": {
+            "deletedAt": "2026-11-10T00:00:00Z"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "B:1",
+          "actorId": "B",
+          "seq": 1,
+          "context": {
+            "A": 1
+          },
+          "taskId": "t1",
+          "kind": "patch",
+          "changes": {
+            "title": "删除后编辑"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        }
+      ],
+      "expected": {
+        "tasks": [
+          {
+            "taskId": "t1",
+            "title": "删除后编辑",
+            "detail": "",
+            "date": "2026-11-10",
+            "time": "",
+            "defer": "none",
+            "done": false,
+            "completedAt": "",
+            "deleted": true,
+            "deletedAt": "2026-11-10T00:00:00Z",
+            "createdAt": "2026-11-10T00:00:00Z",
+            "color": "#9bd3c7"
+          }
+        ],
+        "conflicts": []
+      },
+      "expectedCanonical": "{\"conflicts\":[],\"tasks\":[{\"color\":\"#9bd3c7\",\"completedAt\":\"\",\"createdAt\":\"2026-11-10T00:00:00Z\",\"date\":\"2026-11-10\",\"defer\":\"none\",\"deleted\":true,\"deletedAt\":\"2026-11-10T00:00:00Z\",\"detail\":\"\",\"done\":false,\"taskId\":\"t1\",\"time\":\"\",\"title\":\"删除后编辑\"}]}",
+      "vectors": {
+        "A": 2,
+        "B": 1
+      },
+      "gaps": {}
+    },
+    {
+      "name": "trash-then-restore",
+      "groupId": "g-merge",
+      "ops": [
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:1",
+          "actorId": "A",
+          "seq": 1,
+          "context": {},
+          "taskId": "t1",
+          "kind": "create",
+          "changes": {
+            "title": "周计划",
+            "date": "2026-11-10",
+            "done": false,
+            "createdAt": "2026-11-10T00:00:00Z"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:2",
+          "actorId": "A",
+          "seq": 2,
+          "context": {
+            "A": 1
+          },
+          "taskId": "t1",
+          "kind": "trash",
+          "changes": {
+            "deletedAt": "2026-11-10T00:00:00Z"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:3",
+          "actorId": "A",
+          "seq": 3,
+          "context": {
+            "A": 2
+          },
+          "taskId": "t1",
+          "kind": "restore",
+          "changes": {},
+          "recordedAt": "2026-11-10T00:00:00Z"
+        }
+      ],
+      "expected": {
+        "tasks": [
+          {
+            "taskId": "t1",
+            "title": "周计划",
+            "detail": "",
+            "date": "2026-11-10",
+            "time": "",
+            "defer": "none",
+            "done": false,
+            "completedAt": "",
+            "deleted": false,
+            "deletedAt": "",
+            "createdAt": "2026-11-10T00:00:00Z",
+            "color": "#9bd3c7"
+          }
+        ],
+        "conflicts": []
+      },
+      "expectedCanonical": "{\"conflicts\":[],\"tasks\":[{\"color\":\"#9bd3c7\",\"completedAt\":\"\",\"createdAt\":\"2026-11-10T00:00:00Z\",\"date\":\"2026-11-10\",\"defer\":\"none\",\"deleted\":false,\"deletedAt\":\"\",\"detail\":\"\",\"done\":false,\"taskId\":\"t1\",\"time\":\"\",\"title\":\"周计划\"}]}",
+      "vectors": {
+        "A": 3
+      },
+      "gaps": {}
+    },
+    {
+      "name": "concurrent-trash-and-restore",
+      "groupId": "g-merge",
+      "ops": [
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:1",
+          "actorId": "A",
+          "seq": 1,
+          "context": {},
+          "taskId": "t1",
+          "kind": "create",
+          "changes": {
+            "title": "周计划",
+            "date": "2026-11-10",
+            "done": false,
+            "createdAt": "2026-11-10T00:00:00Z"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:2",
+          "actorId": "A",
+          "seq": 2,
+          "context": {
+            "A": 1
+          },
+          "taskId": "t1",
+          "kind": "trash",
+          "changes": {
+            "deletedAt": "2026-11-10T00:00:00Z"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "B:1",
+          "actorId": "B",
+          "seq": 1,
+          "context": {
+            "A": 1
+          },
+          "taskId": "t1",
+          "kind": "restore",
+          "changes": {},
+          "recordedAt": "2026-11-10T00:00:00Z"
+        }
+      ],
+      "expected": {
+        "tasks": [
+          {
+            "taskId": "t1",
+            "title": "周计划",
+            "detail": "",
+            "date": "2026-11-10",
+            "time": "",
+            "defer": "none",
+            "done": false,
+            "completedAt": "",
+            "deleted": true,
+            "deletedAt": "2026-11-10T00:00:00Z",
+            "createdAt": "2026-11-10T00:00:00Z",
+            "color": "#9bd3c7"
+          }
+        ],
+        "conflicts": []
+      },
+      "expectedCanonical": "{\"conflicts\":[],\"tasks\":[{\"color\":\"#9bd3c7\",\"completedAt\":\"\",\"createdAt\":\"2026-11-10T00:00:00Z\",\"date\":\"2026-11-10\",\"defer\":\"none\",\"deleted\":true,\"deletedAt\":\"2026-11-10T00:00:00Z\",\"detail\":\"\",\"done\":false,\"taskId\":\"t1\",\"time\":\"\",\"title\":\"周计划\"}]}",
+      "vectors": {
+        "A": 2,
+        "B": 1
+      },
+      "gaps": {}
+    },
+    {
+      "name": "purge-is-terminal",
+      "groupId": "g-merge",
+      "ops": [
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:1",
+          "actorId": "A",
+          "seq": 1,
+          "context": {},
+          "taskId": "t1",
+          "kind": "create",
+          "changes": {
+            "title": "周计划",
+            "date": "2026-11-10",
+            "done": false,
+            "createdAt": "2026-11-10T00:00:00Z"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:2",
+          "actorId": "A",
+          "seq": 2,
+          "context": {
+            "A": 1
+          },
+          "taskId": "t1",
+          "kind": "purge",
+          "changes": {},
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:3",
+          "actorId": "A",
+          "seq": 3,
+          "context": {
+            "A": 2
+          },
+          "taskId": "t1",
+          "kind": "patch",
+          "changes": {
+            "title": "复活尝试"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "B:1",
+          "actorId": "B",
+          "seq": 1,
+          "context": {
+            "A": 1
+          },
+          "taskId": "t1",
+          "kind": "patch",
+          "changes": {
+            "title": "旧设备编辑"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        }
+      ],
+      "expected": {
+        "tasks": [],
+        "conflicts": []
+      },
+      "expectedCanonical": "{\"conflicts\":[],\"tasks\":[]}",
+      "vectors": {
+        "A": 3,
+        "B": 1
+      },
+      "gaps": {}
+    },
+    {
+      "name": "out-of-order-delivery",
+      "groupId": "g-merge",
+      "ops": [
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:3",
+          "actorId": "A",
+          "seq": 3,
+          "context": {
+            "A": 2
+          },
+          "taskId": "t1",
+          "kind": "patch",
+          "changes": {
+            "title": "第三次"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:1",
+          "actorId": "A",
+          "seq": 1,
+          "context": {},
+          "taskId": "t1",
+          "kind": "create",
+          "changes": {
+            "title": "初始",
+            "date": "2026-11-10",
+            "createdAt": "2026-11-10T00:00:00Z"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:2",
+          "actorId": "A",
+          "seq": 2,
+          "context": {
+            "A": 1
+          },
+          "taskId": "t1",
+          "kind": "patch",
+          "changes": {
+            "title": "第二次"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        }
+      ],
+      "expected": {
+        "tasks": [
+          {
+            "taskId": "t1",
+            "title": "第三次",
+            "detail": "",
+            "date": "2026-11-10",
+            "time": "",
+            "defer": "none",
+            "done": false,
+            "completedAt": "",
+            "deleted": false,
+            "deletedAt": "",
+            "createdAt": "2026-11-10T00:00:00Z",
+            "color": "#9bd3c7"
+          }
+        ],
+        "conflicts": []
+      },
+      "expectedCanonical": "{\"conflicts\":[],\"tasks\":[{\"color\":\"#9bd3c7\",\"completedAt\":\"\",\"createdAt\":\"2026-11-10T00:00:00Z\",\"date\":\"2026-11-10\",\"defer\":\"none\",\"deleted\":false,\"deletedAt\":\"\",\"detail\":\"\",\"done\":false,\"taskId\":\"t1\",\"time\":\"\",\"title\":\"第三次\"}]}",
+      "vectors": {
+        "A": 3
+      },
+      "gaps": {}
+    },
+    {
+      "name": "duplicate-delivery",
+      "groupId": "g-merge",
+      "ops": [
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:1",
+          "actorId": "A",
+          "seq": 1,
+          "context": {},
+          "taskId": "t1",
+          "kind": "create",
+          "changes": {
+            "title": "周计划",
+            "date": "2026-11-10",
+            "done": false,
+            "createdAt": "2026-11-10T00:00:00Z"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:1",
+          "actorId": "A",
+          "seq": 1,
+          "context": {},
+          "taskId": "t1",
+          "kind": "create",
+          "changes": {
+            "title": "周计划",
+            "date": "2026-11-10",
+            "done": false,
+            "createdAt": "2026-11-10T00:00:00Z"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:2",
+          "actorId": "A",
+          "seq": 2,
+          "context": {
+            "A": 1
+          },
+          "taskId": "t1",
+          "kind": "patch",
+          "changes": {
+            "title": "只应生效一次"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        }
+      ],
+      "expected": {
+        "tasks": [
+          {
+            "taskId": "t1",
+            "title": "只应生效一次",
+            "detail": "",
+            "date": "2026-11-10",
+            "time": "",
+            "defer": "none",
+            "done": false,
+            "completedAt": "",
+            "deleted": false,
+            "deletedAt": "",
+            "createdAt": "2026-11-10T00:00:00Z",
+            "color": "#9bd3c7"
+          }
+        ],
+        "conflicts": []
+      },
+      "expectedCanonical": "{\"conflicts\":[],\"tasks\":[{\"color\":\"#9bd3c7\",\"completedAt\":\"\",\"createdAt\":\"2026-11-10T00:00:00Z\",\"date\":\"2026-11-10\",\"defer\":\"none\",\"deleted\":false,\"deletedAt\":\"\",\"detail\":\"\",\"done\":false,\"taskId\":\"t1\",\"time\":\"\",\"title\":\"只应生效一次\"}]}",
+      "vectors": {
+        "A": 2
+      },
+      "gaps": {}
+    },
+    {
+      "name": "gap-blocks-until-filled",
+      "groupId": "g-merge",
+      "ops": [
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:1",
+          "actorId": "A",
+          "seq": 1,
+          "context": {},
+          "taskId": "t1",
+          "kind": "create",
+          "changes": {
+            "title": "周计划",
+            "date": "2026-11-10",
+            "done": false,
+            "createdAt": "2026-11-10T00:00:00Z"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:3",
+          "actorId": "A",
+          "seq": 3,
+          "context": {
+            "A": 2
+          },
+          "taskId": "t1",
+          "kind": "patch",
+          "changes": {
+            "title": "第三条"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:2",
+          "actorId": "A",
+          "seq": 2,
+          "context": {
+            "A": 1
+          },
+          "taskId": "t1",
+          "kind": "patch",
+          "changes": {
+            "title": "第二条"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        }
+      ],
+      "expected": {
+        "tasks": [
+          {
+            "taskId": "t1",
+            "title": "第三条",
+            "detail": "",
+            "date": "2026-11-10",
+            "time": "",
+            "defer": "none",
+            "done": false,
+            "completedAt": "",
+            "deleted": false,
+            "deletedAt": "",
+            "createdAt": "2026-11-10T00:00:00Z",
+            "color": "#9bd3c7"
+          }
+        ],
+        "conflicts": []
+      },
+      "expectedCanonical": "{\"conflicts\":[],\"tasks\":[{\"color\":\"#9bd3c7\",\"completedAt\":\"\",\"createdAt\":\"2026-11-10T00:00:00Z\",\"date\":\"2026-11-10\",\"defer\":\"none\",\"deleted\":false,\"deletedAt\":\"\",\"detail\":\"\",\"done\":false,\"taskId\":\"t1\",\"time\":\"\",\"title\":\"第三条\"}]}",
+      "vectors": {
+        "A": 3
+      },
+      "gaps": {}
+    },
+    {
+      "name": "two-tasks-same-day-color-order",
+      "groupId": "g-merge",
+      "ops": [
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:1",
+          "actorId": "A",
+          "seq": 1,
+          "context": {},
+          "taskId": "t-b",
+          "kind": "create",
+          "changes": {
+            "title": "B 任务",
+            "date": "2026-11-11",
+            "createdAt": "2026-11-10T00:00:00Z"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        },
+        {
+          "protocolVersion": 1,
+          "groupId": "g-merge",
+          "opId": "A:2",
+          "actorId": "A",
+          "seq": 2,
+          "context": {
+            "A": 1
+          },
+          "taskId": "t-a",
+          "kind": "create",
+          "changes": {
+            "title": "A 任务",
+            "date": "2026-11-11",
+            "createdAt": "2026-11-10T00:00:00Z"
+          },
+          "recordedAt": "2026-11-10T00:00:00Z"
+        }
+      ],
+      "expected": {
+        "tasks": [
+          {
+            "taskId": "t-a",
+            "title": "A 任务",
+            "detail": "",
+            "date": "2026-11-11",
+            "time": "",
+            "defer": "none",
+            "done": false,
+            "completedAt": "",
+            "deleted": false,
+            "deletedAt": "",
+            "createdAt": "2026-11-10T00:00:00Z",
+            "color": "#9bd3c7"
+          },
+          {
+            "taskId": "t-b",
+            "title": "B 任务",
+            "detail": "",
+            "date": "2026-11-11",
+            "time": "",
+            "defer": "none",
+            "done": false,
+            "completedAt": "",
+            "deleted": false,
+            "deletedAt": "",
+            "createdAt": "2026-11-10T00:00:00Z",
+            "color": "#e7bd82"
+          }
+        ],
+        "conflicts": []
+      },
+      "expectedCanonical": "{\"conflicts\":[],\"tasks\":[{\"color\":\"#9bd3c7\",\"completedAt\":\"\",\"createdAt\":\"2026-11-10T00:00:00Z\",\"date\":\"2026-11-11\",\"defer\":\"none\",\"deleted\":false,\"deletedAt\":\"\",\"detail\":\"\",\"done\":false,\"taskId\":\"t-a\",\"time\":\"\",\"title\":\"A 任务\"},{\"color\":\"#e7bd82\",\"completedAt\":\"\",\"createdAt\":\"2026-11-10T00:00:00Z\",\"date\":\"2026-11-11\",\"defer\":\"none\",\"deleted\":false,\"deletedAt\":\"\",\"detail\":\"\",\"done\":false,\"taskId\":\"t-b\",\"time\":\"\",\"title\":\"B 任务\"}]}",
+      "vectors": {
+        "A": 2
+      },
+      "gaps": {}
+    }
+  ]
+}
