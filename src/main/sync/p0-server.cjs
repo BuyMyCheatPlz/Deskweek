@@ -11,6 +11,7 @@ const { encodeFrame, decodeFrames } = require("./frame.cjs");
 const { validate, ProtocolError } = require("./messages.cjs");
 const { KeyRegistry, verify, sign, loadOrCreateIdentityFile } = require("./identity.cjs");
 const { OpLog } = require("./oplog.cjs");
+const { shortAuthString } = require("./trust.cjs");
 
 const DEFAULT_PORT = 47821;
 const DEFAULT_GROUP = "p0-group";
@@ -30,6 +31,8 @@ function createSession(socket, {
   registry = new KeyRegistry(),
   oplog = new OpLog({ groupId }),
   identity = null,
+  trust = null,
+  onPendingPairing = () => {},
 } = {}) {
   let buffer = Buffer.alloc(0);
   const state = { peer: null };
@@ -83,6 +86,16 @@ function createSession(socket, {
           } else {
             log("unverified", message.actorId);
           }
+
+          // 必须先通过信任表：未配对设备给出短认证码并断开，由用户确认后重试
+          if (trust && message.publicKey && !trust.isTrusted(message.actorId, message.publicKey)) {
+            const sas = shortAuthString(identity.publicKeyB64, message.publicKey);
+            onPendingPairing({ actorId: message.actorId, publicKeyB64: message.publicKey, sas });
+            log("pending-pairing", `${message.actorId} ${sas}`);
+            send({ type: "ERROR", protocolVersion: 1, code: "EPAIRING", message: `需要配对，验证码 ${sas}` });
+            socket.destroy();
+            return;
+          }
           const self = identity || { actorId, publicKeyB64: null, privateKey: null };
           const helloReply = {
             type: "HELLO", protocolVersion: 1, groupId, actorId: self.actorId,
@@ -127,7 +140,7 @@ function createSession(socket, {
   return state;
 }
 
-function createServer({ pfx, passphrase, log = () => {}, groupId = DEFAULT_GROUP, identityDir } = {}) {
+function createServer({ pfx, passphrase, log = () => {}, groupId = DEFAULT_GROUP, identityDir, trust = null } = {}) {
   const credentials = pfx ? { pfx, passphrase } : defaultCredentials();
   const registry = new KeyRegistry();
   const oplog = new OpLog({ groupId });
@@ -139,11 +152,12 @@ function createServer({ pfx, passphrase, log = () => {}, groupId = DEFAULT_GROUP
     { ...credentials, minVersion: "TLSv1.2" },
     (socket) => {
       log("connection", socket.remoteAddress);
-      createSession(socket, { log, registry, oplog, groupId, identity });
+      createSession(socket, { log, registry, oplog, groupId, identity, trust, onPendingPairing: server.onPendingPairing });
     },
   );
   server.registry = registry;
   server.oplog = oplog;
+  server.onPendingPairing = () => {};
   return server;
 }
 

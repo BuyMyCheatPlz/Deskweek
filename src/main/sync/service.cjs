@@ -76,6 +76,8 @@ function createSyncService({ dataDir, groupId = "default", log = () => {} }) {
   let lastError = null;
   let applyState = null;
   const sessions = new Set();
+  /** 待确认配对：actorId → { actorId, publicKeyB64, sas, at } */
+  const pending = new Map();
 
   function status() {
     return {
@@ -89,6 +91,8 @@ function createSyncService({ dataDir, groupId = "default", log = () => {} }) {
       operations: oplog.allOps().length,
       peers: trust.all().length,
       sessions: sessions.size,
+      pending: [...pending.values()],
+      paired: trust.all().map(peer => ({ actorId: peer.actorId, pairedAt: peer.pairedAt, sas: peer.sas })),
     };
   }
 
@@ -143,7 +147,11 @@ function createSyncService({ dataDir, groupId = "default", log = () => {} }) {
         groupId,
         identityDir: path.join(dataDir, "sync"),
         log,
+        trust,
       });
+      server.onPendingPairing = entry => {
+        pending.set(entry.actorId, { ...entry, at: new Date().toISOString() });
+      };
       // 接管会话广播：记录连接并在收到 OPS 时回写投影
       server.on("secureConnection", (socket) => {
         sessions.add(socket);
@@ -228,7 +236,34 @@ function createSyncService({ dataDir, groupId = "default", log = () => {} }) {
     startedAt = null;
   }
 
-  return { status, start, stop, recordLocalChange, applyRemote, attachStore, identity, trust, oplog };
+  function approvePairing(actorId) {
+    const entry = pending.get(actorId);
+    if (!entry) return false;
+    trust.remember({
+      actorId: entry.actorId,
+      publicKeyB64: entry.publicKeyB64,
+      groupId,
+      pairedAt: new Date().toISOString(),
+      sas: entry.sas,
+    });
+    pending.delete(actorId);
+    log("paired", actorId);
+    return true;
+  }
+
+  function rejectPairing(actorId) {
+    return pending.delete(actorId);
+  }
+
+  function forgetPeer(actorId) {
+    trust.forget(actorId);
+  }
+
+  return {
+    status, start, stop, recordLocalChange, applyRemote, attachStore,
+    approvePairing, rejectPairing, forgetPeer,
+    identity, trust, oplog,
+  };
 }
 
 module.exports = { createSyncService, diffTasks };

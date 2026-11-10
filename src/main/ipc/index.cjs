@@ -45,6 +45,21 @@ function registerIPC({ electron, windows, store, aiConfig, ai, updates, runtime,
     else sync.stop();
     return sync.status();
   });
+  handle("sync-pending-approve", (_event, actorId) => {
+    if (!sync) return { running: false };
+    sync.approvePairing(String(actorId || ""));
+    return sync.status();
+  });
+  handle("sync-pending-reject", (_event, actorId) => {
+    if (!sync) return { running: false };
+    sync.rejectPairing(String(actorId || ""));
+    return sync.status();
+  });
+  handle("sync-forget-peer", (_event, actorId) => {
+    if (!sync) return { running: false };
+    sync.forgetPeer(String(actorId || ""));
+    return sync.status();
+  });
   handle("ai-config-get", () => aiConfig.publicAIConfig());
   handle("ai-config-save", (_event, next) => aiConfig.saveAIConfig(next));
   handle("ai-summarize", (_event, payload) => ai.summarizeWithAI(payload));

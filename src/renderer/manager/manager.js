@@ -20,6 +20,7 @@ const els = {
   themeLightButton: $("#themeLightButton"), themeDarkButton: $("#themeDarkButton"),
   managerExport: $("#managerExport"), managerImport: $("#managerImport"), managerImportFile: $("#managerImportFile"),
   settingsOpenDataFolder: $("#settingsOpenDataFolder"),
+  syncToggle: $("#syncToggle"), syncStatusText: $("#syncStatusText"), syncPendingList: $("#syncPendingList"), syncPeerList: $("#syncPeerList"), syncRefresh: $("#syncRefresh"),
   checkUpdateButton: $("#checkUpdateButton"), updateStatus: $("#updateStatus"), updateStatusText: $("#updateStatusText"), updateNotes: $("#updateNotes"), installUpdateButton: $("#installUpdateButton"),
   dialog: $("#managerEditDialog"), editForm: $("#managerEditForm"), editTitle: $("#managerEditTitle"), editDetail: $("#managerEditDetail"), editDate: $("#managerEditDate"), editTime: $("#managerEditTime"), editDefer: $("#managerEditDefer"), editDone: $("#managerEditDone"),
   deleteTask: $("#managerDeleteTask"), closeDialog: $("#managerCloseDialog"), cancelEdit: $("#managerCancelEdit"), toast: $("#managerToast"),
@@ -787,10 +788,73 @@ function closeManagerAddDialog() {
 }
 
 async function loadAutostart() {
-  if (!els.autostartToggle) return;
+if (!els.autostartToggle) return;
   try { const enabled = await window.deskWeek?.getAutostart?.(); els.autostartToggle.checked = Boolean(enabled); }
   catch { /* ignore */ }
 }
+
+  // ---- 局域网同步 ----
+function renderSyncStatus(status) {
+  if (!els.syncStatusText) return;
+  if (!status || !status.running) {
+    els.syncStatusText.textContent = status?.lastError ? `未运行：${status.lastError}` : "未开启";
+    if (els.syncToggle) els.syncToggle.checked = false;
+    if (els.syncPendingList) els.syncPendingList.innerHTML = "";
+    if (els.syncPeerList) els.syncPeerList.innerHTML = "";
+    return;
+  }
+  if (els.syncToggle) els.syncToggle.checked = true;
+  const vectors = Object.entries(status.vectors || {}).map(([k, v]) => `${k.slice(0, 8)}…=${v}`).join("，") || "无";
+  els.syncStatusText.textContent = `运行中 · 端口 ${status.port} · 操作 ${status.operations} 条 · 已配对 ${status.peers} 台 · 向量 ${vectors}`;
+
+  if (els.syncPendingList) {
+    els.syncPendingList.innerHTML = "";
+    for (const entry of status.pending || []) {
+      const row = document.createElement("div");
+      row.className = "sync-row";
+      const text = document.createElement("span");
+      text.textContent = `待配对设备 ${entry.actorId.slice(0, 8)}… 验证码 ${entry.sas}`;
+      const ok = document.createElement("button");
+      ok.className = "soft-button"; ok.type = "button"; ok.textContent = "确认";
+      ok.addEventListener("click", async () => { renderSyncStatus(await window.deskWeek?.syncApprove?.(entry.actorId)); });
+      const no = document.createElement("button");
+      no.className = "soft-button"; no.type = "button"; no.textContent = "拒绝";
+      no.addEventListener("click", async () => { renderSyncStatus(await window.deskWeek?.syncReject?.(entry.actorId)); });
+      row.append(text, ok, no);
+      els.syncPendingList.append(row);
+    }
+  }
+
+  if (els.syncPeerList) {
+    els.syncPeerList.innerHTML = "";
+    for (const peer of status.paired || []) {
+      const row = document.createElement("div");
+      row.className = "sync-row";
+      const text = document.createElement("span");
+      text.textContent = `已配对 ${peer.actorId.slice(0, 8)}…（验证码 ${peer.sas}）`;
+      const remove = document.createElement("button");
+      remove.className = "soft-button"; remove.type = "button"; remove.textContent = "移除";
+      remove.addEventListener("click", async () => { renderSyncStatus(await window.deskWeek?.syncForget?.(peer.actorId)); });
+      row.append(text, remove);
+      els.syncPeerList.append(row);
+    }
+  }
+}
+
+async function refreshSyncStatus() {
+  try { renderSyncStatus(await window.deskWeek?.syncStatus?.()); } catch { /* ignore */ }
+}
+
+els.syncToggle?.addEventListener("change", async event => {
+  const enabled = event.target.checked;
+  els.syncStatusText.textContent = enabled ? "启动中…" : "正在停止…";
+  try { renderSyncStatus(await window.deskWeek?.syncToggle?.(enabled)); }
+  catch (error) { els.syncStatusText.textContent = `失败：${error.message}`; }
+});
+els.syncRefresh?.addEventListener("click", refreshSyncStatus);
+setInterval(refreshSyncStatus, 5000);
+refreshSyncStatus();
+
 function readableUpdateError(error) {
   return String(error?.message || error || "更新失败")
     .replace(/^Error invoking remote method '[^']+':\s*/i, "")
