@@ -5,6 +5,7 @@
 // 仅用于验证 TLS + 帧协议，不承载真实数据。
 
 const { createServer, listen } = require("../src/main/sync/p0-server.cjs");
+const { Bonjour } = require("bonjour-service");
 
 const port = Number(process.argv[2] || 47821);
 
@@ -15,8 +16,25 @@ const server = createServer({
   },
 });
 
+const advertise = !process.argv.includes("--no-mdns");
+
 listen(server, { port, host: "0.0.0.0" })
-  .then((actual) => console.log(`P0 sync server listening on 0.0.0.0:${actual}`))
+  .then((actual) => {
+    console.log(`P0 sync server listening on 0.0.0.0:${actual}`);
+    if (!advertise) return;
+    const bonjour = new Bonjour();
+    const service = bonjour.publish({
+      name: `DeskWeek-${require("node:os").hostname()}`,
+      type: "deskweek-sync",
+      port: actual,
+      txt: { pv: "1", group: "p0-group" },
+    });
+    console.log("mDNS advertised as _deskweek-sync._tcp");
+    process.on("SIGINT", () => {
+      service.stop?.();
+      bonjour.destroy();
+    });
+  })
   .catch((error) => {
     console.error("failed to listen:", error.message);
     process.exit(1);
