@@ -9,7 +9,7 @@ const path = require("node:path");
 
 const { encodeFrame, decodeFrames } = require("./frame.cjs");
 const { validate, ProtocolError } = require("./messages.cjs");
-const { KeyRegistry, verify } = require("./identity.cjs");
+const { KeyRegistry, verify, sign, loadOrCreateIdentityFile } = require("./identity.cjs");
 const { OpLog } = require("./oplog.cjs");
 
 const DEFAULT_PORT = 47821;
@@ -29,6 +29,7 @@ function createSession(socket, {
   log = () => {},
   registry = new KeyRegistry(),
   oplog = new OpLog({ groupId }),
+  identity = null,
 } = {}) {
   let buffer = Buffer.alloc(0);
   const state = { peer: null };
@@ -82,10 +83,13 @@ function createSession(socket, {
           } else {
             log("unverified", message.actorId);
           }
-          send({
-            type: "HELLO", protocolVersion: 1, groupId, actorId,
+          const self = identity || { actorId, publicKeyB64: null, privateKey: null };
+          const helloReply = {
+            type: "HELLO", protocolVersion: 1, groupId, actorId: self.actorId,
             nonce: "reply-" + message.nonce, capabilities: ["ops", "tls"],
-          });
+            publicKey: self.publicKeyB64,
+          };
+          send(self.privateKey ? { ...helloReply, signature: sign(helloReply, self.privateKey) } : helloReply);
           send({ type: "SUMMARY", protocolVersion: 1, vectors: oplog.vectors() });
           break;
         }
@@ -123,15 +127,19 @@ function createSession(socket, {
   return state;
 }
 
-function createServer({ pfx, passphrase, log = () => {}, groupId = DEFAULT_GROUP } = {}) {
+function createServer({ pfx, passphrase, log = () => {}, groupId = DEFAULT_GROUP, identityDir } = {}) {
   const credentials = pfx ? { pfx, passphrase } : defaultCredentials();
   const registry = new KeyRegistry();
   const oplog = new OpLog({ groupId });
+  // 服务端也有身份：配对时把自己的公钥发给对端，双方核对同一串短码
+  const identity = loadOrCreateIdentityFile(
+    identityDir || path.join(__dirname, "..", "..", "..", ".server-identity"),
+  );
   const server = tls.createServer(
     { ...credentials, minVersion: "TLSv1.2" },
     (socket) => {
       log("connection", socket.remoteAddress);
-      createSession(socket, { log, registry, oplog, groupId });
+      createSession(socket, { log, registry, oplog, groupId, identity });
     },
   );
   server.registry = registry;
