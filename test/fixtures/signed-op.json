@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "publicKeyB64": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE/PIbe4aS4BghbP+OBYO/LD+rG2aN0xN1ZxR4Nb9hRTRIzFPUI7ASD3ETqC6RmDP+umNWpT7ZxLj/7nxiPsDS1w==",
+  "privateKeyB64": "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgmHTnwS+nwZz0p73HMhb6vOGJo0rwDC/zrUmoh6c/QE+hRANCAAT88ht7hpLgGCFs/44Fg78sP6sbZo3TE3VnFHg1v2FFNEjMU9QjsBIPcROoLpGYM/66Y1alPtnEuP/ufGI+wNLX",
+  "op": {
+    "protocolVersion": 1,
+    "groupId": "p0-group",
+    "opId": "vector-actor:1",
+    "actorId": "vector-actor",
+    "seq": 1,
+    "context": {},
+    "taskId": "task-vector",
+    "kind": "create",
+    "changes": {
+      "title": "签名向量：评审 Android 方案",
+      "done": false,
+      "defer": "3d"
+    },
+    "recordedAt": "2026-11-10T02:00:00Z"
+  },
+  "signature": "MEUCIQDFt5mxBwEHfFbzpbKqWmy379uh/oBilQdMvLiCnS1/UwIgeAp1Ri5371lJBFMCDgyrGOxtmoBySgTfjhdsarvgpes="
+}

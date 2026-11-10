@@ -83,6 +83,12 @@ function validate(message) {
       id(message.actorId, "actorId");
       text(message.nonce, "nonce", 256);
       if (!Array.isArray(message.capabilities)) fail("ECONTRACT", "capabilities must be an array");
+      // P2：可选的身份证明，带公钥时必须带签名（签名覆盖 HELLO 去掉 signature 的规范化内容）
+      if (message.publicKey !== undefined) text(message.publicKey, "publicKey", 1024);
+      if (message.signature !== undefined) text(message.signature, "signature", 1024);
+      if ((message.publicKey === undefined) !== (message.signature === undefined)) {
+        fail("ECONTRACT", "HELLO publicKey and signature must appear together");
+      }
       break;
     case "SUMMARY":
     case "ACK":

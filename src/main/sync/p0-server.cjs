@@ -10,6 +10,7 @@ const path = require("node:path");
 
 const { encodeFrame, decodeFrames } = require("./frame.cjs");
 const { validate, ProtocolError } = require("./messages.cjs");
+const { KeyRegistry, verify } = require("./identity.cjs");
 
 const DEFAULT_PORT = 47821;
 const CERT_DIR = path.join(__dirname, "..", "..", "..", "test", "fixtures", "certs");
@@ -22,7 +23,7 @@ function defaultCredentials() {
 }
 
 /** 每个连接一个协议状态机，P0 只保留最小字段 */
-function createSession(socket, { actorId = "host-actor", groupId = "p0-group", log = () => {} } = {}) {
+function createSession(socket, { actorId = "host-actor", groupId = "p0-group", log = () => {}, registry = new KeyRegistry() } = {}) {
   let buffer = Buffer.alloc(0);
   const state = { peer: null, opsApplied: 0, vectors: {} };
 
@@ -62,6 +63,19 @@ function createSession(socket, { actorId = "host-actor", groupId = "p0-group", l
       switch (message.type) {
         case "HELLO":
           state.peer = message.actorId;
+          if (message.publicKey && message.signature) {
+            if (verify(message, message.publicKey, message.signature)) {
+              registry.put(message.actorId, message.publicKey);
+              log("verified", message.actorId);
+            } else {
+              log("bad-signature", "HELLO " + message.actorId);
+              send({ type: "ERROR", protocolVersion: 1, code: "EBADSIG", message: "HELLO signature rejected" });
+              socket.destroy();
+              return;
+            }
+          } else {
+            log("unverified", message.actorId);
+          }
           send({
             type: "HELLO",
             protocolVersion: 1,
@@ -75,10 +89,22 @@ function createSession(socket, { actorId = "host-actor", groupId = "p0-group", l
         case "PING":
           send({ type: "PONG", protocolVersion: 1, nonce: message.nonce });
           break;
-        case "OPS":
+        case "OPS": {
+          const rejected = message.ops.filter((op) => !registry.verifyOperation(op));
+          if (rejected.length > 0) {
+            log("bad-signature", "OPS " + rejected.map((op) => op.opId).join(","));
+            send({
+              type: "ERROR",
+              protocolVersion: 1,
+              code: "EBADSIG",
+              message: "operation signature rejected: " + rejected.map((op) => op.opId).join(","),
+            });
+            break;
+          }
           for (const op of message.ops) state.vectors[op.actorId] = op.seq;
           send({ type: "ACK", protocolVersion: 1, vectors: state.vectors });
           break;
+        }
         case "PONG":
         case "ACK":
           break;
@@ -94,13 +120,15 @@ function createSession(socket, { actorId = "host-actor", groupId = "p0-group", l
 
 function createServer({ pfx, passphrase, log = () => {} } = {}) {
   const credentials = pfx ? { pfx, passphrase } : defaultCredentials();
+  const registry = new KeyRegistry();
   const server = tls.createServer(
     { ...credentials, minVersion: "TLSv1.2" },
     (socket) => {
       log("connection", socket.remoteAddress);
-      createSession(socket, { log });
+      createSession(socket, { log, registry });
     },
   );
+  server.registry = registry;
   return server;
 }
 
