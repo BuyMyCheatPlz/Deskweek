@@ -33,7 +33,7 @@ DeskWeek 是一款专为 Windows 设计的桌面周历与待办事项工具。�
 - **全透明浮窗模式**：去除白色底板和卡片阴影，仅保留日程文字与必要操作，完美融入各类电脑壁纸；可在「管理中心 → 设置 → 浮窗背景」中开启。
 - **跨端协同与面对面二维码传输**：支持与 Android 手机和平板免网面对面扫码互传日程，也可开启局域网协同同步。
 - **农历、节气与节假日**：支持公历、农历对照、二十四节气、法定节假日与休假调休标记。
-- **可选 AI 助手总结**：支持导入文本、截图以及 PDF、Word、Excel、PPTX 等资料，自动提取多条待办事项并支持一键添加。
+- **可选 AI 助手总结**：在「设置 → AI 导入」或任务的详细输入里，导入文本、截图以及 PDF、Word、Excel、PPTX 等资料，自动提取多条待办事项，确认后勾选或一键导入到待办。
 - **自动翻译整理**：可将外语资料自动提炼整理为中文待办。
 - **内置检查更新**：检测到新版本后，用户确认即可自动下载更新并平滑重启，保留所有本地数据。
 - **纯本地便携数据**：所有待办保存在程序旁的 `data/data.json` 中，随时打包带走。
@@ -65,7 +65,8 @@ npm start
 | --- | --- |
 | `npm run check` | 检查 JavaScript 代码语法 |
 | `npm test` | 核心功能自动化测试（数据读写、多屏计算、全屏检测、二维码编解码、同步协议等） |
-| `npm run test:host` | 桌面环境集成测试（多屏拖动、双窗口同步、全屏休眠等） |
+| `npm run test:host` | 桌面环境集成测试（多屏拖动、双窗口同步、全屏休眠、设置页 AI 导入写盘等） |
+| `npm run test:ai` | AI 导入回归（真实窗口 + 本地 mock AI，覆盖浮窗/设置页/非法日期跳过） |
 | `npm run test:multimonitor` | 真实双屏全屏隔离测试（需设置 `DESKWEEK_MULTI_EVIDENCE`，详见[修复说明](docs/multimonitor-fullscreen-fix.md)） |
 | `npm run test:qr` | 二维码离线传输集成测试（真实图片解码、摄像头流与确认导入） |
 | `npm run test:visibility` | 桌面可见性测试（验证后台辅助软件不会误触发浮窗隐藏） |
@@ -79,7 +80,7 @@ npm start
 # 1. 打包生成绿色便携版目录 (dist/DeskWeek-win32-x64/)
 npm run package
 
-# 2. 构建 Windows 安装包 (dist/DeskWeek-v2.0.0-windows-x64-Setup.exe)
+# 2. 构建 Windows 安装包 (dist/DeskWeek-v2.2.0-windows-x64-Setup.exe)
 npm run package:installer
 ```
 

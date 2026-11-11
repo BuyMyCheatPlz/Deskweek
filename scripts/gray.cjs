@@ -32,6 +32,7 @@ run("语法检查", "npm", ["run", "check"]);
 run("单元测试", "node", ["--test", "test/*.test.cjs"]);
 run("UI 冒烟（同步面板）", "node", ["scripts/ui-smoke.cjs", "--sync"]);
 run("应用冒烟（启动 + 同步服务）", "node", ["scripts/smoke.cjs", "--sync"]);
+run("AI 导入回归（浮窗 + 设置页 + 管理端）", "node", ["scripts/run.cjs", "--ai-test"]);
 run("主机回归", "npm", ["run", "test:host"]);
 
 console.log("\n===== 灰测汇总 =====");

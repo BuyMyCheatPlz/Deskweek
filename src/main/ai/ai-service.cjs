@@ -15,11 +15,29 @@ function createAIService({ publicAIConfig, readUsableAIKey }) {
   }
 
   function parseAIJson(content) {
-    const text = String(content || "").trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
-    const start = text.indexOf("{");
-    const end = text.lastIndexOf("}");
+    const text = String(content || "").trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+    // Some OpenAI-compatible models answer with a bare array instead of the requested
+    // {"items": [...]} object. Pick whichever container starts first so both shapes work.
+    const objectStart = text.indexOf("{");
+    const arrayStart = text.indexOf("[");
+    const useArray = arrayStart >= 0 && (objectStart < 0 || arrayStart < objectStart);
+    const start = useArray ? arrayStart : objectStart;
+    const closing = useArray ? "]" : "}";
+    const end = text.lastIndexOf(closing);
     if (start < 0 || end <= start) throw new Error("AI 返回内容不是有效 JSON");
-    return JSON.parse(text.slice(start, end + 1));
+    try {
+      return JSON.parse(text.slice(start, end + 1));
+    } catch {
+      throw new Error("AI 返回内容不是有效 JSON");
+    }
+  }
+
+  function pickAIItems(result) {
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result?.items)) return result.items;
+    if (Array.isArray(result?.tasks)) return result.tasks;
+    if (result?.items && typeof result.items === "object") return [result.items];
+    return result?.title || result?.detail ? [result] : [];
   }
 
   async function summarizeWithAI(payload = {}) {
@@ -104,7 +122,7 @@ function createAIService({ publicAIConfig, readUsableAIKey }) {
       const raw = data?.choices?.[0]?.message?.content;
       const text = Array.isArray(raw) ? raw.map((part) => part?.text || "").join("") : raw;
       const result = parseAIJson(text);
-      const rawItems = Array.isArray(result?.items) ? result.items : (result?.title || result?.detail ? [result] : []);
+      const rawItems = pickAIItems(result);
       const items = rawItems.slice(0, 20).map((entry) => {
         const title = String(entry?.title || "").trim().slice(0, 100);
         const detail = String(entry?.detail || "").trim().slice(0, 4000);

@@ -126,7 +126,6 @@
           <div class="field schedule-defer-field"><span>延后显示</span><div id="calendarNewDefer" class="defer-picker" data-defer-picker data-defer-value="none"><button class="defer-trigger" type="button" aria-label="延后显示：立即显示" aria-expanded="false"><span class="defer-clock-icon" aria-hidden="true"></span><span class="defer-trigger-badge" hidden></span></button></div></div>
         </div>
       </div>
-      <div id="calendarAIProposals" class="ai-proposal-list" hidden></div>
       <section class="ai-summary-box">
         <div class="ai-summary-head"><h3>AI 总结</h3><span id="aiConfigHint" class="ai-config-hint" hidden>未配置接口</span></div>
         <textarea id="aiSourceText" rows="3" maxlength="12000" placeholder="粘贴邮件、通知或聊天内容，也可以添加文件"></textarea>
@@ -137,11 +136,16 @@
           <div id="aiImageList" class="ai-image-list"></div>
           <div id="aiFileList" class="ai-file-list"></div>
           <span class="spacer"></span>
-          <button id="calendarAddAllButton" class="save-button ai-add-all-button" type="button" hidden>一键添加</button>
           <button id="aiSummarizeButton" class="save-button" type="button">总结并填入</button>
         </div>
         <p id="aiSummaryStatus" class="ai-summary-status" hidden></p>
       </section>
+      <div id="aiResultBar" class="ai-result-bar" hidden>
+        <span id="aiResultText" class="ai-result-text"></span>
+        <span class="spacer"></span>
+        <button id="calendarAIImportResults" class="save-button ai-result-import" type="button">导入到待办</button>
+      </div>
+      <div id="calendarAIProposals" class="ai-proposal-list" hidden></div>
       <div class="dialog-actions">
         <span class="spacer"></span>
         <button id="calendarCancelAdd" class="ghost-button" type="button">取消</button>

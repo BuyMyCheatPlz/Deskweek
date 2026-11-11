@@ -471,3 +471,22 @@ body.theme-light #aiExtraPrompt { border-color: rgba(48,96,82,.12); background: 
 .floating-month-head { display: flex; min-width: 0; align-items: flex-start; gap: 4px; }
 .floating-month-head > .floating-month-number { flex: 0 0 auto; }
 .floating-month-head > .floating-month-holidays { flex: 1 1 auto; min-width: 0; }
+/* AI 拆解结果条：总结后把“导入到待办”放在结果旁边，避免按钮落在滚动区之外。 */
+.ai-result-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 6px;
+  padding: 9px 11px;
+  border: 1px solid rgba(155, 211, 199, .28);
+  border-radius: 11px;
+  background: rgba(103, 200, 179, .10);
+}
+.ai-result-bar[hidden] { display: none !important; }
+.ai-result-text { min-width: 0; color: var(--ink); font-size: 11px; font-weight: 650; line-height: 1.4; }
+.ai-result-import { flex: 0 0 auto; min-height: 32px; padding: 0 13px; font-size: 11px; }
+.ai-result-import:disabled { opacity: .55; cursor: default; }
+.ai-proposal-card.is-invalid { border-color: rgba(242, 155, 155, .52); background: rgba(242, 155, 155, .07); }
+body.theme-light .ai-result-bar { border-color: rgba(42, 146, 124, .22); background: rgba(47, 157, 134, .08); }
+body.theme-light .ai-result-text { color: #293f39; }
+body.theme-light .ai-proposal-card.is-invalid { border-color: rgba(208, 95, 95, .48); background: rgba(208, 95, 95, .06); }

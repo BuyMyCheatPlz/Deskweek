@@ -86,6 +86,26 @@
               <div class="ai-option-row"><span class="ai-option-label">自动翻译</span><label class="toggle" aria-label="自动翻译"><input id="aiAutoTranslateToggle" type="checkbox"><span class="toggle-track"></span></label></div>
               <div class="settings-actions"><button id="saveAIConfig" class="soft-button">保存 AI 配置</button><button id="clearAIKey" class="soft-button">清除密钥</button></div>
             </article>
+            <article class="settings-card ai-import-card">
+              <div class="settings-card-head"><div><h3>AI 导入</h3><p>粘贴资料或添加文件，AI 拆解成待办后勾选导入。文件在电脑本地解析，只有整理后的文字和图片会发给你配置的接口。</p></div><span id="settingsAIConfigHint" class="ai-config-hint" hidden>未配置接口</span></div>
+              <label class="ai-import-field"><span>资料内容</span><textarea id="settingsAISource" rows="4" maxlength="12000" placeholder="粘贴邮件、通知、聊天记录，或从下面添加 PDF、Word、Excel、PPT、文本文件"></textarea></label>
+              <label class="ai-import-field"><span>补充要求（可选）</span><textarea id="settingsAIExtraPrompt" rows="2" maxlength="4000" placeholder="例如：只保留与考试有关的事项；按每周拆成复习计划"></textarea></label>
+              <div class="ai-import-attach-row">
+                <label class="soft-button ai-image-button">添加文件<input id="settingsAIFileInput" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.ods,.csv,.pptx,.odt,.rtf,.txt,.md,.markdown,.json,.xml,.yaml,.yml,.log" multiple hidden></label>
+                <label class="soft-button ai-image-button">添加图片<input id="settingsAIImageInput" type="file" accept="image/*" multiple hidden></label>
+                <div id="settingsAIImageList" class="ai-image-list"></div>
+                <div id="settingsAIFileList" class="ai-file-list"></div>
+              </div>
+              <div class="settings-actions ai-import-actions">
+                <button id="settingsAIParse" class="primary-button" type="button">AI 拆解</button>
+                <button id="settingsAISelectAll" class="soft-button" type="button">全选</button>
+                <button id="settingsAIImport" class="soft-button" type="button" disabled>导入选中（0）</button>
+                <button id="settingsAIClear" class="soft-button" type="button">清空</button>
+              </div>
+              <p id="settingsAIStatus" class="ai-summary-status" hidden></p>
+              <div id="settingsAIEntries" class="ai-import-list" hidden></div>
+              <p class="settings-note">导入后会写入“未完成”待办；日期或标题不完整的事项会跳过，不会阻塞其他事项。没有日期的事项会作为未排期任务显示。</p>
+            </article>
             <article class="settings-card sync-card">
               <div class="settings-card-head"><div><h3>局域网同步</h3><p>同网发现已配对设备并交换改动；未配对的设备需要核对验证码后才能加入。</p></div><label class="toggle" aria-label="开启局域网同步"><input id="syncToggle" type="checkbox"><span class="toggle-track"></span></label></div>
               <p class="settings-note" id="syncStatusText">未开启</p>
@@ -103,7 +123,7 @@
                   <p class="about-credit">开发：小虾 × <a class="about-link" href="https://space.bilibili.com/520978347" data-external-url="https://space.bilibili.com/520978347">菜鸡咕</a><span class="about-credit-separator" aria-hidden="true">·</span><span class="about-credit-ack">鸣谢：<a class="about-link" href="https://github.com/BuyMyCheatPlz" data-external-url="https://github.com/BuyMyCheatPlz">BuyMyCheatPlz</a></span></p>
                   <p class="about-star-note">如果你觉得这个软件对你有所帮助，可以来 <a class="about-star-link" href="https://github.com/EasonGuuu/Deskweek" data-external-url="https://github.com/EasonGuuu/Deskweek">GitHub</a> 给我们点个 star 吗！</p>
                 </div>
-                <span class="version-pill">v2.1.1</span>
+                <span class="version-pill">v2.2.0</span>
               </div>
               <div class="about-links">
                 <button id="checkUpdateButton" class="soft-button" type="button">检查更新</button>
@@ -127,7 +147,6 @@
         <label class="field"><span>详情</span><textarea id="managerAddDetail" rows="3" maxlength="4000" placeholder="补充要求、链接或注意事项"></textarea></label>
         <div class="field-row schedule-row"><label class="field"><span>日期</span><input id="managerAddDate" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="日期" aria-label="选择日期" data-date-picker></label><label class="field"><span>时间</span><input id="managerAddTime" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="12:00" aria-label="可选时间" data-time-picker></label><div class="field schedule-defer-field"><span>延后显示</span><div id="managerAddDefer" class="defer-picker" data-defer-picker data-defer-value="none"><button class="defer-trigger" type="button" aria-label="延后显示：立即显示" aria-expanded="false"><span class="defer-clock-icon" aria-hidden="true"></span><span class="defer-trigger-badge" hidden></span></button></div></div></div>
       </div>
-      <div id="managerAIProposals" class="ai-proposal-list" hidden></div>
       <section class="ai-summary-box">
         <div class="ai-summary-head"><h3>AI 总结</h3><span id="managerAIConfigHint" class="ai-config-hint" hidden>未配置接口</span></div>
         <textarea id="managerAISourceText" rows="3" maxlength="12000" placeholder="粘贴邮件、通知或聊天内容，也可以添加文件"></textarea>
@@ -138,11 +157,16 @@
           <div id="managerAIImageList" class="ai-image-list"></div>
           <div id="managerAIFileList" class="ai-file-list"></div>
           <span class="spacer"></span>
-          <button id="managerAddAllButton" class="primary-button ai-add-all-button" type="button" hidden>一键添加</button>
           <button id="managerAISummarizeButton" class="primary-button" type="button">总结并填入</button>
         </div>
         <p id="managerAIStatus" class="ai-summary-status" hidden></p>
       </section>
+      <div id="managerAIResultBar" class="ai-result-bar" hidden>
+        <span id="managerAIResultText" class="ai-result-text"></span>
+        <span class="spacer"></span>
+        <button id="managerAIImportResults" class="primary-button ai-result-import" type="button">导入到待办</button>
+      </div>
+      <div id="managerAIProposals" class="ai-proposal-list" hidden></div>
       <div class="dialog-actions"><span class="spacer"></span><button id="managerCancelAdd" class="soft-button" type="button">取消</button><button id="managerAddSubmit" class="primary-button" type="submit">添加</button></div>
     </form>
   </dialog>
