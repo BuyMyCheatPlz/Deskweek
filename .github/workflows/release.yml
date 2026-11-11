@@ -55,7 +55,7 @@ jobs:
           $cleanVersion = $tag.TrimStart('v')
           Write-Output "tag=$tag" >> $env:GITHUB_OUTPUT
           Write-Output "version=$cleanVersion" >> $env:GITHUB_OUTPUT
-          Write-Output "title=DeskWeek $tag · 全透明浮窗与核心架构优化" >> $env:GITHUB_OUTPUT
+          Write-Output "title=DeskWeek $tag" >> $env:GITHUB_OUTPUT
           Write-Host "Releasing DeskWeek $tag (version $cleanVersion)"
 
       - name: Package Windows portable executable
@@ -71,17 +71,14 @@ jobs:
           $zipName = "DeskWeek-v$ver-windows-x64-portable.zip"
           $zipPath = "dist/$zipName"
           Write-Host "Creating archive: $zipPath"
-          if (Get-Command tar.exe -ErrorAction SilentlyContinue) {
-            tar.exe -a -c -f $zipPath -C dist DeskWeek-win32-x64
-          } else {
-            Compress-Archive -Path dist/DeskWeek-win32-x64 -DestinationPath $zipPath -CompressionLevel Optimal
-          }
+          # 与本地交付一致：压缩包里直接是程序文件，不再多套一层目录。
+          Compress-Archive -Path "dist/DeskWeek-win32-x64/*" -DestinationPath $zipPath -CompressionLevel Optimal
           
           # Generate SHA-256 for all release packages
           Get-ChildItem -Path dist -Include *.zip, *Setup.exe -Recurse | ForEach-Object {
             $h = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash.ToLower()
             $outSha = "$($_.FullName).sha256"
-            "$h *$($_.Name)" | Out-File -FilePath $outSha -Encoding utf8
+            "$h  $($_.Name)" | Out-File -FilePath $outSha -Encoding utf8
             Write-Host "$($_.Name) SHA-256: $h"
           }
 
