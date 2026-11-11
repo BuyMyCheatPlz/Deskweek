@@ -94,7 +94,7 @@
               <div class="settings-actions"><button id="syncRefresh" class="soft-button" type="button">刷新状态</button></div>
               <p class="settings-note">验证码要与对方设备上显示的 6 位数字一致；确认后对方需要再连一次。</p>
             </article><article class="settings-card"><div class="settings-card-head"><div><h3>开机自动启动</h3></div><label class="toggle"><input id="autostartToggle" type="checkbox"><span class="toggle-track"></span></label></div></article>
-            <article class="settings-card"><div class="settings-card-head"><div><h3>备份与恢复</h3></div></div><div class="settings-actions"><button id="managerExport" class="soft-button">导出 JSON</button><button id="managerImport" class="soft-button">导入 JSON</button><input id="managerImportFile" type="file" accept="application/json,.json" hidden></div></article>
+            <article class="settings-card"><div class="settings-card-head"><div><h3>离线传输与备份</h3></div></div><div class="settings-actions"><button id="managerExport" class="soft-button">导出 JSON</button><button id="managerImport" class="soft-button">导入 JSON</button><button id="managerQrExport" class="soft-button">生成 JSON 二维码</button><button id="managerQrScan" class="soft-button">摄像头扫码导入</button><input id="managerImportFile" type="file" accept="application/json,.json" hidden></div><p class="settings-note">电脑生成二维码，手机或平板扫码导入，无需网络。Android 回传可导出 JSON 文件后在这里导入，也可展示二维码由电脑摄像头扫描。</p></article>
             <article class="settings-card"><div class="settings-card-head"><div><h3>本地数据</h3></div></div><div class="settings-actions"><button id="settingsOpenDataFolder" class="soft-button">打开数据目录</button></div><p class="settings-note">位置：data\data.json</p></article>
             <article class="settings-card about-card">
               <div class="about-head">
@@ -103,7 +103,7 @@
                   <p class="about-credit">开发：小虾 × <a class="about-link" href="https://space.bilibili.com/520978347" data-external-url="https://space.bilibili.com/520978347">菜鸡咕</a><span class="about-credit-separator" aria-hidden="true">·</span><span class="about-credit-ack">鸣谢：<a class="about-link" href="https://github.com/BuyMyCheatPlz" data-external-url="https://github.com/BuyMyCheatPlz">BuyMyCheatPlz</a></span></p>
                   <p class="about-star-note">如果你觉得这个软件对你有所帮助，可以来 <a class="about-star-link" href="https://github.com/EasonGuuu/Deskweek" data-external-url="https://github.com/EasonGuuu/Deskweek">GitHub</a> 给我们点个 star 吗！</p>
                 </div>
-                <span class="version-pill">v1.3.0</span>
+                <span class="version-pill">v2.0.0</span>
               </div>
               <div class="about-links">
                 <button id="checkUpdateButton" class="soft-button" type="button">检查更新</button>
@@ -168,6 +168,24 @@
     </div>
   </dialog>
 
+  <dialog id="jsonQrExportDialog" class="edit-dialog json-qr-dialog">
+    <div class="dialog-head"><h2>JSON 二维码</h2><button id="jsonQrExportClose" class="icon-button" aria-label="关闭二维码">×</button></div>
+    <p id="jsonQrExportInfo" role="status"></p><img id="jsonQrImage" alt="任务 JSON 二维码" width="640" height="640">
+    <div class="settings-actions"><button id="jsonQrPrev" class="soft-button">上一张</button><span id="jsonQrPage"></span><button id="jsonQrNext" class="soft-button">下一张</button><button id="jsonQrAuto" class="soft-button">自动翻页</button></div>
+    <p class="settings-note">二维码包含任务明文。多张时请保持扫码页面打开，收齐后确认导入；较大的数据建议使用 JSON 文件。</p>
+  </dialog>
+  <dialog id="jsonQrScanDialog" class="edit-dialog json-qr-dialog">
+    <div class="dialog-head"><h2>摄像头扫码导入</h2><button id="jsonQrScanClose" class="icon-button" aria-label="关闭扫码">×</button></div>
+    <label>摄像头 <select id="jsonQrCamera" aria-label="选择摄像头"></select></label>
+    <video id="jsonQrVideo" autoplay muted playsinline></video><canvas id="jsonQrCanvas" hidden></canvas>
+    <p id="jsonQrScanStatus" role="status">正在开启摄像头…</p><div class="settings-actions"><button id="jsonQrReset" class="soft-button">清空进度</button><button id="jsonQrCameraRetry" class="soft-button">重试摄像头</button></div>
+    <p class="settings-note">仅在此窗口打开时使用摄像头，不上传画面。关闭窗口会停止相机；无摄像头时可使用 JSON 文件导入。</p>
+  </dialog>
+  <dialog id="jsonImportDialog" class="edit-dialog">
+    <div class="dialog-head"><h2>确认导入 JSON</h2></div><p id="jsonImportInfo"></p>
+    <p>合并保留现有任务，同 ID 采用导入内容；替换覆盖当前全部任务及文件中的偏好。垃圾箱也包含在内，永久删除需要以替换方式传递。</p>
+    <div class="dialog-actions"><button id="jsonImportCancel" class="soft-button">取消</button><button id="jsonImportMerge" class="primary-button">合并</button><button id="jsonImportReplace" class="danger-button">替换全部</button></div>
+  </dialog>
   <div id="managerToast" class="toast" role="status" aria-live="polite"></div>
   <script src="../shared/pickers/defer-picker.js"></script>
   <script src="../shared/pickers/date-picker.js"></script>
@@ -175,7 +193,10 @@
   <script src="../../../vendor/lunar/lunar.js"></script>
   <script src="../shared/calendar/calendar-info.js"></script>
   <script src="../shared/runtime/ui-runtime.js"></script>
+  <script src="../../../node_modules/jsqr/dist/jsQR.js"></script>
+  <script src="../shared/transfer/json-qr.js"></script>
   <script src="./manager.js"></script>
+  <script src="./json-qr-ui.js"></script>
 </body>
 </html>
 

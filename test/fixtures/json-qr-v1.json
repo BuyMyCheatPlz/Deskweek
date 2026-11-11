@@ -1,0 +1,50 @@
+{
+  "snapshot": {
+    "initialized": true,
+    "items": [
+      {
+        "id": "cross-one",
+        "title": "周历 😀 中文 / 离线",
+        "detail": "📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\📚任务详情\n含换行与引号\"及反斜线\\",
+        "date": "2026-11-10",
+        "time": "08:30",
+        "done": true,
+        "completedAt": "2026-11-10T01:00:00Z",
+        "deleted": false,
+        "defer": "3d",
+        "createdAt": "2026-11-01T00:00:00Z",
+        "custom": {
+          "keep": true
+        }
+      },
+      {
+        "id": "cross-trash",
+        "title": "回收站任务",
+        "deleted": true,
+        "deletedAt": "2026-11-10T02:00:00Z"
+      },
+      {
+        "id": "cross-undated",
+        "title": "无日期"
+      }
+    ],
+    "prefs": {
+      "theme": "dark"
+    },
+    "customRoot": "原样校验"
+  },
+  "frames": [
+    "{\"format\":\"deskweek-json-qr\",\"version\":1,\"id\":\"7386d2080a4f681a\",\"part\":1,\"total\":12,\"bytes\":3479,\"sha256\":\"7386d2080a4f681aa328824b9e8af91bba5f3b502007eea26d25530201653dce\",\"data\":\"eyJpbml0aWFsaXplZCI6dHJ1ZSwiaXRlbXMiOlt7ImlkIjoiY3Jvc3Mtb25lIiwidGl0bGUiOiLlkajljoYg8J+YgCDkuK3mlocgLyDnprvnur8iLCJkZXRhaWwiOiLwn5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43mlpznur9cXPCfk5rku7vliqHor6bmg4VcbuWQq+aNouihjOS4juW8leWPt1wi5Y+K5Y+N5pac57q/XFzwn5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6\"}",
+    "{\"format\":\"deskweek-json-qr\",\"version\":1,\"id\":\"7386d2080a4f681a\",\"part\":2,\"total\":12,\"bytes\":3479,\"sha256\":\"7386d2080a4f681aa328824b9e8af91bba5f3b502007eea26d25530201653dce\",\"data\":\"v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43mlpznur9cXPCfk5rku7vliqHor6bmg4VcbuWQq+aNouihjOS4juW8leWPt1wi5Y+K5Y+N5pac57q/XFzwn5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43mlpznur9cXPCfk5rku7vliqHor6bmg4VcbuWQq+aNouihjOS4juW8leWPt1wi5Y+K5Y+N5pac57q/XFzwn5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dc\"}",
+    "{\"format\":\"deskweek-json-qr\",\"version\":1,\"id\":\"7386d2080a4f681a\",\"part\":3,\"total\":12,\"bytes\":3479,\"sha256\":\"7386d2080a4f681aa328824b9e8af91bba5f3b502007eea26d25530201653dce\",\"data\":\"IuWPiuWPjeaWnOe6v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43mlpznur9cXPCfk5rku7vliqHor6bmg4VcbuWQq+aNouihjOS4juW8leWPt1wi5Y+K5Y+N5pac57q/XFzwn5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43mlpznur9cXPCfk5rku7vliqHor6bmg4VcbuWQq+aNouihjOS4juW8leWPt1wi5Y+K5Y+N5pac57q/XFzwn5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLo\"}",
+    "{\"format\":\"deskweek-json-qr\",\"version\":1,\"id\":\"7386d2080a4f681a\",\"part\":4,\"total\":12,\"bytes\":3479,\"sha256\":\"7386d2080a4f681aa328824b9e8af91bba5f3b502007eea26d25530201653dce\",\"data\":\"oYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43mlpznur9cXPCfk5rku7vliqHor6bmg4VcbuWQq+aNouihjOS4juW8leWPt1wi5Y+K5Y+N5pac57q/XFzwn5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43mlpznur9cXPCfk5rku7vliqHor6bmg4VcbuWQq+aNouihjOS4juW8leWPt1wi5Y+K5Y+N5pac57q/XFzwn5Oa5Lu75Yqh6K+m\"}",
+    "{\"format\":\"deskweek-json-qr\",\"version\":1,\"id\":\"7386d2080a4f681a\",\"part\":5,\"total\":12,\"bytes\":3479,\"sha256\":\"7386d2080a4f681aa328824b9e8af91bba5f3b502007eea26d25530201653dce\",\"data\":\"5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43mlpznur9cXPCfk5rku7vliqHor6bmg4VcbuWQq+aNouihjOS4juW8leWPt1wi5Y+K5Y+N5pac57q/XFzwn5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43mlpznur9cXPCfk5rku7vliqHor6bmg4VcbuWQq+aNouihjOS4juW8leWPt1wi5Y+K5Y+N5pac57q/XFzw\"}",
+    "{\"format\":\"deskweek-json-qr\",\"version\":1,\"id\":\"7386d2080a4f681a\",\"part\":6,\"total\":12,\"bytes\":3479,\"sha256\":\"7386d2080a4f681aa328824b9e8af91bba5f3b502007eea26d25530201653dce\",\"data\":\"n5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43mlpznur9cXPCfk5rku7vliqHor6bmg4VcbuWQq+aNouihjOS4juW8leWPt1wi5Y+K5Y+N5pac57q/XFzwn5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43mlpznur9cXPCfk5rku7vliqHor6bmg4VcbuWQq+aNouihjOS4juW8leWPt1wi5Y+K\"}",
+    "{\"format\":\"deskweek-json-qr\",\"version\":1,\"id\":\"7386d2080a4f681a\",\"part\":7,\"total\":12,\"bytes\":3479,\"sha256\":\"7386d2080a4f681aa328824b9e8af91bba5f3b502007eea26d25530201653dce\",\"data\":\"5Y+N5pac57q/XFzwn5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43mlpznur9cXPCfk5rku7vliqHor6bmg4VcbuWQq+aNouihjOS4juW8leWPt1wi5Y+K5Y+N5pac57q/XFzwn5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43mlpznur9cXPCfk5rku7vliqHor6bmg4VcbuWQq+aNouihjOS4\"}",
+    "{\"format\":\"deskweek-json-qr\",\"version\":1,\"id\":\"7386d2080a4f681a\",\"part\":8,\"total\":12,\"bytes\":3479,\"sha256\":\"7386d2080a4f681aa328824b9e8af91bba5f3b502007eea26d25530201653dce\",\"data\":\"juW8leWPt1wi5Y+K5Y+N5pac57q/XFzwn5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43mlpznur9cXPCfk5rku7vliqHor6bmg4VcbuWQq+aNouihjOS4juW8leWPt1wi5Y+K5Y+N5pac57q/XFzwn5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43mlpznur9cXPCfk5rku7vliqHor6bmg4Vc\"}",
+    "{\"format\":\"deskweek-json-qr\",\"version\":1,\"id\":\"7386d2080a4f681a\",\"part\":9,\"total\":12,\"bytes\":3479,\"sha256\":\"7386d2080a4f681aa328824b9e8af91bba5f3b502007eea26d25530201653dce\",\"data\":\"buWQq+aNouihjOS4juW8leWPt1wi5Y+K5Y+N5pac57q/XFzwn5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43mlpznur9cXPCfk5rku7vliqHor6bmg4VcbuWQq+aNouihjOS4juW8leWPt1wi5Y+K5Y+N5pac57q/XFzwn5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43mlpznur9cXPCfk5rk\"}",
+    "{\"format\":\"deskweek-json-qr\",\"version\":1,\"id\":\"7386d2080a4f681a\",\"part\":10,\"total\":12,\"bytes\":3479,\"sha256\":\"7386d2080a4f681aa328824b9e8af91bba5f3b502007eea26d25530201653dce\",\"data\":\"u7vliqHor6bmg4VcbuWQq+aNouihjOS4juW8leWPt1wi5Y+K5Y+N5pac57q/XFzwn5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43mlpznur9cXPCfk5rku7vliqHor6bmg4VcbuWQq+aNouihjOS4juW8leWPt1wi5Y+K5Y+N5pac57q/XFzwn5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6v1xc8J+TmuS7u+WKoeivpuaDhVxu5ZCr5o2i6KGM5LiO5byV5Y+3XCLlj4rlj43m\"}",
+    "{\"format\":\"deskweek-json-qr\",\"version\":1,\"id\":\"7386d2080a4f681a\",\"part\":11,\"total\":12,\"bytes\":3479,\"sha256\":\"7386d2080a4f681aa328824b9e8af91bba5f3b502007eea26d25530201653dce\",\"data\":\"lpznur9cXPCfk5rku7vliqHor6bmg4VcbuWQq+aNouihjOS4juW8leWPt1wi5Y+K5Y+N5pac57q/XFzwn5Oa5Lu75Yqh6K+m5oOFXG7lkKvmjaLooYzkuI7lvJXlj7dcIuWPiuWPjeaWnOe6v1xcIiwiZGF0ZSI6IjIwMjYtMTEtMTAiLCJ0aW1lIjoiMDg6MzAiLCJkb25lIjp0cnVlLCJjb21wbGV0ZWRBdCI6IjIwMjYtMTEtMTBUMDE6MDA6MDBaIiwiZGVsZXRlZCI6ZmFsc2UsImRlZmVyIjoiM2QiLCJjcmVhdGVkQXQiOiIyMDI2LTExLTAxVDAwOjAwOjAwWiIsImN1c3RvbSI6eyJrZWVwIjp0cnVlfX0seyJpZCI6ImNyb3NzLXRy\"}",
+    "{\"format\":\"deskweek-json-qr\",\"version\":1,\"id\":\"7386d2080a4f681a\",\"part\":12,\"total\":12,\"bytes\":3479,\"sha256\":\"7386d2080a4f681aa328824b9e8af91bba5f3b502007eea26d25530201653dce\",\"data\":\"YXNoIiwidGl0bGUiOiLlm57mlLbnq5nku7vliqEiLCJkZWxldGVkIjp0cnVlLCJkZWxldGVkQXQiOiIyMDI2LTExLTEwVDAyOjAwOjAwWiJ9LHsiaWQiOiJjcm9zcy11bmRhdGVkIiwidGl0bGUiOiLml6Dml6XmnJ8ifV0sInByZWZzIjp7InRoZW1lIjoiZGFyayJ9LCJjdXN0b21Sb290Ijoi5Y6f5qC35qCh6aqMIn0=\"}"
+  ]
+}

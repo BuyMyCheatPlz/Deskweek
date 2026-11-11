@@ -124,7 +124,7 @@ function normalizeItem(item) {
   const createdAt = typeof item.createdAt === "string" && !Number.isNaN(Date.parse(item.createdAt)) ? item.createdAt : new Date().toISOString();
   const completedAt = Boolean(item.done) ? (typeof item.completedAt === "string" && !Number.isNaN(Date.parse(item.completedAt)) ? item.completedAt : createdAt) : "";
   return {
-    id: item.id || uid(), title: clampText(item.title) || "未命名事项", detail: typeof item.detail === "string" ? clampText(item.detail, 4000) : "", date, time,
+    ...item, id: item.id || uid(), title: clampText(item.title) || "未命名事项", detail: typeof item.detail === "string" ? clampText(item.detail, 4000) : "", date, time,
     done: Boolean(item.done), completedAt, deleted: Boolean(item.deleted), deletedAt: typeof item.deletedAt === "string" ? item.deletedAt : "",
     color: COLORS.includes(item.color) ? item.color : COLORS[0], defer: date ? normalizeDefer(item.defer) : "none", createdAt,
   };
@@ -1016,9 +1016,7 @@ function exportData() {
 }
 async function importData(file) {
   try {
-    const parsed = JSON.parse(await file.text()); if (!Array.isArray(parsed.items)) throw new Error("没有 items 数据");
-    const incoming = normalizeItems(parsed.items); if (!(await requestConfirm({ title: "导入并替换？", message: `将导入 ${incoming.length} 条事项，当前数据会被替换。`, okText: "导入" }))) return;
-    await window.deskWeek.replaceStore({ items: incoming, prefs: parsed.prefs && typeof parsed.prefs === "object" ? parsed.prefs : state.prefs }); toast("导入完成");
+    await window.DeskWeekQrUI.previewImport(await file.text());
   } catch (error) { toast(`导入失败：${error.message}`); }
 }
 function changeCalendarPeriod(direction) {

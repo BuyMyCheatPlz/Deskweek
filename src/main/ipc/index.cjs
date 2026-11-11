@@ -21,6 +21,43 @@ function registerIPC({ electron, windows, store, aiConfig, ai, updates, runtime,
   handle("store-load", () => store.load());
   handle("store-save", (_event, request) => store.save(request));
   handle("store-edit", (_event, before, after) => store.edit(before, after));
+  const qrSessions = new Map();
+  const cameraUsers = new Set();
+  const qrContents = new Set();
+  const trackQrContents = contents => {
+    if (qrContents.has(contents.id)) return;
+    qrContents.add(contents.id);
+    contents.once("destroyed", () => { qrSessions.delete(contents.id); cameraUsers.delete(contents.id); qrContents.delete(contents.id); });
+  };
+  const isCameraPage = contents => {
+    try { return cameraUsers.has(contents?.id) && path.resolve(fileURLToPath(contents.getURL())) === paths.manager; }
+    catch { return false; }
+  };
+  electron.session.defaultSession.setPermissionRequestHandler((contents, permission, callback, details) => {
+    callback(permission === "media" && isCameraPage(contents) && details.mediaTypes?.length > 0 && details.mediaTypes.every(type => type === "video"));
+  });
+  electron.session.defaultSession.setPermissionCheckHandler((contents, permission, _origin, details) =>
+    permission === "media" && isCameraPage(contents) && details.mediaType !== "audio");
+  handle("qr-camera-active", (event, enabled) => {
+    if (path.resolve(fileURLToPath(event.senderFrame.url)) !== paths.manager) throw new Error("只有管理中心可以使用相机");
+    if (enabled) { cameraUsers.add(event.sender.id); trackQrContents(event.sender); }
+    else cameraUsers.delete(event.sender.id);
+    return true;
+  });
+  handle("qr-export-start", async event => {
+    const data = store.load();
+    if (data.loadError) throw new Error("任务数据损坏，请先恢复数据");
+    const frames = await require("../../renderer/shared/transfer/json-qr.js").frames(JSON.stringify({ initialized: true, items: data.items, prefs: data.prefs }));
+    qrSessions.set(event.sender.id, frames);
+    trackQrContents(event.sender);
+    return { total: frames.length, count: data.items.length };
+  });
+  handle("qr-export-page", async (event, index) => {
+    const frames = qrSessions.get(event.sender.id);
+    if (!frames || !Number.isInteger(index) || index < 0 || index >= frames.length) throw new Error("二维码页面无效，请重新生成");
+    return await require("qrcode").toDataURL(frames[index], { width: 640, margin: 4, errorCorrectionLevel: "M" });
+  });
+  handle("qr-export-close", event => { qrSessions.delete(event.sender.id); return true; });
   handle("draft-load", event => windows.isWidgetSender(event.sender) ? windows.loadDraft() : null);
   on("draft-save", (event, value) => { if (windows.isWidgetSender(event.sender)) windows.saveDraft(value); });
   handle("set-mini-mode", (event, enabled) => windows.isWidgetSender(event.sender) ? windows.setMini(Boolean(enabled)) : { enabled: false });
