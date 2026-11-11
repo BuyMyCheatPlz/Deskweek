@@ -73,9 +73,18 @@ function createWindowsShell(screen) {
       } catch { return false; }
       finally { probe?.destroy(); }
     },
-    fullscreen(onlyPid = 0) {
+    fullscreen(onlyPid = 0, targetBounds = null) {
       try {
-        const displays = screen.getAllDisplays().map(d => screen.dipToScreenRect(null, d.bounds));
+        const scoped = targetBounds !== null;
+        // Widget/manager bounds are DIP, but Win32 HWND rectangles are physical.
+        // Select occupied displays before converting each display to screen pixels.
+        const displays = screen.getAllDisplays().filter(({ bounds: a }) => !scoped || (
+          targetBounds.width > 0 && targetBounds.height > 0 &&
+          Math.min(a.x + a.width, targetBounds.x + targetBounds.width) > Math.max(a.x, targetBounds.x) &&
+          Math.min(a.y + a.height, targetBounds.y + targetBounds.height) > Math.max(a.y, targetBounds.y)
+        )).map(d => screen.dipToScreenRect(null, d.bounds));
+        if (!displays.length) return false;
+        const covered = new Set();
         function isFullscreen(hwnd) {
           if (!hwnd || !visible(hwnd) || iconic(hwnd)) return false;
           const owner = [0]; pid(hwnd, owner);
@@ -85,7 +94,8 @@ function createWindowsShell(screen) {
           const text = Buffer.alloc(512); className(hwnd, text, 256);
           if (["Progman", "WorkerW", "Shell_TrayWnd", "Shell_SecondaryTrayWnd"].includes(text.toString("utf16le").replace(/\0.*$/s, ""))) return false;
           const r = {}; if (!rect(hwnd, r)) return false;
-          if (!coversDisplay({ x: r.left, y: r.top, width: r.right - r.left, height: r.bottom - r.top }, displays)) return false;
+          const bounds = { x: r.left, y: r.top, width: r.right - r.left, height: r.bottom - r.top };
+          if (!coversDisplay(bounds, displays)) return false;
           // Visible in Win32 does not mean visible on screen: overlays often
           // retain WS_VISIBLE while fully transparent or unable to activate.
           const style = Number(extendedStyle(hwnd, -20)); // GWL_EXSTYLE
@@ -96,10 +106,13 @@ function createWindowsShell(screen) {
             // successful LWA_ALPHA query proves that alpha zero is invisible.
             if (layeredAttributes(hwnd, color, alpha, flags) && (flags[0] & 2) && alpha[0] === 0) return false;
           }
-          return true;
+          displays.forEach((display, index) => { if (coversDisplay(bounds, [display])) covered.add(index); });
+          // A window spanning monitors must keep updating while any part of it
+          // remains on an uncovered display. Separate fullscreen apps can cover both.
+          return scoped ? covered.size === displays.length : covered.size > 0;
         }
         if (isFullscreen(foreground())) return true;
-        // A fullscreen app on another monitor need not own keyboard focus.
+        // A fullscreen app on the target monitor need not own keyboard focus.
         let found = false;
         enumWindows(hwnd => { if (isFullscreen(hwnd)) { found = true; return false; } return true; }, 0);
         return found;

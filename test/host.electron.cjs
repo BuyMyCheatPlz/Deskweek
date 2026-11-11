@@ -16,7 +16,7 @@ let simulatedCursor = null, gestureDown = false, invalidateHost = false;
 // Ignore unrelated fullscreen applications without altering the user's desktop.
 // The fixture still passes through the real HWND/visibility/monitor checks.
 const shellModule = require(path.join(appRoot, "src/main/desktop/windows-shell.cjs")), makeShell = shellModule.createWindowsShell;
-shellModule.createWindowsShell = (...args) => { const shell = makeShell(...args); const detect = shell.fullscreen; shell.fullscreen = () => fixture && fixture.exitCode === null ? detect(fixture.pid) : false; shell.buttonDown = () => gestureDown; return shell; };
+shellModule.createWindowsShell = (...args) => { const shell = makeShell(...args); const detect = shell.fullscreen; shell.fullscreen = (_pid, bounds) => fixture && fixture.exitCode === null ? detect(fixture.pid, bounds) : false; shell.buttonDown = () => gestureDown; return shell; };
 const desktopModule = require(path.join(appRoot, "src/main/desktop/desktop.cjs")), makeDesktop = desktopModule.createDesktopManager;
 desktopModule.createDesktopManager = (...args) => {
   const desktop = makeDesktop(...args), healthy = desktop.healthy;
@@ -123,6 +123,7 @@ app.whenReady().then(async () => {
   // Wait for idle, then record a comparable total across all Electron processes.
   metrics(); await sleep(4000); const active = metrics();
   const fixtureEnv = { ...process.env }; delete fixtureEnv.ELECTRON_RUN_AS_NODE;
+  fixtureEnv.DESKWEEK_FULLSCREEN_DISPLAY_ID = String(screen.getDisplayMatching(windowController.widgetBounds()).id);
   fixture = spawn(process.execPath, [path.join(__dirname, "fixtures/fullscreen.cjs")], { stdio: ["ignore", "pipe", "pipe"], env: fixtureEnv });
   fixture.stdout.on("data", data => process.stdout.write(data));
   fixture.stderr.on("data", data => process.stderr.write(data));

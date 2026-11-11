@@ -1,7 +1,7 @@
 {
   "name": "deskweek-float",
   "productName": "DeskWeek",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "A small desktop floating weekly calendar and deadline-sorted todo list.",
   "main": "src/main/index.cjs",
   "private": true,
@@ -14,6 +14,7 @@
     "check": "node scripts/check.cjs",
     "test": "node --test test/*.test.cjs",
     "test:host": "node scripts/run.cjs --host-test",
+    "test:multimonitor": "node scripts/run.cjs --multimonitor-test",
     "test:qr": "node scripts/run.cjs --qr-test",
     "test:packaged": "node scripts/run.cjs --host-test --packaged-code",
     "test:visibility": "node scripts/run.cjs --visibility-test",

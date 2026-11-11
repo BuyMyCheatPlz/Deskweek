@@ -39,7 +39,7 @@ else {
     windows = createWindows({ app, BrowserWindow, screen, shell: nativeShell, root: paths.root, dataDir,
       onStatus: () => refreshTray(),
       onWidgetLoaded: win => sendToWindow(win, "deskweek:runtime-state", runtime.state()),
-      onManagerLoaded: win => { sendToWindow(win, "deskweek:update-state", updates.state()); sendToWindow(win, "deskweek:runtime-state", windows.managerRuntimeState(runtime.state())); },
+      onManagerLoaded: win => { sendToWindow(win, "deskweek:update-state", updates.state()); sendToWindow(win, "deskweek:runtime-state", windows.managerRuntimeState(runtime.state(), win)); },
     });
     const store = createStore({ file, onChange: payload => windows.broadcast("deskweek:store-changed", payload) });
     store.load();

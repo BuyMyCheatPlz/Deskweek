@@ -4,17 +4,23 @@ const { createRefreshPolicy } = require("./refresh-policy.cjs");
 function createRuntime({ windows, shell, powerMonitor, onState = () => {} }) {
   const policy = createRefreshPolicy();
   let locked = false, timer, last = "", token = 0, paused = false, reason = "active";
+  function widgetFullscreen() {
+    const bounds = windows.widgetBounds();
+    return Boolean(bounds && shell.fullscreen(0, bounds));
+  }
   function tick() {
-    const state = policy.evaluate({ now: Date.now(), fullscreen: shell.fullscreen(), hidden: windows.isHidden(), locked, canRelease: true });
+    const state = policy.evaluate({ now: Date.now(), fullscreen: widgetFullscreen(), hidden: windows.isHidden(), locked, canRelease: true });
     paused = state.paused;
     reason = state.reason;
     if (`${state.paused}:${state.reason}` !== last) {
       last = `${state.paused}:${state.reason}`;
       token++;
       if (!state.paused) windows.restoreWidget();
-      windows.notifyRuntime({ ...state, token });
       onState(state);
     }
+    // Managers can move or become covered independently of the widget. The
+    // window controller only sends IPC when that particular window's state changes.
+    windows.notifyRuntime({ ...state, token });
     // Never cache permission across the grace period. Ask the live page just
     // before unloading; it freezes input before granting this one-shot token.
     if (state.release && windows.widget()) windows.notifyRuntime({ ...state, token: ++token, releaseRequested: true });
@@ -29,7 +35,7 @@ function createRuntime({ windows, shell, powerMonitor, onState = () => {} }) {
       timer = setInterval(tick, 1500); timer.unref(); tick();
     },
     ready(event, data) {
-      if (windows.isWidgetSender(event.sender) && paused && data?.token === token && data.releaseRequested && data.canRelease && (locked || windows.isHidden() || shell.fullscreen())) {
+      if (windows.isWidgetSender(event.sender) && paused && data?.token === token && data.releaseRequested && data.canRelease && (locked || windows.isHidden() || widgetFullscreen())) {
         token++;
         windows.releaseWidget();
       }

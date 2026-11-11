@@ -1,7 +1,5 @@
 # DeskWeek · 周历清单
 
-本次源码新增 [二维码无损压缩优化](docs/qr-density.md)，显著减少任务传输张数；测试包尚未发布为 release。
-
 <p align="center">
   <img src="assets/icons/app-icon.png" width="112" alt="DeskWeek icon">
 </p>
@@ -18,7 +16,7 @@ DeskWeek 是一款专为 Windows 设计的桌面周历与待办事项工具。�
 
 ## 相关文档
 
-- [使用说明](docs/使用说明.txt)：软件启动、桌面显示、托盘图标操作、数据迁移与常见使用技巧。
+- [多显示器全屏独立检测说明](docs/multimonitor-fullscreen-fix.md)：多显示器环境下主副屏全屏独立判定说明。
 - [多端协同与同步指引](docs/android-lan-integration.md)：Windows 与 Android 手机/平板互通指引。
 - [二维码离线传输指南](docs/offline-json-qr.md)：面对面无网扫码互传操作方法。
 - [故障排查](docs/故障排查.md)：浮窗不显示、短暂闪退、报错提示或保存失败时的解决方法。
@@ -68,6 +66,7 @@ npm start
 | `npm run check` | 检查 JavaScript 代码语法 |
 | `npm test` | 核心功能自动化测试（数据读写、多屏计算、全屏检测、二维码编解码、同步协议等） |
 | `npm run test:host` | 桌面环境集成测试（多屏拖动、双窗口同步、全屏休眠等） |
+| `npm run test:multimonitor` | 真实双屏全屏隔离测试（需设置 `DESKWEEK_MULTI_EVIDENCE`，详见[修复说明](docs/multimonitor-fullscreen-fix.md)） |
 | `npm run test:qr` | 二维码离线传输集成测试（真实图片解码、摄像头流与确认导入） |
 | `npm run test:visibility` | 桌面可见性测试（验证后台辅助软件不会误触发浮窗隐藏） |
 | `npm run test:resume` | 休眠唤醒测试（验证频繁休眠恢复时的稳定性） |

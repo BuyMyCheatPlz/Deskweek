@@ -7,15 +7,27 @@ const { fitBounds, resizeBounds, RESIZE_EDGES } = require("./geometry.cjs");
 const { writeAtomic } = require("../storage/store.cjs");
 const { liveContents, sendToWindow, onWindowLoaded } = require("./lifecycle.cjs");
 const { sampleWindowBackground } = require("./background-sampler.cjs");
-function managerRuntimeState(state) { return { ...state, paused: state.paused && state.reason !== "hidden", releaseRequested: false }; }
+function managerRuntimeState(state, fullscreen = false) {
+  const locked = state.reason === "locked";
+  return { ...state, paused: locked || fullscreen, reason: locked ? "locked" : fullscreen ? "fullscreen" : "active", releaseRequested: false };
+}
 
 function createWindows({ app, BrowserWindow, screen, shell, root, dataDir, onStatus = () => {}, onWidgetLoaded = () => {}, onManagerLoaded = () => {} }) {
   const paths = createPaths(root);
   const desktop = createDesktopManager();
   const stateFile = path.join(dataDir, "window-state.json");
   let widget, mini = false, preMini, normalBounds, hidden = false, gesture, gestureTimer, displayTimer;
-  let stopping = false, status = "正在启动", fallbackRetry = 0, draft = null, backgroundSampling = null;
+  let stopping = false, status = "正在启动", fallbackRetry = 0, draft = null, backgroundSampling = null, suspendedBounds = null;
   const managers = new Set();
+  const runtimeSent = new WeakMap();
+  function managerState(state, win) {
+    return managerRuntimeState(state, Boolean(win && !win.isDestroyed() && shell.fullscreen(0, win.getBounds())));
+  }
+  function sendRuntime(win, state, isWidget = false) {
+    if (!liveContents(win)) return;
+    const key = JSON.stringify([state.paused, state.reason, isWidget ? state.token : 0, isWidget && Boolean(state.releaseRequested)]);
+    if (runtimeSent.get(win) !== key && sendToWindow(win, "deskweek:runtime-state", state)) runtimeSent.set(win, key);
+  }
   function fit(bounds, manager = false) {
     const primary = screen.getPrimaryDisplay();
     const displays = [primary, ...screen.getAllDisplays().filter(display => display.id !== primary.id)];
@@ -44,6 +56,7 @@ function createWindows({ app, BrowserWindow, screen, shell, root, dataDir, onSta
     }
     mini = false; preMini = null;
     const bounds = fit(normalBounds);
+    suspendedBounds = null;
     widget = new BrowserWindow({ ...bounds, minWidth: Math.min(420, bounds.width), minHeight: Math.min(280, bounds.height), maxWidth: 1600, maxHeight: 1000,
       frame: false, thickFrame: false, transparent: true, backgroundColor: "#00000000", resizable: false, maximizable: false, minimizable: false, fullscreenable: false,
       hasShadow: false, skipTaskbar: true, show: false, title: "DeskWeek",
@@ -70,6 +83,7 @@ function createWindows({ app, BrowserWindow, screen, shell, root, dataDir, onSta
   function releaseWidget(preserve = true) {
     endGesture();
     if (!widget || widget.isDestroyed()) return;
+    suspendedBounds = getBounds();
     if (preserve) persist();
     const win = widget; widget = null;
     desktop.release(win); win.destroy();
@@ -151,10 +165,12 @@ function createWindows({ app, BrowserWindow, screen, shell, root, dataDir, onSta
     createWidget, showManager, setMini, beginGesture, endGesture, releaseWidget,
     restoreWidget: createWidget,
     status: () => status,
-    managerRuntimeState,
+    managerRuntimeState: managerState,
     saveDraft(value) { draft = value ? { ...value, assets: value.assets || draft?.assets } : null; },
     loadDraft: () => draft,
     widget: () => widget,
+    // Keep the last fitted desktop position available while the renderer is unloaded.
+    widgetBounds: () => widget && !widget.isDestroyed() ? getBounds() : suspendedBounds || normalBounds,
     isWidgetSender: sender => Boolean(widget && !widget.isDestroyed() && widget.webContents === sender),
     isHidden: () => hidden,
     async sampleBackground(desktopCapturer) {
@@ -165,10 +181,11 @@ function createWindows({ app, BrowserWindow, screen, shell, root, dataDir, onSta
     },
     init() { for (const event of ["display-added", "display-removed", "display-metrics-changed"]) screen.on(event, displayChanged); createWidget(); },
     toggle() { hidden = !hidden; if (hidden) { endGesture(); widget?.hide(); } else { createWidget(); if (widget) { shell.moveToCurrent(widget); widget.showInactive(); } } },
-    reset() { normalBounds = fit(null); preMini = normalBounds; if (widget) desktop.setBounds(widget, normalBounds, screen); else createWidget(); persist(); },
+    reset() { normalBounds = fit(null); preMini = normalBounds; suspendedBounds = null; if (widget) desktop.setBounds(widget, normalBounds, screen); else createWidget(); persist(); },
     focus() { hidden = false; createWidget(); if (widget) { shell.moveToCurrent(widget); widget.showInactive(); desktop.focus(widget); } },
     notifyRuntime(state) {
-      for (const win of [widget, ...managers]) sendToWindow(win, "deskweek:runtime-state", win === widget ? state : managerRuntimeState(state));
+      sendRuntime(widget, state, true);
+      for (const win of managers) if (liveContents(win)) sendRuntime(win, managerState(state, win));
     },
     broadcast(channel, payload) {
       for (const win of [widget, ...managers]) sendToWindow(win, channel, payload);
