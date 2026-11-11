@@ -86,7 +86,14 @@
               <div class="ai-option-row"><span class="ai-option-label">自动翻译</span><label class="toggle" aria-label="自动翻译"><input id="aiAutoTranslateToggle" type="checkbox"><span class="toggle-track"></span></label></div>
               <div class="settings-actions"><button id="saveAIConfig" class="soft-button">保存 AI 配置</button><button id="clearAIKey" class="soft-button">清除密钥</button></div>
             </article>
-            <article class="settings-card"><div class="settings-card-head"><div><h3>开机自动启动</h3></div><label class="toggle"><input id="autostartToggle" type="checkbox"><span class="toggle-track"></span></label></div></article>
+            <article class="settings-card sync-card">
+              <div class="settings-card-head"><div><h3>局域网同步</h3><p>同网发现已配对设备并交换改动；未配对的设备需要核对验证码后才能加入。</p></div><label class="toggle" aria-label="开启局域网同步"><input id="syncToggle" type="checkbox"><span class="toggle-track"></span></label></div>
+              <p class="settings-note" id="syncStatusText">未开启</p>
+              <div id="syncPendingList" class="sync-list"></div>
+              <div id="syncPeerList" class="sync-list"></div>
+              <div class="settings-actions"><button id="syncRefresh" class="soft-button" type="button">刷新状态</button></div>
+              <p class="settings-note">验证码要与对方设备上显示的 6 位数字一致；确认后对方需要再连一次。</p>
+            </article><article class="settings-card"><div class="settings-card-head"><div><h3>开机自动启动</h3></div><label class="toggle"><input id="autostartToggle" type="checkbox"><span class="toggle-track"></span></label></div></article>
             <article class="settings-card"><div class="settings-card-head"><div><h3>备份与恢复</h3></div></div><div class="settings-actions"><button id="managerExport" class="soft-button">导出 JSON</button><button id="managerImport" class="soft-button">导入 JSON</button><input id="managerImportFile" type="file" accept="application/json,.json" hidden></div></article>
             <article class="settings-card"><div class="settings-card-head"><div><h3>本地数据</h3></div></div><div class="settings-actions"><button id="settingsOpenDataFolder" class="soft-button">打开数据目录</button></div><p class="settings-note">位置：data\data.json</p></article>
             <article class="settings-card about-card">

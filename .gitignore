@@ -27,3 +27,6 @@ Desktop.ini
 # Temporary files
 *.tmp
 *.bak
+
+# 服务端身份（原型）
+.server-identity/
