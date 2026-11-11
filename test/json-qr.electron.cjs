@@ -8,6 +8,7 @@ assert.ok(evidence, "Set DESKWEEK_QR_EVIDENCE to an isolated evidence directory"
 fs.mkdirSync(evidence, { recursive: true });
 process.env.DESKWEEK_DATA_DIR = fs.mkdtempSync(path.join(evidence, "desktop-profile-"));
 const fixture = require("./fixtures/json-qr-v1.json"), QRCode = require("qrcode"), jsQR = require("jsqr");
+const compressedFixture = require("./fixtures/json-qr-v2.json");
 const appRoot = process.env.DESKWEEK_APP_ROOT || path.resolve(__dirname, "..");
 const shellModule = require(path.join(appRoot, "src/main/desktop/windows-shell.cjs")), makeShell = shellModule.createWindowsShell;
 shellModule.createWindowsShell = (...args) => { const shell = makeShell(...args); shell.fullscreen = () => false; return shell; };
@@ -31,7 +32,7 @@ app.whenReady().then(async () => {
   const imageUrl = await js("document.querySelector('#jsonQrImage').src");
   const png = require("pngjs").PNG.sync.read(Buffer.from(imageUrl.split(",")[1], "base64"));
   fs.writeFileSync(path.join(evidence, "desktop-export-qr.png"), Buffer.from(imageUrl.split(",")[1], "base64"));
-  const decoded = jsQR(new Uint8ClampedArray(png.data), png.width, png.height); assert.ok(decoded); assert.equal(JSON.parse(decoded.data).part, 1);
+  const decoded = jsQR(new Uint8ClampedArray(png.data), png.width, png.height); assert.ok(decoded); assert.equal(JSON.parse(decoded.data).p, 1);
   await until(() => js("document.querySelector('#jsonQrImage').complete && document.querySelector('#jsonQrImage').naturalWidth > 0"), "QR image did not load");
   let screenImage;
   await until(async () => {
@@ -40,6 +41,9 @@ app.whenReady().then(async () => {
     return Boolean(jsQR(new Uint8ClampedArray(png.data), png.width, png.height));
   }, "Displayed QR image did not decode from actual window pixels");
   fs.writeFileSync(path.join(evidence, "desktop-qr-export.png"), screenImage.toPNG());
+  const efficientTotal = Number((await js("document.querySelector('#jsonQrPage').textContent")).split("/")[1]); assert.ok(efficientTotal < fixture.frames.length);
+  await js("document.querySelector('#jsonQrLegacy').checked=true;document.querySelector('#jsonQrLegacy').dispatchEvent(new Event('change'))");
+  await until(async () => Number((await js("document.querySelector('#jsonQrPage').textContent")).split('/')[1]) > efficientTotal, "Legacy compatibility mode did not regenerate");
   const total = Number((await js("document.querySelector('#jsonQrPage').textContent")).split("/")[1]); assert.ok(total > 1);
   await js("document.querySelector('#jsonQrNext').click()"); await until(async () => (await js("document.querySelector('#jsonQrPage').textContent")).startsWith("2 /"), "Page did not change");
   await js("document.querySelector('#jsonQrExportClose').click()");
@@ -56,14 +60,14 @@ app.whenReady().then(async () => {
   await until(() => js("document.querySelector('#jsonQrScanStatus').textContent.includes('Windows 隐私设置')"), "Permission denial missing");
   await js("document.querySelector('#jsonQrScanClose').click()");
   console.log("PASS camera denial and file fallback message");
-  await js(`(async()=>{ const s=await window.deskWeek.loadStore(); await window.deskWeek.replaceStore({items:[{id:'keep',title:'本机保留任务'}],prefs:{localOnly:true}}); window.__qaCanvas=document.createElement('canvas'); __qaCanvas.width=640;__qaCanvas.height=640; const ctx=__qaCanvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,640,640); navigator.mediaDevices.getUserMedia=async()=>{window.__qaStream=__qaCanvas.captureStream(8);return __qaStream;};navigator.mediaDevices.enumerateDevices=async()=>[{kind:'videoinput',deviceId:'qa',label:'QR test camera'}];document.querySelector('#managerQrScan').click(); })()`);
+  await js(`(async()=>{ const s=await window.deskWeek.loadStore(); await window.deskWeek.replaceStore({items:[{id:'keep',title:'本机保留任务'}],prefs:{localOnly:true}}); window.__qaCanvas=document.createElement('canvas'); __qaCanvas.width=960;__qaCanvas.height=960; const ctx=__qaCanvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,960,960); navigator.mediaDevices.getUserMedia=async()=>{window.__qaStream=__qaCanvas.captureStream(8);return __qaStream;};navigator.mediaDevices.enumerateDevices=async()=>[{kind:'videoinput',deviceId:'qa',label:'QR test camera'}];document.querySelector('#managerQrScan').click(); })()`);
   await js("window.__qaFramePump=setInterval(()=>{__qaCanvas.getContext('2d').drawImage(__qaCanvas,0,0)},120)");
   try { await until(() => js("document.querySelector('#jsonQrVideo').readyState >= 2"), "Synthetic camera did not start"); }
   catch (error) { console.log(await js("({status:document.querySelector('#jsonQrScanStatus').textContent,tracks:window.__qaStream?.getTracks().map(t=>({state:t.readyState,enabled:t.enabled})),open:document.querySelector('#jsonQrScanDialog').open,videoError:document.querySelector('#jsonQrVideo').error?.message})")); throw error; }
-  for (let i = 0; i < fixture.frames.length; i++) {
-    const src = await QRCode.toDataURL(fixture.frames[i], { width: 640, margin: 4, errorCorrectionLevel: "M" });
-    await js(`new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>{__qaCanvas.getContext('2d').drawImage(im,0,0,640,640);resolve();};im.onerror=reject;im.src=${JSON.stringify(src)};})`);
-    if (i < fixture.frames.length - 1) await until(() => js(`document.querySelector('#jsonQrScanStatus').textContent.includes('已收集 ${i + 1} /')`), `Camera did not decode frame ${i + 1}`);
+  for (let i = 0; i < compressedFixture.desktopFrames.length; i++) {
+    const src = await QRCode.toDataURL(compressedFixture.desktopFrames[i], { scale: 6, margin: 4, errorCorrectionLevel: "M" });
+    await js(`new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>{const ctx=__qaCanvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,960,960);ctx.drawImage(im,Math.floor((960-im.width)/2),Math.floor((960-im.height)/2));resolve();};im.onerror=reject;im.src=${JSON.stringify(src)};})`);
+    if (i < compressedFixture.desktopFrames.length - 1) await until(() => js(`document.querySelector('#jsonQrScanStatus').textContent.includes('已收集 ${i + 1} /')`), `Camera did not decode frame ${i + 1}`);
   }
   await until(() => js("document.querySelector('#jsonImportDialog').open"), "Camera did not reach import preview");
   await sleep(350);
@@ -71,11 +75,11 @@ app.whenReady().then(async () => {
   assert.equal((await js("window.deskWeek.loadStore()")).items[0].title, "本机保留任务");
   fs.writeFileSync(path.join(evidence, "desktop-qr-import-preview.png"), (await manager.webContents.capturePage()).toPNG());
   await js("document.querySelector('#jsonImportMerge').click()");
-  await until(async () => (await js("window.deskWeek.loadStore()")).items.length === fixture.snapshot.items.length + 1, "Merge did not persist");
+  await until(async () => (await js("window.deskWeek.loadStore()")).items.length === compressedFixture.snapshot.items.length + 1, "Merge did not persist");
   console.log("PASS synthetic camera actual frames, multipart collector, preview, merge and camera stop");
   const snapshotText = JSON.stringify(fixture.snapshot);
   await js(`window.DeskWeekQrUI.previewImport(${JSON.stringify(snapshotText)})`); await js("document.querySelector('#jsonImportCancel').click()");
-  assert.equal((await js("window.deskWeek.loadStore()")).items.length, 4);
+  assert.equal((await js("window.deskWeek.loadStore()")).items.length, compressedFixture.snapshot.items.length + 1);
   await js(`importData({text:async()=>${JSON.stringify(snapshotText)}})`); await js("document.querySelector('#jsonImportReplace').click()");
   await until(async () => (await js("window.deskWeek.loadStore()")).items.length === 3, "File replace did not persist");
   const replaced = await js("window.deskWeek.loadStore()"); assert.equal(replaced.prefs.theme, "dark"); assert.ok(replaced.items.find(t => t.id === "cross-trash").deleted);

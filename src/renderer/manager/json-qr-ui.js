@@ -2,7 +2,7 @@
 (function () {
   const $ = id => document.getElementById(id), protocol = window.DeskWeekJsonQr;
   const exportDialog = $("jsonQrExportDialog"), scanDialog = $("jsonQrScanDialog"), importDialog = $("jsonImportDialog");
-  let total = 0, page = 0, flipTimer, exportGeneration = 0, stream, frameTimer, cameraGeneration = 0, scanning = false, pending = null, importing = false;
+  let total = 0, page = 0, flipTimer, exportGeneration = 0, exportRequest = 0, stream, frameTimer, cameraGeneration = 0, scanning = false, pending = null, importing = false;
   let collector = new protocol.Collector();
   const message = value => { $("jsonQrScanStatus").textContent = value; };
   function stopFlip() { clearInterval(flipTimer); flipTimer = null; $("jsonQrAuto").textContent = "自动翻页"; }
@@ -16,14 +16,24 @@
     } catch (e) { stopFlip(); $("jsonQrExportInfo").textContent = e.message; }
   }
   async function openExport() {
+    const request = ++exportRequest;
     try {
-      const result = await window.deskWeek.startQrExport(); total = result.total; page = 0;
-      $("jsonQrExportInfo").textContent = `${result.count} 条任务 · ${total} 张二维码${total > 20 ? "；张数较多，建议使用 JSON 文件传输" : ""}`;
+      stopFlip();
+      ++exportGeneration; total = 0;
+      $("jsonQrImage").removeAttribute("src"); $("jsonQrPage").textContent = "";
+      $("jsonQrExportInfo").textContent = "正在压缩生成…";
+      for (const id of ["jsonQrPrev", "jsonQrNext", "jsonQrAuto"]) $(id).disabled = true;
+      if (!exportDialog.open) exportDialog.showModal();
+      const legacy = $("jsonQrLegacy").checked;
+      const result = await window.deskWeek.startQrExport(legacy);
+      if (request !== exportRequest || !exportDialog.open) return;
+      total = result.total; page = 0;
+      $("jsonQrExportInfo").textContent = `${result.count} 条任务 · ${total} 张二维码 · ${legacy ? "旧版兼容" : "高效压缩，需两端新版"}${total > 20 ? "；张数较多，建议使用 JSON 文件传输" : ""}`;
       for (const id of ["jsonQrPrev", "jsonQrNext", "jsonQrAuto"]) $(id).disabled = total === 1;
-      $("jsonQrImage").removeAttribute("src"); exportDialog.showModal(); await showPage(0);
-    } catch (e) { toast(`生成失败：${e.message}`); }
+      await showPage(0);
+    } catch (e) { if (request === exportRequest && exportDialog.open) $("jsonQrExportInfo").textContent = `生成失败：${e.message}`; }
   }
-  exportDialog.addEventListener("close", () => { if (exportDialog.open) return; ++exportGeneration; stopFlip(); $("jsonQrImage").removeAttribute("src"); window.deskWeek.closeQrExport().catch(() => {}); });
+  exportDialog.addEventListener("close", () => { if (exportDialog.open) return; ++exportRequest; ++exportGeneration; stopFlip(); $("jsonQrImage").removeAttribute("src"); window.deskWeek.closeQrExport().catch(() => {}); });
   $("jsonQrExportClose").onclick = () => exportDialog.close();
   $("jsonQrPrev").onclick = () => { stopFlip(); showPage(page - 1); };
   $("jsonQrNext").onclick = () => { stopFlip(); showPage(page + 1); };
@@ -101,6 +111,7 @@
     finally { importing = false; }
   }
   $("managerQrExport").onclick = openExport;
+  $("jsonQrLegacy").onchange = openExport;
   $("managerQrScan").onclick = () => { collector = new protocol.Collector(); scanDialog.showModal(); startCamera(); };
   $("jsonQrScanClose").onclick = () => scanDialog.close(); scanDialog.addEventListener("close", () => { if (!scanDialog.open) closeScan(); });
   $("jsonQrCamera").onchange = () => startCamera($("jsonQrCamera").value);

@@ -1,5 +1,7 @@
 # DeskWeek · 周历清单
 
+本次源码新增 [二维码无损压缩优化](docs/qr-density.md)，显著减少任务传输张数；测试包尚未发布为 release。
+
 <p align="center">
   <img src="assets/icons/app-icon.png" width="112" alt="DeskWeek icon">
 </p>

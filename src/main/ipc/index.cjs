@@ -44,18 +44,21 @@ function registerIPC({ electron, windows, store, aiConfig, ai, updates, runtime,
     else cameraUsers.delete(event.sender.id);
     return true;
   });
-  handle("qr-export-start", async event => {
+  handle("qr-export-start", async (event, legacy = false) => {
+    const transfer = { frames: null };
+    qrSessions.set(event.sender.id, transfer);
+    trackQrContents(event.sender);
     const data = store.load();
     if (data.loadError) throw new Error("任务数据损坏，请先恢复数据");
-    const frames = await require("../../renderer/shared/transfer/json-qr.js").frames(JSON.stringify({ initialized: true, items: data.items, prefs: data.prefs }));
-    qrSessions.set(event.sender.id, frames);
-    trackQrContents(event.sender);
+    const frames = await require("../../renderer/shared/transfer/json-qr.js").frames(JSON.stringify({ initialized: true, items: data.items, prefs: data.prefs }), { legacy: legacy === true });
+    if (qrSessions.get(event.sender.id) !== transfer) throw new Error("二维码已取消或重新生成");
+    transfer.frames = frames;
     return { total: frames.length, count: data.items.length };
   });
   handle("qr-export-page", async (event, index) => {
-    const frames = qrSessions.get(event.sender.id);
+    const frames = qrSessions.get(event.sender.id)?.frames;
     if (!frames || !Number.isInteger(index) || index < 0 || index >= frames.length) throw new Error("二维码页面无效，请重新生成");
-    return await require("qrcode").toDataURL(frames[index], { width: 640, margin: 4, errorCorrectionLevel: "M" });
+    return await require("qrcode").toDataURL(frames[index], { scale: 6, margin: 4, errorCorrectionLevel: "M" });
   });
   handle("qr-export-close", event => { qrSessions.delete(event.sender.id); return true; });
   handle("draft-load", event => windows.isWidgetSender(event.sender) ? windows.loadDraft() : null);

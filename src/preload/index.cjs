@@ -50,7 +50,7 @@ managerClose: () => ipcRenderer.send("deskweek:manager-close"),
     return () => ipcRenderer.removeListener("deskweek:manager-window-state", listener);
   },
   loadStore: async () => { const data = await ipcRenderer.invoke("deskweek:store-load"); if (!pending) base = clone(data); return data; },
-  startQrExport: () => ipcRenderer.invoke("deskweek:qr-export-start"),
+  startQrExport: legacy => ipcRenderer.invoke("deskweek:qr-export-start", Boolean(legacy)),
   qrExportPage: index => ipcRenderer.invoke("deskweek:qr-export-page", index),
   closeQrExport: () => ipcRenderer.invoke("deskweek:qr-export-close"),
   setQrCameraActive: enabled => ipcRenderer.invoke("deskweek:qr-camera-active", Boolean(enabled)),

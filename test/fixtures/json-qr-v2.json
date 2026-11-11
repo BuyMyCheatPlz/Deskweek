@@ -1,0 +1,362 @@
+{
+  "snapshot": {
+    "initialized": true,
+    "items": [
+      {
+        "id": "54fb94c9c3de396bb6a7628a44800ffd",
+        "title": "任务 1：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": true,
+        "completedAt": "2026-11-11T01:00:00Z",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "edca673e85a61804817b859290f43c9d",
+        "title": "任务 2：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": false,
+        "completedAt": "",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "f7c45491130821dbf775106811ba6c8d",
+        "title": "任务 3：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": false,
+        "completedAt": "",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "d046d164a8201b5c18239880cf7bce82",
+        "title": "任务 4：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": false,
+        "completedAt": "",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "c5edc377909603b524bb525c798ee0a6",
+        "title": "任务 5：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": false,
+        "completedAt": "",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "68ce1b99de4dda89a51bcd07b8f9838e",
+        "title": "任务 6：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": true,
+        "completedAt": "2026-11-11T01:00:00Z",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "9eea7fa3100fac5b96c0fbdfff417edf",
+        "title": "任务 7：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": false,
+        "completedAt": "",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "509ace7af92cf282495ad3304a294d32",
+        "title": "任务 8：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": false,
+        "completedAt": "",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "8c898c7f4818db9b94099f9761405f70",
+        "title": "任务 9：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": false,
+        "completedAt": "",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "08c13f3787bf6269ef7245a3bcfe632b",
+        "title": "任务 10：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": false,
+        "completedAt": "",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "637c80314b2b15c46ade97baa14f18fe",
+        "title": "任务 11：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": true,
+        "completedAt": "2026-11-11T01:00:00Z",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "8d3345472db4bd6a9e8aa6a172c4367c",
+        "title": "任务 12：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": false,
+        "completedAt": "",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "51e6735e092d0d395e81de64afb0e2eb",
+        "title": "任务 13：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": false,
+        "completedAt": "",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "a93fc8524d3db8a0793e2190cb34411a",
+        "title": "任务 14：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": false,
+        "completedAt": "",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "016814234bf5cb209b751d9f0d9e2672",
+        "title": "任务 15：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": false,
+        "completedAt": "",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "77ef124e73f0b051e30301d6c41bb10c",
+        "title": "任务 16：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": true,
+        "completedAt": "2026-11-11T01:00:00Z",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "7a0857ffa9f577498a88aa599b4298d1",
+        "title": "任务 17：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": false,
+        "completedAt": "",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "04442d9e42f27cefc2be4faff4250e38",
+        "title": "任务 18：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": false,
+        "completedAt": "",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "e2cd2d5a28a2ee06114aaf33f58ca2f3",
+        "title": "任务 19：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": false,
+        "completedAt": "",
+        "deleted": false,
+        "deletedAt": "",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      },
+      {
+        "id": "be99c42c144b9ead5e6ae4519f139d4f",
+        "title": "任务 20：安排本周会议 📅",
+        "detail": "确认会议时间、地点和资料。",
+        "date": "2026-11-11",
+        "time": "09:30",
+        "done": false,
+        "completedAt": "",
+        "deleted": true,
+        "deletedAt": "2026-11-11T02:00:00Z",
+        "defer": "none",
+        "color": "#9bd3c7",
+        "createdAt": "2026-11-11T00:00:00Z",
+        "custom": {
+          "preserve": true
+        }
+      }
+    ],
+    "prefs": {
+      "theme": "dark"
+    },
+    "customRoot": [
+      "保留未知字段",
+      42
+    ]
+  },
+  "desktopFrames": [
+    "{\"f\":\"DWQ\",\"v\":2,\"p\":1,\"n\":2,\"b\":882,\"u\":6780,\"h\":\"c05fc352712c6f21fb15465e5aa42bb71a69fd1f4932b4786ec42a47f143aa72\",\"d\":\"eJzt2M2KXEUUB/BXCeW2A+dUnfo4d+criCtDFvVxDjb2TIeejguHgRh0oYhgRIeESAgoiGjjwgiSgA+T6Z5xpY8g3ZnohKnFbMQs7vJW3fq4P25V3f89NNP96XKaZ9MPpJlhubgtEzNdyt6BGW4cmmkzg/GkhalydU0ch1JCjsGmTJQAVJuZmOV0ORMzmJOnT9efPr6Gfz57sF59svn83ubhj+svvj959uBstbr216MvPzYT02SZpzMzmNPHq7PVty8qN8e//nH8y/M7H64f/nx697f1vc/Onny0+fr+8zt3t03yctu9BRuuI15H3I25ty0DHhxsb5nvy8sHqPO9WzNZSntz+UqrtwEHgAHgnd00dreYQfPsQP653jXZVasszGD2t/1uu5zNt5dvcGmuxm3JQnJvCPh3iHr7YDnfM8OhubWQA1m8fz7Do6PJua20mkN0knwOmIASxpI8WwYlV7lja/8323OnV3FfF0iNlTwxooNksRWN0SOEhFhyqKkD6UbIHmQDCg0D5WQBi6+YrOOUoGosVZK9DEkjZA+yemnVxcjAAVzxlkrx1tfISQRyuAzpR8geZEhVsDA3odZy4uyx1AaxJOXkklyGDOP5c0VbFslRs0MAzdUXDhW0NFUljNL0sm0cX9IepAfOVWJWtlVtssQ+N+eAsmVqrrNtphGyB5lq4lSjUsLUChcmYFaOAQm8RrgMySNkDxJSRacuplg02MCi0ZLPrlSV4GzpfLbDKNk9gFysCRxSsQV9pZCbcCw5Iykm7RxAOCagK6/35hx5irYVKi1k\"}",
+    "{\"f\":\"DWQ\",\"v\":2,\"p\":2,\"n\":2,\"b\":882,\"u\":6780,\"h\":\"c05fc352712c6f21fb15465e5aa42bb71a69fd1f4932b4786ec42a47f143aa72\",\"d\":\"lpRzyBhtJRdi7eCOEah/BKGE6LwA2wbNsZeETQJlLSBWegt+zEBdycxOa/KWmmslZYjsxCJDLY4IMXckxxDUP4QwJCTrqKivxQKX6LGxQmOxIXY+i3BMQV3JGEXRkkSnUMCjOHCALVTCUhB6++QYg66MmyH5qJpZfYzEKaeUs2cuZDk17OCOOai/4InINhayamMVrbYIaVYl60Fc6kiOQaj/a9jWZpvPNmUrAgGRclbn1KearbqO5JiEupJFmCvZikSFJTcvIQt5ZEXHjTo/OexrnIRe7K0XIS/C2Is763+Je3OyLdKDbd3yXdk9ScuL98zRy1ZvzedLM9wwJ79/c/rV/c3DH04ffbf+6XizemImZG8e/Q1LMPMQ\"}"
+  ],
+  "androidFrames": [
+    "{\"f\":\"DWQ\",\"v\":2,\"p\":1,\"n\":2,\"b\":894,\"u\":6780,\"h\":\"5627a29b61537cef70f7266f5569afabeee549d5d20f479b7307bdb56221efbd\",\"d\":\"eJztmM2KXEUUx18lXLcj1Kk69XF65yuIK0MWp6rOwcae6TDTcWEYiEEXighGdEgYCYEIItq4MIIk4MNkumdc6SNY3ZnohKnFbMQsLlwu91ad+vpxz8f/3h6me9PFlGfTD6UOk8X+LdkZpgvZPRgm128P09Y2eNRMWKi4Ko5CzoFjsIkRkzGqddgZFtPFTJrpydOnq88eXYM/nz1YLT9df3Fvffzj6svvT549OFsur/318KtPmnGVBU9nzfr00fJs+fhF5/ro1z+Ofnl+56PV8c+nd39b3fv87MnH62/uP79zdzOEF5vprbHhTYB2bdfc3bQZmjizMZnvycsDlPnuzZkspL61eGXUOwYmxrTr3e02tibDRHl2IP+8b4dsu1X22+PeZt7NlLP55vUNytWVuGnZF+4tYf5dotw6WMx3h8nt4ea+HMj+B+c7PDzcOWcrtXCITpLnAMlggpiTJ0tG0RXqsLX/G9tzTq/CfV1AaizokQCcSRZq1hg9mJAAMoeSOiDdCLIHshoMFQJysgayL5Cso5RM0ZiLJHsZJI4geyCLb87tYiRDwbjsLeZ28yVSEjEcLoP0I8geyJCKQCaqgrVyIvaQSzUtUColl+QyyDDmnyuyJRGOyg5aJufiM4ViNFdVRYhS9TLbOH6kPZDeEBeJrGSL2mSRPFfnDLIlrK4TNtMIsgcylUSpRG2lUKqZWuVpiJRiADReo7kMkkaQPZAmFXDqYopZgw0kGi16drmoBGdzp2w3I8luAnKxJOMAs83gCwauQjEzAyok7SQgGBXQlf29RclW\"}",
+    "{\"f\":\"DWQ\",\"v\":2,\"p\":2,\"n\":2,\"b\":894,\"u\":6780,\"h\":\"5627a29b61537cef70f7266f5569afabeee549d5d20f479b7307bdb56221efbd\",\"d\":\"uUdbM+YamCQxB4ZoC7oQSwfuKIH6KQikSUkvhmw11ZGXBFVaJa/ZiJWew48aqEuSyWlJrWKvrubEJpITC2RKdogA3CE5iqB+EoImwdE6zOpLtoZyk+WV1FQSG2KnLIJRBXVJxigKFiU6Ndk0X3fGGaihIOQMphcnRxl0Zbhsko+qTOpjREqcWhbyRBktpQoduKMO6js8Itrm3GjVxiJabBZUbnrSeiMudUiOQqj/a9iWaqtnm9iKmACAzOqc+lTYquuQHJVQl2QWooK2AGIm4eolsKAHUnBUsfOTw77GSuhFbL0I8iIYezGy/pdwb+xsmvRg07d4T7Ynqbz//nD4ctTb83mb+fpw8vu3p1/fXx//cPrwu9VPR+vlk2EH7Y3DvwFLMPMQ\"}"
+  ]
+}

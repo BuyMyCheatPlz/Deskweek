@@ -14,7 +14,7 @@ test("single QR contains ordinary JSON and actual image decodes without network"
   assert.deepEqual(JSON.parse((await new Q.Collector().accept(decoded.data)).text), snapshot);
 });
 test("shared Android fixture, out of order, repeated frames, UTF-8 and checksum", async () => {
-  assert.deepEqual(await Q.frames(JSON.stringify(fixture.snapshot)), fixture.frames);
+  assert.deepEqual(await Q.frames(JSON.stringify(fixture.snapshot), { legacy: true }), fixture.frames);
   const collector = new Q.Collector(); const order = [...fixture.frames].reverse();
   const first = await collector.accept(order[0]); assert.equal(first.received, 1); assert.equal(first.text, undefined);
   assert.equal((await collector.accept(order[0])).received, 1);
